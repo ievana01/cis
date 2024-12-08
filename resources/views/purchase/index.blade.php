@@ -3,12 +3,12 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <a class="btn btn-primary mb-2" href="{{ route('purchase.create') }}">+ Tambah Nota</a>
+    <a class="btn btn-primary mb-2" href="{{ route('purchase.create') }}">+ Purchase Orders</a>
     <table class="table table-hover">
         <thead>
             <tr>
-                <th scope="col">Nomor Nota</th>
-                <th scope="col">Tanggal Dibuat</th>
+                <th scope="col">Purchase Invoice</th>
+                <th scope="col">Purchase Date</th>
                 <th scope="col">Supplier</th>
                 <th scope="col">Total</th>
                 {{-- <th>Status</th> --}}
@@ -24,7 +24,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center">Data belum tersedia.</td>
+                    <td colspan="4" class="text-center">Data not available.</td>
                 </tr>
             @endforelse
         </tbody>

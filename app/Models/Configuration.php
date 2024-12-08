@@ -10,4 +10,8 @@ class Configuration extends Model
     use HasFactory;
     protected $primaryKey = 'id_configuration';
     public $timestamps = false;
+    public function details()
+    {
+        return $this->hasMany(DetailConfiguration::class, 'configuration_id');
+    }
 }

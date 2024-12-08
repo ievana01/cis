@@ -24,12 +24,44 @@ class ProductController extends Controller
 
     public function showConfiguration()
     {
-    $configuration = DB::select('select * from configurations where menu_id = 3');
+        $configuration = DB::select('select * from configurations where menu_id = 3');
         foreach ($configuration as $config) {
             $config->details = DB::select('select * from detail_configurations where configuration_id = ?', [$config->id_configuration]);
         }
 
-        return view('sales.configuration', ['configuration' => $configuration]);
+        return view('product.configuration', ['configuration' => $configuration]);
+    }
+
+    public function save(Request $request)
+    {
+        $configurations = $request->input('configurations', []);
+
+        // Ambil semua konfigurasi terkait menu_id = 3
+        $allConfigurations = DB::table('detail_configurations')
+            ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
+            ->where('configurations.menu_id', 3)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id')
+            ->get();
+
+        // Loop untuk memproses setiap konfigurasi yang dikirim
+        foreach ($allConfigurations as $config) {
+            $isActive = 0; // Default: tidak aktif
+
+            // Jika konfigurasi ini dipilih oleh user, aktifkan
+            if (
+                isset($configurations[$config->configuration_id]) &&
+                in_array($config->id_detail_configuration, $configurations[$config->configuration_id])
+            ) {
+                $isActive = 1;
+            }
+
+            // Update status aktif untuk detail konfigurasi ini
+            DB::table('detail_configurations')
+                ->where('id_detail_configuration', $config->id_detail_configuration)
+                ->update(['status_active' => DB::raw($isActive)]);
+        }
+
+        return redirect()->route('product.configuration')->with('status', 'Configurations updated successfully!');
     }
     /**
      * Show the form for creating a new resource.
@@ -59,6 +91,13 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        //ambil id detail konfigurasi yg aktif
+        $cogsChoose = DB::table('detail_configurations')
+            ->where('status_active', 1)
+            ->where('configuration_id', 1)
+            ->first();
+        $cogsMethod = $cogsChoose->name;
+
         $data = new Product();
         $data->name = $request->get('name');
         $data->description = $request->get('description');
@@ -70,8 +109,16 @@ class ProductController extends Controller
         $data->min_total_stock = $request->get('min_total_stock');
         $data->category_id = $request->get('category_id');
         $data->supplier_id = $request->get('supplier_id');
-        // $data->image_id = $imageId;
         $data->save();
+
+        if($cogsMethod == 'FIFO'){
+            DB::table('product_fifo')->insert([
+                'product_id'=>$data->id_product,
+                'purchase_date' => now()->toDateString(),
+                'price'=>$data->cost,
+                'stock'=>$data->total_stock
+            ]);
+        }
 
         $warehouseId = $request->get('warehouse_id');
         DB::table('product_has_warehouses')

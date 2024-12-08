@@ -3,12 +3,12 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <h4 class="font-weight-bold">Daftar Produk</h4>
-    <a class="btn btn-primary mb-2" href="{{ route('product.create') }}">+ Tambah Produk</a>
+    <h4 class="font-weight-bold">List Product</h4>
+    <a class="btn btn-primary mb-2" href="{{ route('product.create') }}">+ Add Product</a>
     <div class="row">
         @forelse ($product as $data)
-            <div class="col-3 mb-3">
-                <div class="card" style="width: 18rem;">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card" style="width: 100%;">
                     @if ($data->images->count() > 0)
                         <img class="card-img-top" src="{{ asset('storage/' . $data->images->first()->file_image) }}"
                             alt="Card image cap">
@@ -19,8 +19,8 @@
                     @endif
                     <div class="card-body">
                         <p class="card-text">{{ $data->name }}</p>
-                        <p class="card-text">Harga: Rp.{{ number_format($data->price, 0, ',', '.') }}</p>
-                        <p class="card-text">Jumlah stok: {{ $data->total_stock }} {{ $data->unit }}</p>
+                        <p class="card-text">Price: Rp.{{ number_format($data->price, 0, ',', '.') }}</p>
+                        <p class="card-text">Totak stock: {{ $data->total_stock }} {{ $data->unit }}</p>
                         
                         <a href="{{ route('product.edit', $data->id_product) }}" class="btn btn-warning">Edit</a>
                         <form method="POST" action="{{ route('product.destroy', $data->id_product) }}"
@@ -35,7 +35,7 @@
             </div>
         @empty
         <div class="ml-2 pt-2">
-            <p>Data belum tersedia</p>
+            <p>Data not available</p>
         </div>
         @endforelse
     </div>

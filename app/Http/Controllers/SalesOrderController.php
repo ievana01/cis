@@ -18,7 +18,20 @@ class SalesOrderController extends Controller
      */
     public function index()
     {
-        $sales = SalesOrder::all();
+        // $sales = SalesOrder::all();
+       
+
+        $sales = DB::table('sales_orders')
+            ->join('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+            ->join('detail_configurations', 'sales_orders.payment_method', '=', 'detail_configurations.id_detail_configuration')
+            ->select(
+                'sales_orders.sales_invoice',
+                'sales_orders.date',
+                'sales_orders.total_price',
+                'customers.name as customer_name',
+                'detail_configurations.name as payment_method_name'
+            )
+            ->get();
         return view('sales.index', ["sales" => $sales]);
     }
 
@@ -61,7 +74,7 @@ class SalesOrderController extends Controller
                 ->update(['status_active' => DB::raw($isActive)]);
         }
 
-        return redirect()->back()->with('success', 'Configurations updated successfully!');
+        return redirect()->route('sales.configuration')->with('status', 'Configurations updated successfully!');
     }
 
 
@@ -74,16 +87,29 @@ class SalesOrderController extends Controller
         $sales = SalesOrder::all();
         $customer = Customer::all();
         $product = Product::all();
-        $payment = PaymentMethod::all();
+        // $payment = PaymentMethod::all();
         $paymentMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 3)
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->get();
+        $discount = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 4)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->get();
         // dd($paymentMethod);
-        return view('sales.create', compact('invoiceNumber', 'sales', 'customer', 'product', 'payment', 
-            'paymentMethod'));
+        return view('sales.create', compact(
+            'invoiceNumber',
+            'sales',
+            'customer',
+            'product',
+            'payment',
+            'paymentMethod',
+            'discount'
+        ));
     }
 
     public function generateInvoiceNumber()
@@ -98,61 +124,6 @@ class SalesOrderController extends Controller
         return 'S' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 
-    public function addProduct(Request $request)
-    {
-        $product = Product::find($request->get('product_id'));
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
-        }
-
-        $amount = $product->price * $request->get('quantity');
-        return response()->json([
-            'product_name' => $product->name,
-            'product_price' => $product->price,
-            'product_qty' => $request->product_qty,
-            'product_amount' => $amount,
-        ]);
-    }
-
-    public function updateShipping(Request $request)
-    {
-        $shippingCost = $request->get('shipping_cost');
-        if ($shippingCost <= 0) {
-            return response()->json(['error' => 'Invalid shipping cost value'], 400);
-        }
-        return response()->json(['shipping_cost' => $shippingCost]);
-    }
-
-    public function updateDiscount(Request $request)
-    {
-        $discount = $request->get('discount');
-        if ($discount < 0) {
-            return response()->json(['error' => 'Invalid discount value'], 400);
-        }
-        return response()->json(['discount' => $discount]);
-    }
-
-    public function calculateTotal(Request $request)
-    {
-        $totalAmount = floatval(value: $request->get('totalAmount'));
-        $shippingCost = floatval($request->get('shipping_cost'));
-        $discount = floatval($request->get('discount'));
-        Log::info('Debug -> Server Data diterima:', [
-            'totalAmount' => $totalAmount,
-            'shippingCost' => $shippingCost,
-            'discount' => $discount,
-        ]);
-
-        $subtotal = $totalAmount + $shippingCost - $discount;
-        $taxes = $subtotal * 0.1;
-        $total = $subtotal + $taxes;
-
-        return response()->json([
-            'subtotal' => $subtotal,
-            'taxes' => $taxes,
-            'total' => $total
-        ]);
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -166,7 +137,7 @@ class SalesOrderController extends Controller
         $sales->date = $request->get(key: 'date');
         $sales->total_price = $request->get('total_price');
         $sales->customer_id = $request->get('id_customer');
-        $sales->payment_method_id = $request->get('payment_method_id');
+        $sales->payment_method = $request->get('payment_method');
         $sales->shipping_cost = $request->get('hShippingCost') ?? 0;
         $sales->discount = $request->get('hDiscount') ?? 0;
         $sales->employee_id = $request->get('employee_id') ?? 1;

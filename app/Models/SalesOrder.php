@@ -23,11 +23,12 @@ class SalesOrder extends Model
 
     public function paymentMethod()
     {
-        return $this->belongsTo(PaymentMethod::class, 'payment_method_id', 'id_payment_method');
+        return $this->belongsTo(PaymentMethod::class, 'payment_method', 'id_detail_configuration');
     }
 
     public function salesDetails()
     {
         return $this->hasMany(SalesDetail::class, 'sales_id');
     }
+    
 }

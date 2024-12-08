@@ -3,15 +3,15 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <h6>Daftar Gudang</h6>
-    <a class="btn btn-primary mb-2" href="{{ route('warehouse.create') }}">+ Tambah Gudang</a>
+    <h4 class="font-weight-bold">List Warehouse</h4>
+    <a class="btn btn-primary mb-2" href="{{ route('warehouse.create') }}">+ Add Warehouse</a>
     <table class="table table-hover">
         <thead>
             <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Nama Gudang</th>
-                <th scope="col">Alamat</th>
-                <th>Aksi</th>
+                <th>ID</th>
+                <th>Warehouse Name</th>
+                <th>Address</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -35,7 +35,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="text-center">Data gudang belum tersedia.</td>
+                    <td colspan="3" class="text-center">Data not available.</td>
                 </tr>
             @endforelse
         </tbody>

@@ -3,16 +3,16 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <h6>Daftar Pemasok</h6>
-    <a class="btn btn-primary mb-2" href="{{ route('supplier.create') }}">+ Tambah Pemasok</a>
+    <h4 class="font-weight-bold">List Supplier</h4>
+    <a class="btn btn-primary mb-2" href="{{ route('supplier.create') }}">+ Add Supplier</a>
     <table class="table table-hover">
         <thead>
             <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Nama</th>
-                <th scope="col">Nomor Telepon</th>
-                <th scope="col">Alamat</th>
-                <th scope="col">Aksi</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone Number</th>
+                <th>Address</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -32,7 +32,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center">Data pemasok belum tersedia.</td>
+                    <td colspan="4" class="text-center">Data not available.</td>
                 </tr>
             @endforelse
         </tbody>

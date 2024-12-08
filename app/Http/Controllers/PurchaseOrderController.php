@@ -31,6 +31,38 @@ class PurchaseOrderController extends Controller
         return view('purchase.configuration', ['configuration' => $configuration]);
     }
 
+    public function save(Request $request)
+    {
+        $configurations = $request->input('configurations', []);
+
+        // Ambil semua konfigurasi terkait menu_id = 2
+        $allConfigurations = DB::table('detail_configurations')
+            ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
+            ->where('configurations.menu_id', 2)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id')
+            ->get();
+
+        // Loop untuk memproses setiap konfigurasi yang dikirim
+        foreach ($allConfigurations as $config) {
+            $isActive = 0; // Default: tidak aktif
+
+            // Jika konfigurasi ini dipilih oleh user, aktifkan
+            if (
+                isset($configurations[$config->configuration_id]) &&
+                in_array($config->id_detail_configuration, $configurations[$config->configuration_id])
+            ) {
+                $isActive = 1;
+            }
+
+            // Update status aktif untuk detail konfigurasi ini
+            DB::table('detail_configurations')
+                ->where('id_detail_configuration', $config->id_detail_configuration)
+                ->update(['status_active' => DB::raw($isActive)]);
+        }
+
+        return redirect()->route('purchase.configuration')->with('status', 'Configurations updated successfully!');
+    }
+
     /**
      * Show the form for creating a new resource.
      */

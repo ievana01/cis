@@ -104,8 +104,8 @@
                 <div class="modal-content">
                     <div class="modal-body" id="modalContent">
                         <div class="form-group">
-                            <label for="payment_method_id">Payment Method</label>
-                            <select class="form-control" id="payment_method_id" name="payment_method_id">
+                            <label for="payment_method">Payment Method</label>
+                            <select class="form-control" id="payment_method" name="payment_method">
                                 <option value="">Choose Payment Method</option>
                                 {{-- @foreach ($payment as $p)
                                     <option value="{{ $p->id_payment_method }}">{{ $p->name }}</option>
@@ -147,7 +147,14 @@
                 <div class="modal-content">
                     <div class="modal-body" id="modalContent">
                         <div class="form-group">
-                            <label for="discount">Discount</label>
+                            <label for="discount">Discount Type:</label>
+                            @foreach ($discount as $dsc)
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio1" name="optradio"
+                                        value="{{ $dsc->id_detail_configuration }}" checked>{{ $dsc->name }}
+                                    <label class="form-check-label" for="radio1"></label>
+                                </div>
+                            @endforeach
                             <input type="number" class="form-control" id="discount" name="discount"
                                 aria-describedby="discount" placeholder="Insert discount">
                         </div>

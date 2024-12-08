@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Configuration;
+use App\Models\DetailConfiguration;
 use Illuminate\Http\Request;
 
-class ConfigurationController extends Controller
+class DetailConfigurationController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $configuration = Configuration::all();
+        $detailCon = DetailConfiguration::all();
     }
 
     /**
@@ -34,7 +34,7 @@ class ConfigurationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Configuration $configuration)
+    public function show(string $id)
     {
         //
     }
@@ -42,7 +42,7 @@ class ConfigurationController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Configuration $configuration)
+    public function edit(string $id)
     {
         //
     }
@@ -50,7 +50,7 @@ class ConfigurationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Configuration $configuration)
+    public function update(Request $request, string $id)
     {
         //
     }
@@ -58,7 +58,7 @@ class ConfigurationController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Configuration $configuration)
+    public function destroy(string $id)
     {
         //
     }

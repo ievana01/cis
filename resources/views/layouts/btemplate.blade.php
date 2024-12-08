@@ -66,7 +66,6 @@
                         <div class="collapse-divider"></div>
                         <h6 class="collapse-header">Configuration</h6>
                         <a class="collapse-item" href="sales-configuration">Sales Configuration</a>
-                        <a class="collapse-item" href="cards.html">Shipping Method</a>
                     </div>
                 </div>
             </li>
@@ -82,6 +81,8 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('purchase.index') }}">Purchase Orders</a>
+                        <div class="collapse-divider"></div>
+                        <h6 class="collapse-header">Configuration</h6>
                         <a class="collapse-item" href="purchase-configuration">Purchase Configuration</a>
                     </div>
                 </div>
