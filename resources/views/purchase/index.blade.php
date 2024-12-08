@@ -7,11 +7,11 @@
     <table class="table table-hover">
         <thead>
             <tr>
-                <th scope="col">Purchase Invoice</th>
-                <th scope="col">Purchase Date</th>
-                <th scope="col">Supplier</th>
-                <th scope="col">Total</th>
-                {{-- <th>Status</th> --}}
+                <th>Purchase Invoice</th>
+                <th>Purchase Date</th>
+                <th>Supplier</th>
+                <th>Total</th>
+                <th>Payment Method</th>
             </tr>
         </thead>
         <tbody>
@@ -19,12 +19,13 @@
                 <tr>
                     <td>{{ $data->purchase_invoice }}</td>
                     <td>{{ $data->date }}</td>
-                    <td>{{ $data->supplier->name}}</td>
+                    <td>{{ $data->supplier_name }}</td>
                     <td>{{ $data->total_purchase }}</td>
+                    <td>{{ $data->payment_method_name }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center">Data not available.</td>
+                    <td colspan="5" class="text-center">Data not available.</td>
                 </tr>
             @endforelse
         </tbody>

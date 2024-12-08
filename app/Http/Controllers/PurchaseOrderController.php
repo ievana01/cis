@@ -17,7 +17,18 @@ class PurchaseOrderController extends Controller
      */
     public function index()
     {
-        $purchase = PurchaseOrder::all();
+        // $purchase = PurchaseOrder::all();
+        $purchase = DB::table('purchase_orders')
+            ->join('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id_supplier')
+            ->join('detail_configurations', 'purchase_orders.payment_method', '=', 'detail_configurations.id_detail_configuration')
+            ->select(
+                'purchase_orders.purchase_invoice',
+                'purchase_orders.date',
+                'purchase_orders.total_purchase',
+                'suppliers.name as supplier_name',
+                'detail_configurations.name as payment_method_name'
+            )
+            ->get();
         return view('purchase.index', ["purchase" => $purchase]);
     }
 
@@ -34,6 +45,7 @@ class PurchaseOrderController extends Controller
     public function save(Request $request)
     {
         $configurations = $request->input('configurations', []);
+        // dd($configurations);
 
         // Ambil semua konfigurasi terkait menu_id = 2
         $allConfigurations = DB::table('detail_configurations')
@@ -49,7 +61,7 @@ class PurchaseOrderController extends Controller
             // Jika konfigurasi ini dipilih oleh user, aktifkan
             if (
                 isset($configurations[$config->configuration_id]) &&
-                in_array($config->id_detail_configuration, $configurations[$config->configuration_id])
+                $configurations[$config->configuration_id] == $config->id_detail_configuration
             ) {
                 $isActive = 1;
             }
@@ -71,9 +83,14 @@ class PurchaseOrderController extends Controller
         $invoiceNumber = $this->generateInvoiceNumber();
         $supplier = Supplier::all();
         $product = Product::all();
-        $payment = PaymentMethod::all();
+        $paymentMethod = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 3)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->get();
         $warehouse = Warehouse::all();
-        return view('purchase.create', compact('invoiceNumber', 'supplier', 'product', 'payment', 'warehouse'));
+        return view('purchase.create', compact('invoiceNumber', 'supplier', 'product', 'paymentMethod', 'warehouse'));
     }
     public function generateInvoiceNumber()
     {
@@ -87,49 +104,23 @@ class PurchaseOrderController extends Controller
         return 'P' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 
-    public function addProduct(Request $request)
-    {
-        $product = Product::find($request->get('product_id'));
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
-        }
-
-        $amount = $product->price * $request->get('quantity');
-        return response()->json([
-            'product_id' => $product->id,
-            'name' => $product->name,
-            'price' => $product->price,
-            'quantity' => $request->quantity,
-            'amount' => $amount,
-        ]);
-    }
-    public function calculateTotal(Request $request)
-    {
-        $totalAmount = array_sum(array_column($request->products, 'amount'));
-        $shippingCost = $request->shipping_cost;
-        $discount = $request->discount;
-        $taxes = $totalAmount * 0.1;
-
-        $total = $totalAmount + $shippingCost - $discount + $taxes;
-
-        return response()->json([
-            'total_amount' => $totalAmount,
-            'taxes' => $taxes,
-            'total' => $total,
-        ]);
-    }
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
+        $cogsChoose = DB::table('detail_configurations')
+            ->where('status_active', 1)
+            ->where('configuration_id', 1)
+            ->first();
+        $cogsMethod = $cogsChoose->name;
+
         $purchase = new PurchaseOrder();
         $invoiceNumber = $this->generateInvoiceNumber();
         $purchase->purchase_invoice = $invoiceNumber;
         $purchase->date = $request->get(key: 'date');
         $purchase->total_purchase = $request->get('total_price');
-        $purchase->payment_method_id = $request->get('payment_method_id') ?? 1;
+        $purchase->payment_method = $request->get('payment_method') ?? 5;
         $purchase->supplier_id = $request->get('id_supplier');
         $purchase->employee_id = $request->get('employee_id') ?? 1;
         $purchase->save();
@@ -144,8 +135,56 @@ class PurchaseOrderController extends Controller
                     'total_price' => $product['amount'],
                 ]
             );
+
+            DB::table('product_moving')->insert([
+                'move_stock' => $product['quantity'],
+                'product_id' => $product['id'],
+                'warehouse_id_in' => $request->get('id_warehouse'),
+                'purchase_id' => $purchase->id_purchase,
+            ]);
+
+            if ($cogsMethod == 'Average') {
+                $productData = DB::table('products')->where('id_product', $product['id'])->first();
+                $oldStock = $productData->total_stock; //data stok lama
+                $oldPrice = $productData->price; //data harga jual lama
+                $oldCost = $productData->cost; //data harga beli lama
+
+                // Hitung harga rata-rata baru
+                $newStock = $product['quantity'];
+                $newPrice = $product['totalAmount'] / $newStock; //data harga beli per unit baru 
+
+                $totalCost = ($oldStock * $oldPrice) + ($newStock * $newPrice); //Total biaya produk lama + biaya produk baru
+
+                $newAveragePrice = $totalCost / ($oldStock + $newStock); //Harga rata-rata baru berdasarkan stok total
+
+                DB::table('products')
+                    ->where('id_product', $product['id'])
+                    ->update([
+                        'price' => $newAveragePrice,
+                        'cost' => $newAveragePrice,
+                        'total_stock' => $oldStock + $newStock,
+                    ]);
+                
+            } else if ($cogsMethod == 'FIFO') {
+                $price = $product['amount'] / $product['quantity']; // Harga per unit
+                DB::table('product_fifo')->insert([
+                    'product_id' => $product['id'],
+                    'stock' => $product['quantity'],
+                    'purchase_date' => $request->get('date'),
+                    'price' => $price,
+                ]);
+
+                // Update total stok di tabel products
+                DB::table('products')
+                    ->where('id_product', $product['id'])
+                    ->increment('total_stock', $product['quantity']);
+            }
+
+            DB::table('product_has_warehouses')
+                ->where('product_id', $product['id'])
+                ->increment('stock', $product['quantity']);
         }
-        return redirect()->route('purchase.index')->with('status', 'Data Berhasil Disimpan');
+        return redirect()->route('purchase.index')->with('status', 'Data successfully added');
     }
 
     /**

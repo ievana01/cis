@@ -100,11 +100,6 @@
                         <h6 class="collapse-header">Product Management</h6>
                         <a class="collapse-item" href={{ route('product.index') }}>Product</a>
                         <a class="collapse-item" href={{ route('category.index') }}>Category Product</a>
-
-                        {{-- @if ($hasSubCategories)
-                            <a class="collapse-item" href="subcategories.html">Sub Kategori Produk</a>
-                        @endif
-             --}}
                         <a class="collapse-item" href="{{ route('warehouse.index') }}">Warehouse</a>
                         <div class="collapse-divider"></div>
                         <h6 class="collapse-header">Configuration</h6>
@@ -124,6 +119,8 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('customer.index') }}">Data Customer</a>
                         <a class="collapse-item" href="{{ route('supplier.index') }}">Data Supplier</a>
+                        <a class="collapse-item" href="sales-data">Product Sales Report</a>
+                        <a class="collapse-item" href="">Product Purchase Report</a>
                     </div>
                 </div>
             </li>

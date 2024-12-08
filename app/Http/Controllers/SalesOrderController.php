@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ProductMoving;
 use App\Models\SalesDetail;
 use App\Models\SalesOrder;
 use DB;
@@ -18,9 +19,6 @@ class SalesOrderController extends Controller
      */
     public function index()
     {
-        // $sales = SalesOrder::all();
-       
-
         $sales = DB::table('sales_orders')
             ->join('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
             ->join('detail_configurations', 'sales_orders.payment_method', '=', 'detail_configurations.id_detail_configuration')
@@ -47,7 +45,7 @@ class SalesOrderController extends Controller
 
     public function save(Request $request)
     {
-        $configurations = $request->input('configurations', []);
+        $configurations = $request->input('configurations', []); // Ambil input konfigurasi yang dikirim dari form
 
         // Ambil semua konfigurasi terkait menu_id = 1
         $allConfigurations = DB::table('detail_configurations')
@@ -60,23 +58,28 @@ class SalesOrderController extends Controller
         foreach ($allConfigurations as $config) {
             $isActive = 0; // Default: tidak aktif
 
-            // Jika konfigurasi ini dipilih oleh user, aktifkan
-            if (
-                isset($configurations[$config->configuration_id]) &&
-                in_array($config->id_detail_configuration, $configurations[$config->configuration_id])
-            ) {
+            // Cek apakah konfigurasi ini dipilih oleh user (checkbox)
+            if (isset($configurations[$config->configuration_id]) && is_array($configurations[$config->configuration_id])) {
+                // Jika checkbox dipilih, maka periksa apakah id_detail_configuration ada di dalam array
+                if (in_array($config->id_detail_configuration, $configurations[$config->configuration_id])) {
+                    $isActive = 1;
+                }
+            }
+            // Cek apakah ini adalah radio button (hanya satu nilai yang dipilih)
+            else if (isset($configurations[$config->configuration_id]) && $configurations[$config->configuration_id] == $config->id_detail_configuration) {
+                // Jika id_detail_configuration cocok dengan nilai yang dipilih dari radio button
                 $isActive = 1;
             }
 
             // Update status aktif untuk detail konfigurasi ini
             DB::table('detail_configurations')
                 ->where('id_detail_configuration', $config->id_detail_configuration)
-                ->update(['status_active' => DB::raw($isActive)]);
+                ->update(['status_active' => $isActive]);
         }
 
+        // Redirect kembali ke halaman konfigurasi dengan pesan sukses
         return redirect()->route('sales.configuration')->with('status', 'Configurations updated successfully!');
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -87,27 +90,37 @@ class SalesOrderController extends Controller
         $sales = SalesOrder::all();
         $customer = Customer::all();
         $product = Product::all();
-        // $payment = PaymentMethod::all();
         $paymentMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 3)
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->get();
+        $tax = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 2)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.name')
+            ->first(); // Menggunakan first() karena hanya ada satu nilai yang diambil
+
+        if ($tax) {
+            // Menghilangkan tanda '%' dan mengonversi nilai menjadi desimal
+            $taxRate = floatval(str_replace('%', '', $tax->name)) / 100; // Menghasilkan 0.11 untuk 11%
+        }
         $discount = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 4)
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->get();
-        // dd($paymentMethod);
+        // dd($discount);
         return view('sales.create', compact(
             'invoiceNumber',
             'sales',
             'customer',
             'product',
-            'payment',
             'paymentMethod',
+            'taxRate',
             'discount'
         ));
     }
@@ -124,15 +137,32 @@ class SalesOrderController extends Controller
         return 'S' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 
-
+    public function showData()
+    {
+        $data = DB::table('product_moving')
+            ->join('products', 'product_moving.product_id', '=', 'products.id_product')
+            ->join('sales_orders', 'product_moving.sales_id', '=', 'sales_orders.id_sales')
+            ->select(
+                'sales_orders.sales_invoice as sales_invoice',
+                'products.name as product_name',
+                'product_moving.move_stock as stock'
+            )
+            ->get();
+        return view('sales.datasales', ['data' => $data]);
+    }
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
+        $cogsChoose = DB::table('detail_configurations')
+            ->where('status_active', 1)
+            ->where('configuration_id', 1)
+            ->first();
+        $cogsMethod = $cogsChoose->name;
+
         $sales = new SalesOrder();
         $invoiceNumber = $this->generateInvoiceNumber();
-
         $sales->sales_invoice = $invoiceNumber;
         $sales->date = $request->get(key: 'date');
         $sales->total_price = $request->get('total_price');
@@ -153,16 +183,87 @@ class SalesOrderController extends Controller
                     'total_price' => $product['amount'],
                 ]
             );
-            $productModel = Product::find($product['id']); // Cari produk berdasarkan ID
-            if ($productModel) {
-                if ($productModel->total_stock < $product['quantity']) {
-                    // Jika stok tidak mencukupi, lemparkan error
-                    return redirect()->back()->with('error', "Stok produk {$productModel->name} tidak mencukupi!");
+            //ambil warehouse product di product_has_warehouse
+            $warehouse = DB::table('product_has_warehouses')
+                ->where('product_id', $product['id'])
+                ->first();
+
+            //catat di product_moving
+            // DB::table('product_moving')->insert([
+            //     'move_stock' => $product['quantity'],
+            //     'product_id' => $product['id'],
+            //     'warehouse_id_in' => $warehouse->warehouse_id,
+            //     'sales_id' => $sales->id_sales,
+            // ]);
+
+            // Kurangi stok produk di tabel products
+            $currentStock = DB::table('products')
+                ->where('id_product', $product['id'])
+                ->value('total_stock'); // Ambil stok saat ini
+
+            if ($currentStock < $product['quantity']) {
+                throw new \Exception("Stok produk ID {$product['id']} tidak mencukupi. Stok tersedia: $currentStock.");
+            }
+
+            // DB::table('products')
+            //     ->where('id_product', $product['id'])
+            //     ->decrement('total_stock', $product['quantity']);
+
+            if ($cogsMethod == 'FIFO') {
+                $quantity = $product['quantity'];
+                $stocks = DB::table('product_fifo')
+                    ->where('product_id', $product['id'])
+                    ->orderBy('purchase_date', 'asc') // Urutkan berdasarkan tanggal pembelian
+                    ->get();
+
+                foreach ($stocks as $stock) {
+                    if ($quantity <= 0) {
+                        break; // Jika tidak ada stok yang tersisa untuk dikurangi, hentikan loop
+                    }
+
+                    // Jumlah yang dapat dikurangi dari stok ini
+                    $toDecrement = min($quantity, $stock->stock);
+
+                    // Jika stok habis atau ada stok yang cukup untuk dikurangi
+                    if ($toDecrement > 0) {
+                        // Mengurangi stok di product_fifo
+                        DB::table('product_fifo')
+                            ->where('product_id', $stock->product_id)
+                            ->where('id_product_fifo', $stock->id_product_fifo) // Pastikan hanya mengupdate stok yang tepat
+                            ->decrement('stock', $toDecrement);
+
+                        DB::table('products')
+                            ->where('id_product', $product['id'])
+                            ->decrement('total_stock', $toDecrement);
+
+                        // Simpan pergerakan stok di product_moving
+                        DB::table('product_moving')->insert([
+                            'product_id' => $product['id'],
+                            'move_stock' => $toDecrement,
+                            'warehouse_id_in' => $warehouse->warehouse_id,
+                            'sales_id' => $sales->id_sales
+                        ]);
+
+                        // Kurangi jumlah yang akan diproses
+                        $quantity -= $toDecrement;
+
+                        // Update stok di product_has_warehouses jika perlu
+                        DB::table('product_has_warehouses')
+                            ->where('product_id', $product['id'])
+                            ->decrement('stock', $toDecrement);
+                    }
                 }
 
-                $productModel->total_stock -= $product['quantity']; // Kurangi stok
-                $productModel->save(); // Simpan perubahan
+                // Cek jika stok yang dijual melebihi stok yang tersedia (jika stok dalam FIFO habis)
+                if ($quantity > 0) {
+                    throw new \Exception("Stok produk ID {$product['id']} tidak mencukupi setelah melakukan transaksi.");
+                }
             }
+
+
+            // DB::table('product_has_warehouses')
+            //     ->where('product_id', $product['id'])
+            //     ->decrement('stock', $product['quantity']);
         }
 
         return redirect()->route('sales.index')->with('status', 'Data Berhasil Disimpan');

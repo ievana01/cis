@@ -57,3 +57,7 @@ Route::get('inventory-configuration', [ProductController::class, 'showConfigurat
 Route::post('/sales-configuration/save', [SalesOrderController::class, 'save'])->name('sales.configuration.save');
 Route::post('/purchase-configuration/save', [PurchaseOrderController::class, 'save'])->name('purchase.configuration.save');
 Route::post('/inventory-configuration/save', [ProductController::class, 'save'])->name('inventory.configuration.save');
+
+
+Route::get('/sales-data', [SalesOrderController::class, 'showData'])->name('sales.data');
+

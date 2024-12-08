@@ -25,6 +25,11 @@
                     <th><label for="date">Order Date</label></th>
                     <th><input type="date" class="form-control" name="date"></th>
                 </tr>
+                <tr>
+                    <th><label for="tax">Tax Rate</label></th>
+                    <th><input type="text" class="form-control" name="tax" id="tax"
+                            value="{{ $taxRate * 100 }}%" disabled></th>
+                </tr>
             </tbody>
         </table>
 
@@ -37,6 +42,7 @@
                     <th>Product Name</th>
                     <th>Price</th>
                     <th>Quantity</th>
+                    <th>Total Stock</th>
                     <th>Option</th>
                 </tr>
             </thead>
@@ -46,7 +52,8 @@
                         <select class="form-control" id="productName" onchange="updatePrice()">
                             <option value="">Select a product</option>
                             @foreach ($product as $p)
-                                <option value="{{ $p->id_product }}" data-price="{{ $p->price }}">
+                                <option value="{{ $p->id_product }}" data-price="{{ $p->price }}"
+                                    data-stock="{{ $p->total_stock }}">
                                     {{ $p->name }}
                                 </option>
                             @endforeach
@@ -57,6 +64,9 @@
                     </td>
                     <td>
                         <input type="number" id="productQty" class="form-control" min="1" value="1">
+                    </td>
+                    <td>
+                        <input type="number" id="total_stock" class="form-control" disabled>
                     </td>
                     <td>
                         <button type="button" class="btn btn-primary" onclick="addProduct()">Add</button>
@@ -82,7 +92,9 @@
         <div style="text-align: right;" class="mb-4 mt-2">
             <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">Add Shipping
                 Cost</a>
-            <a href="#modalDiscount" class="btn btn-success" data-toggle="modal">Add Discount</a>
+            @if ($discount->isNotEmpty())
+                <a href="#modalDiscount" class="btn btn-success" data-toggle="modal" >Add Discount</a>
+            @endif
         </div>
 
         <input type="hidden" name="total_price" id="total_price_input" value="0">
@@ -107,9 +119,7 @@
                             <label for="payment_method">Payment Method</label>
                             <select class="form-control" id="payment_method" name="payment_method">
                                 <option value="">Choose Payment Method</option>
-                                {{-- @foreach ($payment as $p)
-                                    <option value="{{ $p->id_payment_method }}">{{ $p->name }}</option>
-                                @endforeach --}}
+
                                 @foreach ($paymentMethod as $pay)
                                     <option value="{{ $pay->id_detail_configuration }}">{{ $pay->name }}</option>
                                 @endforeach
@@ -150,9 +160,11 @@
                             <label for="discount">Discount Type:</label>
                             @foreach ($discount as $dsc)
                                 <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="radio1" name="optradio"
-                                        value="{{ $dsc->id_detail_configuration }}" checked>{{ $dsc->name }}
-                                    <label class="form-check-label" for="radio1"></label>
+                                    <input type="radio" class="form-check-input"
+                                        id="radio{{ $dsc->id_detail_configuration }}" name="optradio"
+                                        value="{{ $dsc->id_detail_configuration }}" data-name="{{ $dsc->name }}">
+                                    <label class="form-check-label"
+                                        for="radio{{ $dsc->id_detail_configuration }}">{{ $dsc->name }}</label>
                                 </div>
                             @endforeach
                             <input type="number" class="form-control" id="discount" name="discount"
@@ -172,30 +184,19 @@
 @section('javascript')
     <script>
         let totalAmount = 0;
-        const taxRate = 0.1; // 10% tax
+        // const taxRate = 0.1; // 10% tax  
 
         function getShippingCostFromTable() {
-            // Ambil tabel produk
             const table = document.getElementById("productsTable");
-
-            // Ambil semua baris dalam tabel
             const rows = table.querySelectorAll("tr");
-
-            // Iterasi setiap baris
             for (let row of rows) {
-                // Ambil nama produk (kolom pertama)
                 const productName = row.cells[0]?.textContent.trim();
-
-                // Periksa apakah nama produk adalah "Shipping Cost"
                 if (productName === "Shipping Cost") {
-                    // Ambil nilai dari kolom Amount (kolom ke-4, indeks 3)
                     const shippingCost = parseFloat(row.cells[3]?.textContent.trim()) || 0;
-
                     console.log("Shipping Cost Found:", shippingCost); // Debugging
                     return shippingCost; // Kembalikan nilai Shipping Cost
                 }
             }
-
             // Jika tidak ditemukan Shipping Cost
             console.log("Shipping Cost Not Found.");
             return 0;
@@ -216,28 +217,32 @@
             const productSelect = document.getElementById("productName");
             const selectedOption = productSelect.options[productSelect.selectedIndex];
             const price = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+            const productStock = selectedOption.getAttribute("data-stock") || 0;
 
             console.log("Debug -> Selected Price:", price); // Debug log
 
             // Set price to input field
             document.getElementById("productPrice").value = price.toFixed(2);
+            document.getElementById("total_stock").value = productStock;
         }
 
         function updateTotals() {
+            const taxInput = document.getElementById('tax');
+            // Ambil value dan hilangkan simbol '%', kemudian konversikan ke desimal
+            const taxRate = parseFloat(taxInput.value.replace('%', '')) / 100;
+            // Sekarang taxRate akan bernilai 0.11 (untuk 11%)
+            console.log('tax', taxRate); // Output: 0.11
+
             // const shipcost = parseFloat(document.getElementById('shipping_cost').value) || 0;
             const shipcost = getShippingCostFromTable();
-            console.log(shipcost);
-            // document.getElementById('shipping_cost').value shipcost.toFixed(2);
+            console.log('shipcost', shipcost);
 
             const totalWithShip = totalAmount + shipcost;
             document.getElementById('totalAmount').textContent = `Rp ${totalWithShip.toFixed(2)}`;
 
-            // Calculate taxes (10% of totalAmount)
             const taxes = totalWithShip * taxRate;
             document.getElementById('taxes').textContent = `Rp ${taxes.toFixed(2)}`;
 
-
-            // Calculate total (totalAmount + taxes)
             const total = totalWithShip + taxes;
             document.getElementById('total_price').textContent = `Rp ${total.toFixed(2)}`;
             document.getElementById('total_price_input').value = total.toFixed(2);
@@ -250,6 +255,7 @@
             const productName = selectedOption.text;
             const productPrice = parseFloat(document.getElementById("productPrice").value) || 0;
             const productQty = parseInt(document.getElementById("productQty").value) || 1;
+            const totalStock = parseInt(document.getElementById("total_stock").value) || 0;
             const productAmount = updateAmount();
 
             console.log("Debug -> Adding Product:", {
@@ -261,6 +267,12 @@
 
             if (!productName || productPrice <= 0 || productQty <= 0) {
                 alert("Please select a product and provide valid values!");
+                return;
+            }
+            if (productQty > totalStock) {
+                alert(
+                    "Quantity exceeds the total stock, please set the maximum quantity according to the total stock quantity!"
+                );
                 return;
             }
 
@@ -302,6 +314,7 @@
             productSelect.value = "";
             document.getElementById("productPrice").value = "";
             document.getElementById("productQty").value = "1";
+            document.getElementById("total_stock").value = "";
         }
 
         function submitShippingForm() {
@@ -339,22 +352,44 @@
             updateTotals();
         }
 
+        function getSelectedDiscountName() {
+            const radios = document.getElementsByName('optradio');
+            for (let radio of radios) {
+                if (radio.checked) {
+                    return radio.getAttribute('data-name'); // Get the name from the data-name attribute
+                }
+            }
+            return ''; // Default if no discount is selected
+        }
+
         function submitDiscount() {
             const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const discountName = getSelectedDiscountName();
+            console.log('diskonname', discountName);
+
             document.getElementById('hDiscount').value = discount;
             if (discount < 0) {
                 alert("Please enter a valid discount.");
                 return;
             }
 
+            let finalDiscount = discount;
+
+            if (discountName == 'Discount Percentage') {
+                finalDiscount = totalAmount * (discount / 100);
+                console.log('final diskon', finalDiscount);
+            } else if (discountName == 'Seasonal Discount' || discountName == 'Discount Order') {
+                finalDiscount = discount
+            }
+
             const tableBody = document.getElementById('productsTable');
             const row = document.createElement('tr');
 
             row.innerHTML = `
-            <td>Discount</td>
+            <td>${discountName}</td>
             <td>-</td>
             <td>1</td>
-            <td>${parseFloat(discount).toFixed(2)}</td>
+            <td>${parseFloat(finalDiscount).toFixed(2)}</td>
             <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
                 <i class="fa-solid fa-trash-can"></i></button></td>
             `;
@@ -362,7 +397,7 @@
             tableBody.appendChild(row);
             $('#modalDiscount').modal('hide');
             document.getElementById('discount').value = '';
-            totalAmount -= parseFloat(discount);
+            totalAmount -= parseFloat(finalDiscount);
             updateTotals();
         }
 

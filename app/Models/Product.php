@@ -27,4 +27,7 @@ class Product extends Model
     {
         return $this->hasMany(ImageProduct::class, 'product_id'); // 'product_id' adalah kolom yang menghubungkan dengan produk
     }
+    public function productMoving(){
+        return $this->hasMany(ProductMoving::class, 'product_id');
+    }
 }

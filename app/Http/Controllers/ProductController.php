@@ -54,6 +54,7 @@ class ProductController extends Controller
             ) {
                 $isActive = 1;
             }
+            
 
             // Update status aktif untuk detail konfigurasi ini
             DB::table('detail_configurations')
