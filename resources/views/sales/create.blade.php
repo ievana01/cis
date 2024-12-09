@@ -1,6 +1,6 @@
 @extends('layouts.blank')
 @section('content')
-    <form method="POST" action="{{ route('sales.store') }}">
+    <form method="POST" action="{{ route('sales.store') }}" enctype="multipart/form-data">
         @csrf
         <h4 class="text-center">Sales Order</h4>
         <table class="table table-condensed">
@@ -118,8 +118,7 @@
                         <div class="form-group">
                             <label for="payment_method">Payment Method</label>
                             <select class="form-control" id="payment_method" name="payment_method">
-                                <option value="">Choose Payment Method</option>
-
+                            <option value="">Choose Payment Method</option
                                 @foreach ($paymentMethod as $pay)
                                     <option value="{{ $pay->id_detail_configuration }}">{{ $pay->name }}</option>
                                 @endforeach

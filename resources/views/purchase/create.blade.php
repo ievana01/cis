@@ -23,7 +23,14 @@
                 </tr>
                 <tr>
                     <th><label for="date">Order Date</label></th>
-                    <th><input type="date" class="form-control" name="date"></th>
+                    <th><input type="date" class="form-control" name="date" value="<?= date('Y-m-d') ?>" readonly>
+                    </th>
+                </tr>
+                <tr>
+                    @if ($receiveProdMethod->id_detail_configuration == 13)
+                        <th><label for="expected_arrival">Expexted Arrival</label></th>
+                        <th><input type="date" name="expected_arrival" id="expected_arrival" class="form-control"></th>
+                    @endif
                 </tr>
                 <tr>
                     <th><label for="warehouse">Location Stock</label></th>
@@ -61,9 +68,15 @@
                             @endforeach
                         </select>
                     </td>
-                    <td>
-                        <input type="number" id="productCost" class="form-control" readonly>
-                    </td>
+                    @if ($purchasePriceMethod->id_detail_configuration == 11)
+                        <td>
+                            <input type="number" id="productCost" class="form-control" readonly>
+                        </td>
+                    @elseif ($purchasePriceMethod->id_detail_configuration == 12)
+                        <td>
+                            <input type="number" id="productCost" class="form-control">
+                        </td>
+                    @endif
                     <td>
                         <input type="number" id="productQty" class="form-control" min="1" value="1">
                     </td>
@@ -129,7 +142,7 @@
             document.getElementById("totalAmount").innerText = `Rp ${totalAmount.toFixed(2)}`;
 
             // Hitung pajak (misalnya 10%)
-            const taxRate = 0.1;
+            const taxRate = 0;
             const taxes = totalAmount * taxRate;
             document.getElementById("taxes").innerText = `Rp ${taxes.toFixed(2)}`;
 
@@ -145,7 +158,7 @@
             var productName = selectedOption.text;
             var productCost = parseFloat($('#productCost').val()) || 0;
             var qty = parseInt($('#productQty').val()) || 1;
-            console.log(qty);
+            console.log('prodcos', productCost);
 
             var productAmount = updateAmount();
             console.log("Debug -> Adding Product:", {

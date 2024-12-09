@@ -120,7 +120,7 @@
                         <a class="collapse-item" href="{{ route('customer.index') }}">Data Customer</a>
                         <a class="collapse-item" href="{{ route('supplier.index') }}">Data Supplier</a>
                         <a class="collapse-item" href="sales-data">Product Sales Report</a>
-                        <a class="collapse-item" href="">Product Purchase Report</a>
+                        <a class="collapse-item" href="purchase-data">Product Purchase Report</a>
                     </div>
                 </div>
             </li>

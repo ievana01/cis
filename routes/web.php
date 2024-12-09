@@ -60,4 +60,11 @@ Route::post('/inventory-configuration/save', [ProductController::class, 'save'])
 
 
 Route::get('/sales-data', [SalesOrderController::class, 'showData'])->name('sales.data');
+Route::get('/purchase-data', [PurchaseOrderController::class, 'showData'])->name('purchase.data');
+
+Route::post('purchase/paymentForm', [PurchaseOrderController::class, 'paymentForm'])->name("purchase.paymentForm");
+Route::put('purchase/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase.update');
+
+
+
 

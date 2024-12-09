@@ -89,40 +89,57 @@ class SalesOrderController extends Controller
         $invoiceNumber = $this->generateInvoiceNumber();
         $sales = SalesOrder::all();
         $customer = Customer::all();
-        $product = Product::all();
+
+        $cogsChoose = DB::table('detail_configurations')
+            ->where('status_active', 1)
+            ->where('configuration_id', 1)
+            ->first();
+        $cogsMethod = $cogsChoose->name;
+        if ($cogsMethod == "FIFO") {
+            $product = DB::table('products as p')
+                ->join('product_fifo as pf', 'p.id_product', '=', 'pf.product_id')
+                ->select('p.id_product as id_product', 'p.name as name', 'pf.price as price', 'p.cost as cost', DB::raw('SUM(pf.stock) as total_stock'))
+                ->groupBy('p.id_product', 'p.name', 'p.total_stock', 'pf.price', 'p.cost')
+                ->get();
+        } else {
+            $product = Product::all();
+        }
+
         $paymentMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 3)
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->get();
+
+        $taxRate = 0;
         $tax = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 2)
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.name')
-            ->first(); // Menggunakan first() karena hanya ada satu nilai yang diambil
+            ->first();
 
         if ($tax) {
-            // Menghilangkan tanda '%' dan mengonversi nilai menjadi desimal
             $taxRate = floatval(str_replace('%', '', $tax->name)) / 100; // Menghasilkan 0.11 untuk 11%
         }
+
         $discount = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 4)
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->get();
-        // dd($discount);
-        return view('sales.create', compact(
-            'invoiceNumber',
-            'sales',
-            'customer',
-            'product',
-            'paymentMethod',
-            'taxRate',
-            'discount'
-        ));
+
+        return view('sales.create', [
+            "invoiceNumber" => $invoiceNumber,
+            "sales" => $sales,
+            "customer" => $customer,
+            "product" => $product,
+            "paymentMethod" => $paymentMethod,
+            "taxRate" => $taxRate,
+            "discount" => $discount
+        ]);
     }
 
     public function generateInvoiceNumber()
@@ -168,7 +185,7 @@ class SalesOrderController extends Controller
         $sales->total_price = $request->get('total_price');
         $sales->customer_id = $request->get('id_customer');
         $sales->payment_method = $request->get('payment_method');
-        $sales->shipping_cost = $request->get('hShippingCost') ?? 0;
+        $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
         $sales->discount = $request->get('hDiscount') ?? 0;
         $sales->employee_id = $request->get('employee_id') ?? 1;
         $sales->save();
@@ -188,27 +205,6 @@ class SalesOrderController extends Controller
                 ->where('product_id', $product['id'])
                 ->first();
 
-            //catat di product_moving
-            // DB::table('product_moving')->insert([
-            //     'move_stock' => $product['quantity'],
-            //     'product_id' => $product['id'],
-            //     'warehouse_id_in' => $warehouse->warehouse_id,
-            //     'sales_id' => $sales->id_sales,
-            // ]);
-
-            // Kurangi stok produk di tabel products
-            $currentStock = DB::table('products')
-                ->where('id_product', $product['id'])
-                ->value('total_stock'); // Ambil stok saat ini
-
-            if ($currentStock < $product['quantity']) {
-                throw new \Exception("Stok produk ID {$product['id']} tidak mencukupi. Stok tersedia: $currentStock.");
-            }
-
-            // DB::table('products')
-            //     ->where('id_product', $product['id'])
-            //     ->decrement('total_stock', $product['quantity']);
-
             if ($cogsMethod == 'FIFO') {
                 $quantity = $product['quantity'];
                 $stocks = DB::table('product_fifo')
@@ -221,7 +217,7 @@ class SalesOrderController extends Controller
                         break; // Jika tidak ada stok yang tersisa untuk dikurangi, hentikan loop
                     }
 
-                    // Jumlah yang dapat dikurangi dari stok ini
+                    // Tentukan stok yang bisa dikurangi dari stok ini
                     $toDecrement = min($quantity, $stock->stock);
 
                     // Jika stok habis atau ada stok yang cukup untuk dikurangi
@@ -244,26 +240,31 @@ class SalesOrderController extends Controller
                             'sales_id' => $sales->id_sales
                         ]);
 
-                        // Kurangi jumlah yang akan diproses
-                        $quantity -= $toDecrement;
-
                         // Update stok di product_has_warehouses jika perlu
                         DB::table('product_has_warehouses')
                             ->where('product_id', $product['id'])
                             ->decrement('stock', $toDecrement);
+
+                        // Kurangi jumlah yang akan diproses
+                        $quantity -= $toDecrement;
                     }
                 }
+            } else if ($cogsMethod == 'Average') {
+                DB::table('products')
+                    ->where('id_product', $product['id'])
+                    ->decrement('total_stock', $product['quantity']);
 
-                // Cek jika stok yang dijual melebihi stok yang tersedia (jika stok dalam FIFO habis)
-                if ($quantity > 0) {
-                    throw new \Exception("Stok produk ID {$product['id']} tidak mencukupi setelah melakukan transaksi.");
-                }
+                DB::table('product_moving')->insert([
+                    'product_id' => $product['id'],
+                    'move_stock' => $product['quantity'],
+                    'warehouse_id_in' => $warehouse->warehouse_id,
+                    'sales_id' => $sales->id_sales,
+                ]);
+
+                DB::table('product_has_warehouses')
+                    ->where('product_id', $product['id'])
+                    ->decrement('stock', $product['quantity']);
             }
-
-
-            // DB::table('product_has_warehouses')
-            //     ->where('product_id', $product['id'])
-            //     ->decrement('stock', $product['quantity']);
         }
 
         return redirect()->route('sales.index')->with('status', 'Data Berhasil Disimpan');

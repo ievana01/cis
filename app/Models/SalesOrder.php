@@ -30,5 +30,13 @@ class SalesOrder extends Model
     {
         return $this->hasMany(SalesDetail::class, 'sales_id');
     }
+
+    public function productMoving()
+    {
+        return $this->hasMany(ProductMoving::class, 'sales_id');
+    }
     
+    public function productHasWarehouse(){
+        return $this->hasMany(ProductHasWarehouse::class, 'product_id');
+    }
 }
