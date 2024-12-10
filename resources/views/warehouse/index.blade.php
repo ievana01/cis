@@ -4,7 +4,11 @@
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
     <h4 class="font-weight-bold">List Warehouse</h4>
-    <a class="btn btn-primary mb-2" href="{{ route('warehouse.create') }}">+ Add Warehouse</a>
+    @if ($multiWh)
+        <a class="btn btn-primary mb-2" href="{{ route('warehouse.create') }}">+ Add Warehouse</a>
+    @elseif($warehouse->isEmpty())
+        <a class="btn btn-primary mb-2" href="{{ route('warehouse.create') }}">+ Add Warehouse</a>
+    @endif
     <table class="table table-hover">
         <thead>
             <tr>
@@ -23,19 +27,21 @@
                     <td>
                         <a href="#modalEditA" class="btn btn-warning" data-toggle="modal"
                             onclick="getEditForm({{ $data->id_warehouse }})">Edit</a>
-                        <form method="POST" action="{{ route('warehouse.destroy', $data->id_warehouse) }}"
-                            style="display:inline-block;">
-                            @csrf
-                            @method('DELETE')
-                            <input type="submit" value="Delete" class="btn btn-danger"
-                                onclick="return confirm('Are you sure to delete {{ $data->id_warehouse }} - {{ $data->name }} ?');">
-                        </form>
+                        @if ($multiWh != null)
+                            <form method="POST" action="{{ route('warehouse.destroy', $data->id_warehouse) }}"
+                                style="display:inline-block;">
+                                @csrf
+                                @method('DELETE')
+                                <input type="submit" value="Delete" class="btn btn-danger"
+                                    onclick="return confirm('Are you sure to delete {{ $data->id_warehouse }} - {{ $data->name }} ?');">
+                            </form>
+                        @endif
                     </td>
 
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="text-center">Data not available.</td>
+                    <td colspan="4" class="text-center">Data not available.</td>
                 </tr>
             @endforelse
         </tbody>

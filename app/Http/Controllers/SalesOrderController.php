@@ -200,6 +200,7 @@ class SalesOrderController extends Controller
                     'total_price' => $product['amount'],
                 ]
             );
+            
             //ambil warehouse product di product_has_warehouse
             $warehouse = DB::table('product_has_warehouses')
                 ->where('product_id', $product['id'])

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Warehouse;
+use DB;
 use Illuminate\Http\Request;
 
 class WarehouseController extends Controller
@@ -13,7 +14,12 @@ class WarehouseController extends Controller
     public function index()
     {
         $warehouse = Warehouse::all();
-        return view('warehouse.index', ["warehouse" => $warehouse]);
+        $multiWh = DB::table('detail_configurations')
+            ->where('status_active', 1)
+            ->where('configuration_id', 9)
+            ->first();
+            // dd($multiWh);
+        return view('warehouse.index', ["warehouse" => $warehouse, "multiWh" => $multiWh]);
     }
 
     /**

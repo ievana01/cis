@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\ImageProduct;
 use App\Models\Product;
+use App\Models\ProductHasWarehouse;
 use App\Models\Supplier;
 use App\Models\Warehouse;
 use DB;
@@ -22,6 +23,16 @@ class ProductController extends Controller
         return view('product.index', ["product" => $product]);
     }
 
+    public function showReportStock()
+    {
+        $product = DB::table('products')
+            ->join('product_has_warehouses', 'products.id_product', '=', 'product_has_warehouses.product_id')
+            ->join('warehouses', 'product_has_warehouses.warehouse_id', '=', 'warehouses.id_warehouse')
+            ->select('products.*', 'warehouses.name as warehouse_name')
+            ->get();
+
+        return view('product.reportstock', ['product' => $product]);
+    }
     public function showConfiguration()
     {
         $configuration = DB::select('select * from configurations where menu_id = 3');
@@ -54,7 +65,7 @@ class ProductController extends Controller
             ) {
                 $isActive = 1;
             }
-            
+
 
             // Update status aktif untuk detail konfigurasi ini
             DB::table('detail_configurations')
@@ -112,12 +123,12 @@ class ProductController extends Controller
         $data->supplier_id = $request->get('supplier_id');
         $data->save();
 
-        if($cogsMethod == 'FIFO'){
+        if ($cogsMethod == 'FIFO') {
             DB::table('product_fifo')->insert([
-                'product_id'=>$data->id_product,
+                'product_id' => $data->id_product,
                 'purchase_date' => now()->toDateString(),
-                'price'=>$data->cost,
-                'stock'=>$data->total_stock
+                'price' => $data->cost,
+                'stock' => $data->total_stock
             ]);
         }
 
@@ -142,13 +153,6 @@ class ProductController extends Controller
         }
         return redirect()->route('product.index')->with('status', 'Data Berhasil Disimpan');
     }
-
-    // public function getPrice($id)
-    // {
-    //     $product = Product::find($id);
-    //     return response()->json(['price' => $product ? $product->price : 0]);
-    // }
-
 
     /**
      * Display the specified resource.

@@ -93,7 +93,7 @@
             <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">Add Shipping
                 Cost</a>
             @if ($discount->isNotEmpty())
-                <a href="#modalDiscount" class="btn btn-success" data-toggle="modal" >Add Discount</a>
+                <a href="#modalDiscount" class="btn btn-success" data-toggle="modal">Add Discount</a>
             @endif
         </div>
 
@@ -118,7 +118,7 @@
                         <div class="form-group">
                             <label for="payment_method">Payment Method</label>
                             <select class="form-control" id="payment_method" name="payment_method">
-                            <option value="">Choose Payment Method</option
+                                <option value="">Choose Payment Method</option>
                                 @foreach ($paymentMethod as $pay)
                                     <option value="{{ $pay->id_detail_configuration }}">{{ $pay->name }}</option>
                                 @endforeach

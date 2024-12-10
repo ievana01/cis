@@ -20,7 +20,7 @@
                     <td>{{ $data->purchase_invoice }}</td>
                     <td>{{ $data->date }} {{ $data->id_purchase }}</td>
                     <td>{{ $data->supplier_name }}</td>
-                    <td>{{ $data->total_purchase }}</td>
+                    <td>Rp. {{ $data->total_purchase }}</td>
                     <td>
                         @if ($data->payment_method != null)
                             Payment Success

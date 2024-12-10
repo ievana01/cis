@@ -33,7 +33,7 @@ Route::resource('/warehouse', WarehouseController::class);
 Route::resource('/product', ProductController::class);
 Route::resource('/customer', CustomerController::class);
 
-Route::get('/get-product-price/{id}', [ProductController::class, 'getPrice']);
+// Route::get('/get-product-price/{id}', [ProductController::class, 'getPrice']);
 
 Route::post('warehouse/getEditForm', [WarehouseController::class, 'getEditForm'])->name("warehouse.getEditForm");
 
@@ -67,6 +67,11 @@ Route::put('purchase/{purchaseOrder}', [PurchaseOrderController::class, 'update'
 
 Route::post('category/formSubCategory', [CategoryController::class, 'formSubCategory'])->name("category.formSubCategory");
 Route::post('category/addSub', [CategoryController::class, 'addSub'])->name('category.addSub');
+
+Route::get('report-stock', [ProductController::class, 'showReportStock'])->name('product.reportstock');
+
+
+
 
 
 
