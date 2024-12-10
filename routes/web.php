@@ -65,6 +65,9 @@ Route::get('/purchase-data', [PurchaseOrderController::class, 'showData'])->name
 Route::post('purchase/paymentForm', [PurchaseOrderController::class, 'paymentForm'])->name("purchase.paymentForm");
 Route::put('purchase/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase.update');
 
+Route::post('category/formSubCategory', [CategoryController::class, 'formSubCategory'])->name("category.formSubCategory");
+Route::post('category/addSub', [CategoryController::class, 'addSub'])->name('category.addSub');
+
 
 
 
