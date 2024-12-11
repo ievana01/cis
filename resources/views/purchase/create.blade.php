@@ -33,7 +33,7 @@
                     @endif
                 </tr>
                 <tr>
-                    <th><label for="warehouse">Location Stock</label></th>
+                    <th><label for="warehouse">Deliver to</label></th>
                     <th>
                         <select class="form-control" name="id_warehouse" id="id_warehouse">
                             <option value="">Choose warehouse</option>

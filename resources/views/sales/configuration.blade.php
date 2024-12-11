@@ -32,7 +32,8 @@
                                     id="checkbox{{ $detail->id_detail_configuration }}"
                                     name="configurations[{{ $c->id_configuration }}][]"
                                     value="{{ $detail->id_detail_configuration }}"
-                                    {{ $detail->status_active == 1 ? 'checked' : '' }}>
+                                    {{ $detail->status_active == 1 ? 'checked' : '' }}
+                                    {{$detail->type == 'mandatory' ? 'disabled' : ''}}>
                                 <label class="form-check-label" for="checkbox{{ $detail->id_detail_configuration }}">
                                     {{ $detail->name }}
                                 </label>

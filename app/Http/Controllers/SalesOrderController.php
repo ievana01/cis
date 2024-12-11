@@ -39,45 +39,31 @@ class SalesOrderController extends Controller
         foreach ($configuration as $config) {
             $config->details = DB::select('select * from detail_configurations where configuration_id = ?', [$config->id_configuration]);
         }
-
         return view('sales.configuration', ['configuration' => $configuration]);
     }
 
     public function save(Request $request)
     {
-        $configurations = $request->input('configurations', []); // Ambil input konfigurasi yang dikirim dari form
-
-        // Ambil semua konfigurasi terkait menu_id = 1
+        $configurations = $request->input('configurations', []);
         $allConfigurations = DB::table('detail_configurations')
             ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
             ->where('configurations.menu_id', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id')
             ->get();
-
-        // Loop untuk memproses setiap konfigurasi yang dikirim
         foreach ($allConfigurations as $config) {
-            $isActive = 0; // Default: tidak aktif
-
-            // Cek apakah konfigurasi ini dipilih oleh user (checkbox)
+            $isActive = 0; 
             if (isset($configurations[$config->configuration_id]) && is_array($configurations[$config->configuration_id])) {
-                // Jika checkbox dipilih, maka periksa apakah id_detail_configuration ada di dalam array
                 if (in_array($config->id_detail_configuration, $configurations[$config->configuration_id])) {
                     $isActive = 1;
                 }
             }
-            // Cek apakah ini adalah radio button (hanya satu nilai yang dipilih)
             else if (isset($configurations[$config->configuration_id]) && $configurations[$config->configuration_id] == $config->id_detail_configuration) {
-                // Jika id_detail_configuration cocok dengan nilai yang dipilih dari radio button
                 $isActive = 1;
             }
-
-            // Update status aktif untuk detail konfigurasi ini
             DB::table('detail_configurations')
                 ->where('id_detail_configuration', $config->id_detail_configuration)
                 ->update(['status_active' => $isActive]);
         }
-
-        // Redirect kembali ke halaman konfigurasi dengan pesan sukses
         return redirect()->route('sales.configuration')->with('status', 'Configurations updated successfully!');
     }
 

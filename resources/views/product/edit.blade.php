@@ -65,17 +65,6 @@
         </div>
 
         <div class="form-group">
-            <label for="tax">Pajak Penjualan</label>
-            <select class="form-control" id="tax" name="tax">
-                @foreach ($taxOptions as $option)
-                    <option value="{{ $option }}" {{ $option == $product->tax ? 'selected' : '' }}>
-                        {{ $option }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="form-group">
             <label for="unit">Jenis Produk</label>
             <div>
                 @foreach ($unitOptions as $option)
