@@ -30,4 +30,5 @@ class PurchaseOrder extends Model
     {
         return $this->hasMany(PurchaseDetail::class, 'purchase_id');
     }
+    
 }

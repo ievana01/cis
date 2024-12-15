@@ -13,12 +13,24 @@
                 <tr>
                     <th><label for="id_customer">Customer</label></th>
                     <th>
-                        <select class="form-control" id="id_customer" name="id_customer">
-                            <option value="">Choose Customer</option>
-                            @foreach ($customer as $c)
-                                <option value="{{ $c->id_customer }}">{{ $c->name }}</option>
-                            @endforeach
-                        </select>
+                        <div class="input-group">
+                            <select class="form-control" id="id_customer" name="id_customer"
+                                onchange="toggleOtherCustomerInput()">
+                                <option value="">Choose Customer</option>
+                                @foreach ($customer as $c)
+                                    <option value="{{ $c->id_customer }}">{{ $c->name }}</option>
+                                @endforeach
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div id="other_customer_input" style="display: none;" class="pt-2">
+                            <label for="customer_name">Enter Customer Data:</label>
+                            <div class="pb-2">
+                                <input type="text" class="form-control mb-2" id="customer_name" name="customer_name"
+                                    placeholder="Customer Name" />
+                            </div>
+                        </div>
                     </th>
                 </tr>
                 <tr>
@@ -83,6 +95,7 @@
                     <th>Unit Price</th>
                     <th>Quantity</th>
                     <th>Amount</th>
+                    <th>Discount</th>
                     <th><i class="fa-solid fa-trash-can"></i></th>
                 </tr>
             </thead>
@@ -92,7 +105,7 @@
         <div style="text-align: right;" class="mb-4 mt-2">
             <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">Add Shipping
                 Cost</a>
-            @if ($discount->isNotEmpty())
+            @if ($discount->isNotEmpty() && !$discount->contains('id_detail_configuration', 11))
                 <a href="#modalDiscount" class="btn btn-success" data-toggle="modal">Add Discount</a>
             @endif
         </div>
@@ -107,10 +120,12 @@
             <p>Taxes: <b id="taxes">Rp 0.00</b></p>
             <p>Total: <b id="total_price">Rp 0.00</b></p>
         </div>
+
         <div style="text-align: right;">
             <a href="{{ route('sales.index') }}" type="button" class="btn btn-danger">Cancel</a>
             <a href="#modalPayment" class="btn btn-primary" data-toggle="modal">Create</a>
         </div>
+        
         <div class="modal fade" id="modalPayment" tabindex="-1" role="basic" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -133,6 +148,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="modalShipping" tabindex="-1" role="basic" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -177,6 +193,7 @@
                 </div>
             </div>
         </div>
+
     </form>
 @endsection
 
@@ -184,6 +201,17 @@
     <script>
         let totalAmount = 0;
         // const taxRate = 0.1; // 10% tax  
+
+        function toggleOtherCustomerInput() {
+            const customerSelect = document.getElementById("id_customer");
+            const otherCustomerInput = document.getElementById("other_customer_input");
+
+            if (customerSelect.value === "other") {
+                otherCustomerInput.style.display = "block"; // Menampilkan form input nama customer
+            } else {
+                otherCustomerInput.style.display = "none"; // Menyembunyikan form input nama customer
+            }
+        }
 
         function getShippingCostFromTable() {
             const table = document.getElementById("productsTable");
@@ -255,7 +283,7 @@
             const productPrice = parseFloat(document.getElementById("productPrice").value) || 0;
             const productQty = parseInt(document.getElementById("productQty").value) || 1;
             const totalStock = parseInt(document.getElementById("total_stock").value) || 0;
-            const productAmount = updateAmount();
+            let productAmount = updateAmount();
 
             console.log("Debug -> Adding Product:", {
                 productName,
@@ -275,6 +303,30 @@
                 return;
             }
 
+            // Cek apakah customer dipilih
+            const customerSelect = document.getElementById("id_customer");
+            const selectedCustomer = customerSelect.value;
+            const otherCustomerInput = document.getElementById("customer_name").value;
+            console.log(otherCustomerInput);
+
+            let discountRate = 0;
+            if (selectedCustomer && selectedCustomer !== "other") {
+                discountRate = 0.1; // 10%
+            }
+
+            if (selectedCustomer === "other" && otherCustomerInput) {
+                discountRate = 0;
+            }
+            
+            // Hitung diskon
+            const discountMember = productAmount * discountRate;
+            productAmount -= discountMember;
+            console.log("Debug -> Diskon:", {
+                discountRate,
+                discount,
+                productAmount
+            });
+
             // Append to the product list table
             const productsTable = document.getElementById("productsTable");
             const newRow = `
@@ -283,6 +335,7 @@
                     <td>${productPrice.toFixed(2)}</td>
                     <td>${productQty}</td>
                     <td>${productAmount.toFixed(2)}</td>
+                    <td>Dsc Mem ${discountRate > 0 ? `-Rp ${discountMember.toFixed(2)}` : '-'}</td>
                     <td>
                         <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)"><i class="fa-solid fa-trash-can"></i></button>
                     </td>
@@ -300,7 +353,8 @@
                 name: productName,
                 price: productPrice,
                 quantity: productQty,
-                amount: productAmount
+                amount: productAmount,
+                discountMember: discountMember,
             };
 
             // Add the product to the hidden field
@@ -336,6 +390,7 @@
             <td>-</td>
             <td>1</td>
             <td>${shippingCost.toFixed(2)}</td>
+            <td>-</td>
             <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
                 <i class="fa-solid fa-trash-can"></i></button></td>
             `;
@@ -388,6 +443,7 @@
             <td>${discountName}</td>
             <td>-</td>
             <td>1</td>
+            <td>-</td>
             <td>${parseFloat(finalDiscount).toFixed(2)}</td>
             <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
                 <i class="fa-solid fa-trash-can"></i></button></td>

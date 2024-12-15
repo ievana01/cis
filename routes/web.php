@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\SalesOrderController;
@@ -20,9 +21,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
+Route::get('/', [HomeController::class, 'index']);
 
 Route::resource('/sales', SalesOrderController::class);
 Route::resource('/purchase', PurchaseOrderController::class);
@@ -69,6 +72,11 @@ Route::post('category/formSubCategory', [CategoryController::class, 'formSubCate
 Route::post('category/addSub', [CategoryController::class, 'addSub'])->name('category.addSub');
 
 Route::get('report-stock', [ProductController::class, 'showReportStock'])->name('product.reportstock');
+
+// Route untuk menampilkan form create customer
+// Route::post('/customer/create', [CustomerController::class, 'create'])->name('customer.create');
+Route::post('/sales/getCreateCust', [SalesOrderController::class, 'getCreateCust'])->name('sales.getCreateCust');
+
 
 
 

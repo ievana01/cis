@@ -88,21 +88,21 @@ class PurchaseOrderController extends Controller
         $invoiceNumber = $this->generateInvoiceNumber();
         $supplier = Supplier::all();
 
-        $cogsChoose = DB::table('detail_configurations')
-            ->where('status_active', 1)
-            ->where('configuration_id', 1)
-            ->first();
-        $cogsMethod = $cogsChoose->name;
-        if ($cogsMethod == "FIFO") {
-            $product = DB::table('products as p')
-                ->join('product_fifo as pf', 'p.id_product', '=', 'pf.product_id')
-                ->select('p.id_product as id_product', 'p.name as name', 'pf.price as price', 'p.cost as cost', DB::raw('SUM(pf.stock) as total_stock'))
-                ->groupBy('p.id_product', 'p.name', 'p.total_stock', 'pf.price', 'p.cost')
-                ->get();
-        } else {
-            $product = Product::all();
-        }
-
+        // $cogsChoose = DB::table('detail_configurations')
+        //     ->where('status_active', 1)
+        //     ->where('configuration_id', 1)
+        //     ->first();
+        // $cogsMethod = $cogsChoose->name;
+        // if ($cogsMethod == "FIFO") {
+        //     $product = DB::table('products as p')
+        //         ->join('product_fifo as pf', 'p.id_product', '=', 'pf.product_id')
+        //         ->select('p.id_product as id_product', 'p.name as name', 'pf.price as price', 'p.cost as cost', DB::raw('SUM(pf.stock) as total_stock'))
+        //         ->groupBy('p.id_product', 'p.name', 'p.total_stock', 'pf.price', 'p.cost')
+        //         ->get();
+        // } else {
+        //     $product = Product::all();
+        // }
+        $product = Product::all();
         $paymentMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 3)

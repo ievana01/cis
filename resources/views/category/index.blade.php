@@ -10,7 +10,7 @@
             <tr>
                 <th>ID</th>
                 <th>Category</th>
-                @if ($catProd->id_detail_configuration == 17)
+                @if ($catProd && $catProd->id_detail_configuration == 18)
                     <th>List Sub Category</th>
                 @endif
                 <th>Action</th>
@@ -22,18 +22,21 @@
                     <td>{{ $data->id_category }}</td>
                     <td>{{ $data->code_category }} - {{ $data->name }}</td>
                     <td>
-                        @forelse ($subCategory->where('category_id', $data->id_category) as $sub)
-                            <ul>
-                                <li>{{ $sub->code_sub_category }} - {{ $sub->name }}</li>
-                            </ul>
-                        @empty
-                            <span>Data not available</span>
-                        @endforelse
+                        @if ($catProd && $catProd->id_detail_configuration == 18)
+                            @forelse ($subCategory->where('category_id', $data->id_category) as $sub)
+                                <ul>
+                                    <li>{{ $sub->code_sub_category }} - {{ $sub->name }}</li>
+                                </ul>
+                            @empty
+                                <span>Data not available</span>
+                            @endforelse
+                        @endif
                     </td>
                     <td>
-                        <a href="#modalAddSub" class="btn btn-info btn-sm" data-toggle="modal"
-                            onclick="formSubCategory({{ $data->id_category }})">+Sub Category</a>
-
+                        @if ($catProd && $catProd->id_detail_configuration != null)
+                            <a href="#modalAddSub" class="btn btn-info btn-sm" data-toggle="modal"
+                                onclick="formSubCategory({{ $data->id_category }})">+Sub Category</a>
+                        @endif
                         <a href="{{ route('category.edit', $data->id_category) }}" class="btn btn-warning btn-sm">Edit</a>
                         <form method="POST" action="{{ route('category.destroy', $data->id_category) }}"
                             style="display:inline-block;">
@@ -46,7 +49,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="2" class="text-center">Data not available.</td>
+                    <td colspan="4" class="text-center">Data not available.</td>
                 </tr>
             @endforelse
         </tbody>

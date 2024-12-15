@@ -1,7 +1,8 @@
-@extends('layouts.btemplate')
+@extends('layouts.blank')
 @section('content')
     <form method="POST" action="{{ route('customer.store') }}">
         @csrf
+        <h4>New Customer</h4>
         <div class="form-group">
             <label for="name">Nama</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"

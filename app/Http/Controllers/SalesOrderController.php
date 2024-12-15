@@ -20,14 +20,15 @@ class SalesOrderController extends Controller
     public function index()
     {
         $sales = DB::table('sales_orders')
-            ->join('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
-            ->join('detail_configurations', 'sales_orders.payment_method', '=', 'detail_configurations.id_detail_configuration')
+            ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+            ->leftJoin('detail_configurations', 'sales_orders.payment_method', '=', 'detail_configurations.id_detail_configuration')
             ->select(
                 'sales_orders.sales_invoice',
                 'sales_orders.date',
                 'sales_orders.total_price',
-                'customers.name as customer_name',
-                'detail_configurations.name as payment_method_name'
+                'customers.name as customer_name',  // Menampilkan nama customer dari tabel customers
+                'sales_orders.customer_name as custname',  // Menampilkan nama customer yang diinput manual
+                'detail_configurations.name as payment_method_name'  // Menampilkan metode pembayaran
             )
             ->get();
         return view('sales.index', ["sales" => $sales]);
@@ -48,16 +49,19 @@ class SalesOrderController extends Controller
         $allConfigurations = DB::table('detail_configurations')
             ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
             ->where('configurations.menu_id', 1)
-            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id')
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id', 'detail_configurations.type')
             ->get();
+            // dd($allConfigurations);
         foreach ($allConfigurations as $config) {
-            $isActive = 0; 
+            $isActive = 0;
             if (isset($configurations[$config->configuration_id]) && is_array($configurations[$config->configuration_id])) {
                 if (in_array($config->id_detail_configuration, $configurations[$config->configuration_id])) {
                     $isActive = 1;
                 }
+            } else if (isset($configurations[$config->configuration_id]) && $configurations[$config->configuration_id] == $config->id_detail_configuration) {
+                $isActive = 1;
             }
-            else if (isset($configurations[$config->configuration_id]) && $configurations[$config->configuration_id] == $config->id_detail_configuration) {
+            if ($config->type === 'mandatory') {
                 $isActive = 1;
             }
             DB::table('detail_configurations')
@@ -76,21 +80,22 @@ class SalesOrderController extends Controller
         $sales = SalesOrder::all();
         $customer = Customer::all();
 
-        $cogsChoose = DB::table('detail_configurations')
-            ->where('status_active', 1)
-            ->where('configuration_id', 1)
-            ->first();
-        $cogsMethod = $cogsChoose->name;
-        if ($cogsMethod == "FIFO") {
-            $product = DB::table('products as p')
-                ->join('product_fifo as pf', 'p.id_product', '=', 'pf.product_id')
-                ->select('p.id_product as id_product', 'p.name as name', 'pf.price as price', 'p.cost as cost', DB::raw('SUM(pf.stock) as total_stock'))
-                ->groupBy('p.id_product', 'p.name', 'p.total_stock', 'pf.price', 'p.cost')
-                ->get();
-        } else {
-            $product = Product::all();
-        }
-
+        // $cogsChoose = DB::table('detail_configurations')
+        //     ->where('status_active', 1)
+        //     ->where('configuration_id', 1)
+        //     ->first();
+        // $cogsMethod = $cogsChoose->name;
+        // if ($cogsMethod == "FIFO") {
+        //     $product = DB::table('products as p')
+        //         ->join('product_fifo as pf', 'p.id_product', '=', 'pf.product_id')
+        //         ->select('p.id_product as id_product', 'p.name as name', 'p.price as price', 'p.cost as cost', DB::raw('SUM(pf.stock) as total_stock'))
+        //         ->groupBy('p.id_product', 'p.name', 'p.total_stock', 'p.price', 'p.cost')
+        //         ->get();
+        //     // dd($product);
+        // } else {
+        //     $product = Product::all();
+        // }
+        $product = Product::all();
         $paymentMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 3)
@@ -164,17 +169,33 @@ class SalesOrderController extends Controller
             ->first();
         $cogsMethod = $cogsChoose->name;
 
-        $sales = new SalesOrder();
-        $invoiceNumber = $this->generateInvoiceNumber();
-        $sales->sales_invoice = $invoiceNumber;
-        $sales->date = $request->get(key: 'date');
-        $sales->total_price = $request->get('total_price');
-        $sales->customer_id = $request->get('id_customer');
-        $sales->payment_method = $request->get('payment_method');
-        $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
-        $sales->discount = $request->get('hDiscount') ?? 0;
-        $sales->employee_id = $request->get('employee_id') ?? 1;
-        $sales->save();
+        $customerId = $request->get('id_customer');
+        if ($customerId == 'other') {
+            $sales = new SalesOrder();
+            $invoiceNumber = $this->generateInvoiceNumber();
+            $sales->sales_invoice = $invoiceNumber;
+            $sales->date = $request->get(key: 'date');
+            $sales->total_price = $request->get('total_price');
+            $sales->customer_name = $request->get('customer_name');
+            $sales->payment_method = $request->get('payment_method');
+            $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
+            $sales->discount = $request->get('hDiscount') ?? 0;
+            $sales->employee_id = $request->get('employee_id') ?? 1;
+            $sales->save();
+        } else {
+            $sales = new SalesOrder();
+            $invoiceNumber = $this->generateInvoiceNumber();
+            $sales->sales_invoice = $invoiceNumber;
+            $sales->date = $request->get(key: 'date');
+            $sales->total_price = $request->get('total_price');
+            $sales->customer_id = $request->get('id_customer');
+            $sales->payment_method = $request->get('payment_method');
+            $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
+            $sales->discount = $request->get('hDiscount') ?? 0;
+            $sales->employee_id = $request->get('employee_id') ?? 1;
+            $sales->save();
+        }
+
 
         $products = json_decode($request->get('products'), true);
         foreach ($products as $product) {
@@ -186,7 +207,7 @@ class SalesOrderController extends Controller
                     'total_price' => $product['amount'],
                 ]
             );
-            
+
             //ambil warehouse product di product_has_warehouse
             $warehouse = DB::table('product_has_warehouses')
                 ->where('product_id', $product['id'])

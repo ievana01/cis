@@ -20,7 +20,7 @@ class CategoryController extends Controller
             ->where('configuration_id', 8)
             ->first();
         $subCategory = SubCategory::all();
-        // dd($subCategory);
+        // dd($catProd);
         return view('category.index', ["category" => $category, "catProd" => $catProd, "subCategory" => $subCategory]);
     }
 

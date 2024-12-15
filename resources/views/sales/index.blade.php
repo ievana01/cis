@@ -19,7 +19,7 @@
                 <tr>
                     <td>{{ $data->sales_invoice }}</td>
                     <td>{{ $data->date }}</td>
-                    <td>{{ $data->customer_name }}</td>
+                    <td>{{ $data->customer_name ?? $data->custname }}</td>
                     <td>Rp. {{ $data->total_price }}</td>
                     <td>{{ $data->payment_method_name }}</td>
                 </tr>

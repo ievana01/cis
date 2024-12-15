@@ -33,11 +33,11 @@
                                     name="configurations[{{ $c->id_configuration }}][]"
                                     value="{{ $detail->id_detail_configuration }}"
                                     {{ $detail->status_active == 1 ? 'checked' : '' }}
-                                    {{$detail->type == 'mandatory' ? 'disabled' : ''}}>
+                                    {{ $detail->type == 'mandatory' ? 'disabled' : '' }}>
                                 <label class="form-check-label" for="checkbox{{ $detail->id_detail_configuration }}">
                                     {{ $detail->name }}
                                 </label>
-                                <p>{{$detail->description}}</p>
+                                <p>{{ $detail->description }}</p>
                             </div>
                         @endif
                     @endforeach
