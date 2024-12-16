@@ -90,7 +90,7 @@ class ProductController extends Controller
         preg_match("/^enum\('(.*)'\)$/", $unit->Type, $matches);
         $unitOptions = explode("','", $matches[1]);
 
-        return view('product.createproduct', ["category" => $category, "supplier" => $supplier, "warehouse" => $warehouse,  "unit" => $unitOptions]);
+        return view('product.createproduct', ["category" => $category, "supplier" => $supplier, "warehouse" => $warehouse, "unit" => $unitOptions]);
     }
 
     /**
@@ -108,9 +108,10 @@ class ProductController extends Controller
         $data = new Product();
         $data->name = $request->get('name');
         $data->description = $request->get('description');
-        $data->price = $request->get('price');
+        $data->price = $request->get('cost') * ($request->get('profit')/100) + $request->get('cost');
         $data->total_stock = $request->get('total_stock');
         $data->cost = $request->get('cost');
+        $data->profit = $request->get('profit');
         $data->unit = $request->get('unit');
         $data->min_total_stock = $request->get('min_total_stock');
         $data->category_id = $request->get('category_id');
@@ -121,7 +122,8 @@ class ProductController extends Controller
             DB::table('product_fifo')->insert([
                 'product_id' => $data->id_product,
                 'purchase_date' => now()->toDateString(),
-                'price' => $data->cost,
+                'price' => $data->price,
+                'cost' => $data->cost,
                 'stock' => $data->total_stock
             ]);
         }

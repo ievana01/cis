@@ -43,15 +43,20 @@
             <input type="text" class="form-control" id="total_stock" name="total_stock" aria-describedby="total_stock"
                 placeholder="Insert initial stock product">
         </div>
-        <div class="form-group">
+        {{-- <div class="form-group">
             <label for="price">Product Price</label>
             <input type="text" class="form-control" id="price" name="price" aria-describedby="price"
                 placeholder="Insert price product">
-        </div>
+        </div> --}}
         <div class="form-group">
             <label for="cost">Product Cost</label>
             <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
                 placeholder="Insert cost product">
+        </div>
+        <div class="form-group">
+            <label for="profit">Profit Product</label>
+            <input type="number" class="form-control" id="profit" name="profit" aria-describedby="profit"
+                placeholder="How much profit do you want to get from this product? (in percent)">
         </div>
         <div class="form-group">
             <label for="unit">Type of Product</label>
@@ -89,6 +94,11 @@
 
 @section('javascript')
     <script>
+        var cost = document.getElementById('cost');
+        console.log(cost);
+        var profit = document.getElementById('profit');
+        console.log(profit);
+
         document.addEventListener('DOMContentLoaded', function() {
             const productImages = document.getElementById('id_image');
             console.log('productImages:', productImages); // Should log the input element

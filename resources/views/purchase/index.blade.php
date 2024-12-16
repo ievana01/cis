@@ -18,7 +18,7 @@
             @forelse ($purchase as $data)
                 <tr>
                     <td>{{ $data->purchase_invoice }}</td>
-                    <td>{{ $data->date }} {{ $data->id_purchase }}</td>
+                    <td>{{ $data->date }} </td>
                     <td>{{ $data->supplier_name }}</td>
                     <td>Rp. {{ $data->total_purchase }}</td>
                     <td>
@@ -26,7 +26,7 @@
                             Payment Success
                         @else
                             Payment not Registered
-                            @if ($payProd->id_detail_configuration == 15 && $data->expected_arrival >= now()->toDateString())
+                        @if ($payProd->id_detail_configuration == 16 && $data->expected_arrival >= now()->toDateString())
                                 <a href="#modalPayment" class="btn btn-warning" data-toggle="modal"
                                     onclick="paymentForm({{ $data->id_purchase }})">Payment</a>
                             @endif

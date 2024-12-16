@@ -188,6 +188,8 @@ class PurchaseOrderController extends Controller
 
             if ($cogsMethod == 'Average') {
                 $productData = DB::table('products')->where('id_product', $product['id'])->first();
+                // dd($productData);
+                $profit = $productData->profit / 100;
 
                 $oldStock = $productData->total_stock;
                 $oldCost = $productData->cost;
@@ -201,9 +203,9 @@ class PurchaseOrderController extends Controller
                 $totalAllCost = $totalOldCost + $totalNewCost;
                 $totalAllStock = $oldStock + $newStock;
                 $averageCost = $totalAllCost / $totalAllStock;
-                $ratioPrice = $oldPrice / $oldCost;
+                // $ratioPrice = $oldPrice / $oldCost;
 
-                $newPrice = $averageCost * $ratioPrice;
+                $newPrice = ($averageCost * $profit) + $averageCost;
 
                 DB::table('products')
                     ->where('id_product', $product['id'])
@@ -214,18 +216,27 @@ class PurchaseOrderController extends Controller
                     ]);
 
             } else if ($cogsMethod == 'FIFO') {
-                $price = $product['amount'] / $product['quantity']; // Harga per unit
+                $productData = DB::table('products')->where('id_product', $product['id'])->first();
+                $profit = $productData->profit / 100;
+                $cost = $product['amount'] / $product['quantity'];
+                $price = ($cost * $profit) + $cost;
+                $totalStock = $productData->total_stock + $product['quantity'];
+
                 DB::table('product_fifo')->insert([
                     'product_id' => $product['id'],
                     'stock' => $product['quantity'],
                     'purchase_date' => $request->get('date'),
-                    'price' => $price,
+                    'cost' => $cost,
+                    'price' => $price
                 ]);
 
-                // Update total stok di tabel products
                 DB::table('products')
                     ->where('id_product', $product['id'])
-                    ->increment('total_stock', $product['quantity']);
+                    ->update([
+                        'total_stock' => $totalStock, 
+                        'cost' => $cost,
+                        'price' => $price, 
+                    ]);
             }
 
             DB::table('product_moving')->insert([

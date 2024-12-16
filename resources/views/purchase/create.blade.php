@@ -27,7 +27,7 @@
                     </th>
                 </tr>
                 <tr>
-                    @if ($receiveProdMethod->id_detail_configuration == 13)
+                    @if ($receiveProdMethod->id_detail_configuration == 14)
                         <th><label for="expected_arrival">Expexted Arrival</label></th>
                         <th><input type="date" name="expected_arrival" id="expected_arrival" class="form-control"></th>
                     @endif
@@ -68,11 +68,11 @@
                             @endforeach
                         </select>
                     </td>
-                    @if ($purchasePriceMethod->id_detail_configuration == 11)
+                    @if ($purchasePriceMethod->id_detail_configuration == 12)
                         <td>
                             <input type="number" id="productCost" class="form-control" readonly>
                         </td>
-                    @elseif ($purchasePriceMethod->id_detail_configuration == 12)
+                    @elseif ($purchasePriceMethod->id_detail_configuration == 13)
                         <td>
                             <input type="number" id="productCost" class="form-control">
                         </td>
