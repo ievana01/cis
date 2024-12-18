@@ -46,12 +46,13 @@ class SalesOrderController extends Controller
     public function save(Request $request)
     {
         $configurations = $request->input('configurations', []);
+        $discountValues = $request->input('discount_values', []);
         $allConfigurations = DB::table('detail_configurations')
             ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
             ->where('configurations.menu_id', 1)
-            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id', 'detail_configurations.type')
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id', 'detail_configurations.type', 'detail_configurations.value')
             ->get();
-            // dd($allConfigurations);
+        // dd($allConfigurations);
         foreach ($allConfigurations as $config) {
             $isActive = 0;
             if (isset($configurations[$config->configuration_id]) && is_array($configurations[$config->configuration_id])) {
@@ -67,6 +68,14 @@ class SalesOrderController extends Controller
             DB::table('detail_configurations')
                 ->where('id_detail_configuration', $config->id_detail_configuration)
                 ->update(['status_active' => $isActive]);
+                
+            if (isset($discountValues[$config->id_detail_configuration])) {
+                $discountValue = $discountValues[$config->id_detail_configuration];
+                // Update the discount value in the database (if needed)
+                DB::table('detail_configurations')
+                    ->where('id_detail_configuration', $config->id_detail_configuration)
+                    ->update(['value' => $discountValue]);
+            }
         }
         return redirect()->route('sales.configuration')->with('status', 'Configurations updated successfully!');
     }
@@ -79,22 +88,6 @@ class SalesOrderController extends Controller
         $invoiceNumber = $this->generateInvoiceNumber();
         $sales = SalesOrder::all();
         $customer = Customer::all();
-
-        // $cogsChoose = DB::table('detail_configurations')
-        //     ->where('status_active', 1)
-        //     ->where('configuration_id', 1)
-        //     ->first();
-        // $cogsMethod = $cogsChoose->name;
-        // if ($cogsMethod == "FIFO") {
-        //     $product = DB::table('products as p')
-        //         ->join('product_fifo as pf', 'p.id_product', '=', 'pf.product_id')
-        //         ->select('p.id_product as id_product', 'p.name as name', 'p.price as price', 'p.cost as cost', DB::raw('SUM(pf.stock) as total_stock'))
-        //         ->groupBy('p.id_product', 'p.name', 'p.total_stock', 'p.price', 'p.cost')
-        //         ->get();
-        //     // dd($product);
-        // } else {
-        //     $product = Product::all();
-        // }
         $product = Product::all();
         $paymentMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
@@ -119,9 +112,9 @@ class SalesOrderController extends Controller
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 4)
             ->where('detail_configurations.status_active', 1)
-            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name', 'detail_configurations.value', 'detail_configurations.status_active')
             ->get();
-
+        // dd($discount);
         return view('sales.create', [
             "invoiceNumber" => $invoiceNumber,
             "sales" => $sales,
@@ -170,32 +163,22 @@ class SalesOrderController extends Controller
         $cogsMethod = $cogsChoose->name;
 
         $customerId = $request->get('id_customer');
+        $sales = new SalesOrder();
+        $invoiceNumber = $this->generateInvoiceNumber();
+        $sales->sales_invoice = $invoiceNumber;
+        $sales->date = $request->get(key: 'date');
+        $sales->total_price = $request->get('total_price');
         if ($customerId == 'other') {
-            $sales = new SalesOrder();
-            $invoiceNumber = $this->generateInvoiceNumber();
-            $sales->sales_invoice = $invoiceNumber;
-            $sales->date = $request->get(key: 'date');
-            $sales->total_price = $request->get('total_price');
             $sales->customer_name = $request->get('customer_name');
-            $sales->payment_method = $request->get('payment_method');
-            $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
-            $sales->discount = $request->get('hDiscount') ?? 0;
-            $sales->employee_id = $request->get('employee_id') ?? 1;
-            $sales->save();
         } else {
-            $sales = new SalesOrder();
-            $invoiceNumber = $this->generateInvoiceNumber();
-            $sales->sales_invoice = $invoiceNumber;
-            $sales->date = $request->get(key: 'date');
-            $sales->total_price = $request->get('total_price');
             $sales->customer_id = $request->get('id_customer');
-            $sales->payment_method = $request->get('payment_method');
-            $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
-            $sales->discount = $request->get('hDiscount') ?? 0;
-            $sales->employee_id = $request->get('employee_id') ?? 1;
-            $sales->save();
         }
-
+        $sales->customer_name = $request->get('customer_name');
+        $sales->payment_method = $request->get('payment_method');
+        $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
+        $sales->discount = $request->get('hDiscount') ?? 0;
+        $sales->employee_id = $request->get('employee_id') ?? 1;
+        $sales->save();
 
         $products = json_decode($request->get('products'), true);
         foreach ($products as $product) {
@@ -213,66 +196,7 @@ class SalesOrderController extends Controller
                 ->where('product_id', $product['id'])
                 ->first();
 
-            if ($cogsMethod == 'FIFO') {
-                $quantity = $product['quantity'];
-                $stocks = DB::table('product_fifo')
-                    ->where('product_id', $product['id'])
-                    ->orderBy('purchase_date', 'asc') // Urutkan berdasarkan tanggal pembelian
-                    ->get();
-
-                foreach ($stocks as $stock) {
-                    if ($quantity <= 0) {
-                        break; // Jika tidak ada stok yang tersisa untuk dikurangi, hentikan loop
-                    }
-
-                    // Tentukan stok yang bisa dikurangi dari stok ini
-                    $toDecrement = min($quantity, $stock->stock);
-
-                    // Jika stok habis atau ada stok yang cukup untuk dikurangi
-                    if ($toDecrement > 0) {
-                        // Mengurangi stok di product_fifo
-                        DB::table('product_fifo')
-                            ->where('product_id', $stock->product_id)
-                            ->where('id_product_fifo', $stock->id_product_fifo) // Pastikan hanya mengupdate stok yang tepat
-                            ->decrement('stock', $toDecrement);
-
-                        DB::table('products')
-                            ->where('id_product', $product['id'])
-                            ->decrement('total_stock', $toDecrement);
-
-                        // Simpan pergerakan stok di product_moving
-                        DB::table('product_moving')->insert([
-                            'product_id' => $product['id'],
-                            'move_stock' => $toDecrement,
-                            'warehouse_id_in' => $warehouse->warehouse_id,
-                            'sales_id' => $sales->id_sales
-                        ]);
-
-                        // Update stok di product_has_warehouses jika perlu
-                        DB::table('product_has_warehouses')
-                            ->where('product_id', $product['id'])
-                            ->decrement('stock', $toDecrement);
-
-                        // Kurangi jumlah yang akan diproses
-                        $quantity -= $toDecrement;
-                    }
-                }
-            } else if ($cogsMethod == 'Average') {
-                DB::table('products')
-                    ->where('id_product', $product['id'])
-                    ->decrement('total_stock', $product['quantity']);
-
-                DB::table('product_moving')->insert([
-                    'product_id' => $product['id'],
-                    'move_stock' => $product['quantity'],
-                    'warehouse_id_in' => $warehouse->warehouse_id,
-                    'sales_id' => $sales->id_sales,
-                ]);
-
-                DB::table('product_has_warehouses')
-                    ->where('product_id', $product['id'])
-                    ->decrement('stock', $product['quantity']);
-            }
+            $sales->refreshCostSales($cogsMethod, $product, $warehouse, $sales);
         }
 
         return redirect()->route('sales.index')->with('status', 'Data Berhasil Disimpan');

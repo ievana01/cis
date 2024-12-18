@@ -28,7 +28,7 @@
                 </tr>
                 <tr>
                     @if ($receiveProdMethod->id_detail_configuration == 14)
-                        <th><label for="expected_arrival">Expexted Arrival</label></th>
+                        <th><label for="expected_arrival">Expected Arrival</label></th>
                         <th><input type="date" name="expected_arrival" id="expected_arrival" class="form-control"></th>
                     @endif
                 </tr>

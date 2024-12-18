@@ -38,6 +38,13 @@
                                     {{ $detail->name }}
                                 </label>
                                 <p>{{ $detail->description }}</p>
+                                @if (str_contains($detail->name, 'Discount'))
+                                    <div class="pb-2">
+                                        <input type="number" class="form-control" id="value"
+                                            name="discount_values[{{ $detail->id_detail_configuration }}]"
+                                            placeholder="Insert discount value" value="{{ $detail->value }}">
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     @endforeach

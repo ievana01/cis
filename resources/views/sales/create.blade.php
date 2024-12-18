@@ -102,13 +102,25 @@
             <tbody id="productsTable"></tbody>
         </table>
 
-        <div style="text-align: right;" class="mb-4 mt-2">
+        {{-- <div style="text-align: right;" class="mb-4 mt-2">
             <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">Add Shipping
                 Cost</a>
             @if ($discount->isNotEmpty() && !$discount->contains('id_detail_configuration', 11))
                 <a href="#modalDiscount" class="btn btn-success" data-toggle="modal">Add Discount</a>
             @endif
+        </div> --}}
+        <div style="text-align: right;" class="mb-4 mt-2">
+            <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">Add Shipping Cost</a>
+            @if (
+                $discount->isNotEmpty() &&
+                    $discount->filter(function ($item) {
+                            return $item->status_active == 1 && $item->id_detail_configuration != 11;
+                        })->isNotEmpty())
+                <a href="#modalDiscount" class="btn btn-success" data-toggle="modal">Add Discount</a>
+            @endif
         </div>
+
+
 
         <input type="hidden" name="total_price" id="total_price_input" value="0">
         <input type="hidden" id="hShippingCost" name="hShippingCost" value="0">
@@ -125,7 +137,7 @@
             <a href="{{ route('sales.index') }}" type="button" class="btn btn-danger">Cancel</a>
             <a href="#modalPayment" class="btn btn-primary" data-toggle="modal">Create</a>
         </div>
-        
+
         <div class="modal fade" id="modalPayment" tabindex="-1" role="basic" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -174,16 +186,19 @@
                         <div class="form-group">
                             <label for="discount">Discount Type:</label>
                             @foreach ($discount as $dsc)
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input"
-                                        id="radio{{ $dsc->id_detail_configuration }}" name="optradio"
-                                        value="{{ $dsc->id_detail_configuration }}" data-name="{{ $dsc->name }}">
-                                    <label class="form-check-label"
-                                        for="radio{{ $dsc->id_detail_configuration }}">{{ $dsc->name }}</label>
-                                </div>
+                                @if ($dsc->id_detail_configuration != 11)
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input"
+                                            id="radio{{ $dsc->id_detail_configuration }}" name="optradio"
+                                            value="{{ $dsc->id_detail_configuration }}" data-name="{{ $dsc->name }}"
+                                            data-value="{{ $dsc->value }}" onclick="updateDiscountValue(this)">
+                                        <label class="form-check-label"
+                                            for="radio{{ $dsc->id_detail_configuration }}">{{ $dsc->name }}</label>
+                                    </div>
+                                @endif
                             @endforeach
-                            <input type="number" class="form-control" id="discount" name="discount"
-                                aria-describedby="discount" placeholder="Insert discount">
+                            <input type="number" class="form-control" id="discount" name="discount" value=""
+                                disabled style="display: none;">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -275,6 +290,8 @@
             document.getElementById('total_price_input').value = total.toFixed(2);
         }
 
+        const discounts = @json($discount);
+        console.log(discounts);
 
         function addProduct() {
             const productSelect = document.getElementById("productName");
@@ -311,21 +328,26 @@
 
             let discountRate = 0;
             if (selectedCustomer && selectedCustomer !== "other") {
-                discountRate = 0.1; // 10%
+                const discount = discounts.find(d => d.name.toLowerCase().includes('member'));
+                console.log('x', discount);
+
+                if (discount) {
+                    discountRate = parseFloat(discount.value) / 100;
+                }
             }
 
             if (selectedCustomer === "other" && otherCustomerInput) {
                 discountRate = 0;
             }
-            
+
             // Hitung diskon
             const discountMember = productAmount * discountRate;
             productAmount -= discountMember;
-            console.log("Debug -> Diskon:", {
-                discountRate,
-                discount,
-                productAmount
-            });
+            // console.log("Debug -> Diskon:", {
+            //     discountRate,
+            //     discount,
+            //     productAmount
+            // });
 
             // Append to the product list table
             const productsTable = document.getElementById("productsTable");
@@ -406,6 +428,13 @@
             updateTotals();
         }
 
+        function updateDiscountValue(radio) {
+            const discountValue = radio.getAttribute('data-value');
+            const discountField = document.getElementById('discount');
+            discountField.value = discountValue;
+            discountField.style.display = 'block';
+        }
+
         function getSelectedDiscountName() {
             const radios = document.getElementsByName('optradio');
             for (let radio of radios) {
@@ -418,22 +447,29 @@
 
         function submitDiscount() {
             const discount = parseFloat(document.getElementById('discount').value) || 0;
+            console.log('diskon', discount);
+
             const discountName = getSelectedDiscountName();
             console.log('diskonname', discountName);
 
-            document.getElementById('hDiscount').value = discount;
+            if (discountName === '') {
+                alert('Please select a discount type.');
+                return;
+            }
+
             if (discount < 0) {
                 alert("Please enter a valid discount.");
                 return;
             }
 
             let finalDiscount = discount;
+            console.log('final discount', finalDiscount);
 
             if (discountName == 'Discount Percentage') {
                 finalDiscount = totalAmount * (discount / 100);
                 console.log('final diskon', finalDiscount);
             } else if (discountName == 'Seasonal Discount' || discountName == 'Discount Order') {
-                finalDiscount = discount
+                finalDiscount = discount;
             }
 
             const tableBody = document.getElementById('productsTable');
@@ -447,7 +483,7 @@
             <td>${parseFloat(finalDiscount).toFixed(2)}</td>
             <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
                 <i class="fa-solid fa-trash-can"></i></button></td>
-            `;
+        `;
 
             tableBody.appendChild(row);
             $('#modalDiscount').modal('hide');
