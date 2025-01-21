@@ -19,6 +19,7 @@
         <div class="mb-4">
             <p><strong>Nomor Ref:</strong> {{ $sales->sales_invoice }}</p>
             <p><strong>Tanggal Order:</strong> {{ date('d-m-Y', strtotime($sales->date)) }}</p>
+            <p><strong>Pelanggan:</strong> {{ $sales->customer_name_by_id ?? $sales->customer_name}}</p>
             <p><strong>Staf:</strong> {{ $sales->employee_id }}</p>
         </div>
 
@@ -42,6 +43,18 @@
                         <td>{{ number_format($detail->total_price, 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
+                <tr>
+                    <td>-</td>
+                    <td>Diskon</td>
+                    <td>-</td>
+                    <td>{{ number_format($sales->discount, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td>-</td>
+                    <td>Biaya Pengiriman</td>
+                    <td>-</td>
+                    <td>{{ number_format($sales->shipping_cost, 0, ',', '.') }}</td>
+                </tr>
             </tbody>
         </table>
 

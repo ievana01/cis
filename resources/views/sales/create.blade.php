@@ -14,7 +14,8 @@
                     <th><label for="id_customer">Pelanggan</label></th>
                     <th>
                         <div class="input-group">
-                            <select class="form-control" id="id_customer" name="id_customer" onchange="toggleOtherCustomerInput()">
+                            <select class="form-control" id="id_customer" name="id_customer"
+                                onchange="toggleOtherCustomerInput()">
                                 <option value="">Pilih Pelanggan</option>
                                 @foreach ($customer as $c)
                                     <option value="{{ $c->id_customer }}">{{ $c->name }}</option>
@@ -170,7 +171,8 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
-                            <button type="submit" class="btn btn-primary" onclick="getNota($sales->id_sales)">Cetak Nota</button>
+                            <button type="submit" class="btn btn-primary" onclick="getNota($sales->id_sales)">Cetak
+                                Nota</button>
                         </div>
                     </form>
                 </div>
@@ -434,7 +436,6 @@
             <td>-</td>
             <td>1</td>
             <td>${shippingCost.toFixed(2)}</td>
-            <td>-</td>
             <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
                 <i class="fa-solid fa-trash-can"></i></button></td>
             `;
@@ -450,8 +451,10 @@
         function updateDiscountValue(radio) {
             const discountValue = radio.getAttribute('data-value');
             const discountField = document.getElementById('discount');
+            const hiddenDiscountField = document.getElementById('hDiscount');
             discountField.value = discountValue;
             discountField.style.display = 'block';
+            hiddenDiscountField.value = discountValue;
             updateTotals();
         }
 
@@ -484,6 +487,7 @@
         function submitDiscount() {
             const discount = parseFloat(document.getElementById('discount').value) || 0;
             console.log('diskon', discount);
+            const discountHidden = document.getElementById('hDiscount');// Ambil nilai dari hidden field
             const discountName = getSelectedDiscountName();
             console.log('diskonname', discountName);
             if (discountName === '') {
@@ -493,23 +497,31 @@
             let finalDiscount = discount;
             console.log('final discount', finalDiscount);
             console.log('amount', totalAmount);
+
             if (discountName === 'Diskon Persentase') {
                 finalDiscount = totalAmount * (discount / 100); // Diskon berdasarkan persentase
+                discountHidden.value = finalDiscount;
+                console.log('%',discountHidden.value);
             } else if (discountName === 'Diskon Member') {
                 finalDiscount = totalAmount * (discount / 100); // Diskon member
+                discountHidden.value = finalDiscount;
+                console.log('mem', discountHidden.value);
             } else {
                 finalDiscount = discount; // Diskon nominal (Musim atau Order)
+                discountHidden.value = finalDiscount;
+                console.log('musim/order', discountHidden.value);
+
             }
             const tableBody = document.getElementById('productsTable');
             const row = document.createElement('tr');
             row.innerHTML = `
-            <td>${discountName}</td>
-            <td>-</td>
-            <td>1</td>
-            <td>${parseFloat(finalDiscount).toFixed(2)}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
-                <i class="fa-solid fa-trash-can"></i></button></td>
-        `;
+        <td>${discountName}</td>
+        <td>-</td>
+        <td>1</td>
+        <td>${parseFloat(finalDiscount).toFixed(2)}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
+            <i class="fa-solid fa-trash-can"></i></button></td>
+    `;
             tableBody.appendChild(row);
             $('#modalDiscount').modal('hide');
             document.getElementById('discount').value = '';

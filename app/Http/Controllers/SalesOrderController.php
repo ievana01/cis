@@ -208,6 +208,7 @@ class SalesOrderController extends Controller
         $sales->payment_method = $request->get('payment_method');
         $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
         $sales->discount = $request->get('hDiscount') ?? 0;
+        // dd($request->get('hDiscount'));
         $sales->employee_id = $request->get('employee_id') ?? 1;
         $sales->save();
 
@@ -259,7 +260,20 @@ class SalesOrderController extends Controller
     public function showNota($id)
     {
         $dataToko = StoreData::first();
-        $sales = DB::table('sales_orders')->where('id_sales', $id)->first();
+        // $sales = DB::table('sales_orders')->where('id_sales', $id)->first();
+        // $sales = DB::table('sales_orders')
+        //     ->join('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+        //     ->where('sales_orders.id_sales', $id)
+        //     ->select('sales_orders.*', 'customers.name as customer_name')
+        //     ->first();
+        $sales = DB::table('sales_orders')
+            ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+            ->where('sales_orders.id_sales', $id)
+            ->select(
+                'sales_orders.*',
+                'customers.name as customer_name_by_id',
+            )
+            ->first();
         // dd($sales);
         $salesDetail = DB::table('sales_details')
             ->join('products', 'sales_details.product_id', '=', 'products.id_product')
