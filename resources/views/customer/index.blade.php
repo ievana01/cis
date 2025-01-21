@@ -3,23 +3,23 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <h4 class="font-weight-bold">List Customer</h4>
-    <a class="btn btn-primary mb-2" href="{{ route('customer.create') }}">+ Add Customer</a>
+    <h4 class="font-weight-bold">Daftar Pelanggan</h4>
+    <a class="btn btn-primary mb-2" href="{{ route('customer.create') }}">+ Tambah Pelanggan</a>
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Name</th>
+                <th>No.</th>
+                <th>Nama</th>
                 <th>Email</th>
-                <th>Phone Number</th>
-                <th>Address</th>
-                <th>Action</th>
+                <th>Nomor Telepon</th>
+                <th>Alamat</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($customer as $data)
                 <tr>
-                    <td>{{ $data->id_customer }}</td>
+                    <td>{{ $loop->iteration }}.</td>
                     <td>{{ $data->name }}</td>
                     <td>{{ $data->email }}</td>
                     <td>{{ $data->phone_number }}</td>
@@ -29,14 +29,14 @@
                             style="display:inline-block;">
                             @csrf
                             @method('DELETE')
-                            <input type="submit" value="Delete" class="btn btn-danger"
-                                onclick="return confirm('Are you sure to delete {{ $data->id_customer }} - {{ $data->name }} ?');">
+                            <input type="submit" value="Hapus" class="btn btn-danger"
+                                onclick="return confirm('Apakah anda yakin menghapus{{ $data->id_customer }} - {{ $data->name }} ?');">
                         </form>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center">Data not available.</td>
+                    <td colspan="6" class="text-center">Data tidak tersedia</td>
                 </tr>
             @endforelse
         </tbody>

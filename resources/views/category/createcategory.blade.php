@@ -2,20 +2,18 @@
 @section('content')
     <form method="POST" action="{{ route('category.store') }}">
         @csrf
-        <h4>New Category</h4>
+        <h4 class="font-weight-bold">Kategori Baru</h4>
         <div class="form-group">
-            <label for="name">Category Name</label>
+            <label for="name">Nama Kategori</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"
-                placeholder="Insert category name">
+                placeholder="Masukkan nama kategori">
         </div>
         <div class="form-group">
-            <label for="code_category">Code Category</label>
+            <label for="code_category">Kode Kategori</label>
             <input type="text" class="form-control" id="code_category" name="code_category"
-                placeholder="Insert code category">
+                placeholder="Masukkan kode kategori">
         </div>
-        <div style="text-align: right">
-            <a href="{{ route('category.index') }}" type="button" class="btn btn-danger">Cancel</a>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </div>
+        <a href="{{ route('category.index') }}" type="button" class="btn btn-danger">Batal</a>
+        <button type="submit" class="btn btn-primary">Simpan</button>
     </form>
 @endsection

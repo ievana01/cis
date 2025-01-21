@@ -4,8 +4,10 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductMovingController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\SalesOrderController;
+use App\Http\Controllers\StoreDataController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
@@ -36,19 +38,7 @@ Route::resource('/warehouse', WarehouseController::class);
 Route::resource('/product', ProductController::class);
 Route::resource('/customer', CustomerController::class);
 
-// Route::get('/get-product-price/{id}', [ProductController::class, 'getPrice']);
-
 Route::post('warehouse/getEditForm', [WarehouseController::class, 'getEditForm'])->name("warehouse.getEditForm");
-
-
-// Route::post('/sales/add-product', [SalesOrderController::class, 'addProduct'])->name('sales.addProduct');
-// Route::post('/sales/shipping-cost', [SalesOrderController::class, 'addShippingCost'])->name('sales.addShippingCost');
-// Route::post('/sales/discount', [SalesOrderController::class, 'addDiscount'])->name('sales.addDiscount');
-// Route::post('/sales/calculate-total', [SalesOrderController::class, 'calculateTotal'])->name('sales.calculateTotal');
-
-// Route::post('/sales/add-product', [SalesOrderController::class, 'addProduct'])->name('sales.addProduct');
-// Route::post('/sales/update-shipping', [SalesOrderController::class, 'updateShipping'])->name('sales.updateShipping');
-// Route::post('/sales/update-discount', [SalesOrderController::class, 'updateDiscount'])->name('sales.updateDiscount');
 
 Route::post('/purchase/add-product', [PurchaseOrderController::class, 'addProduct'])->name('purchase.addProduct');
 Route::post('/purchase/calculate-total', [PurchaseOrderController::class, 'calculateTotal'])->name('purchase.calculateTotal');
@@ -76,6 +66,24 @@ Route::get('report-stock', [ProductController::class, 'showReportStock'])->name(
 // Route untuk menampilkan form create customer
 // Route::post('/customer/create', [CustomerController::class, 'create'])->name('customer.create');
 Route::post('/sales/getCreateCust', [SalesOrderController::class, 'getCreateCust'])->name('sales.getCreateCust');
+
+
+Route::resource('/dataStore', controller: StoreDataController::class);  
+// Route::get('/dataStore', [StoreDataController::class, 'index'])->name('dataStore.index');
+// Route::get('/dataStore/edit', [StoreDataController::class, 'edit'])->name('dataStore.edit');
+// Route::put('/dataStore/update', [StoreDataController::class, 'update'])->name('dataStore.update');
+
+Route::post('sales/getNota', [SalesOrderController::class, 'getNota'])->name("sales.getNota");
+Route::get('sales/nota/{id}', [SalesOrderController::class, 'showNota'])->name('sales.showNota');
+
+Route::post('purchase/getNota', [PurchaseOrderController::class, 'getNota'])->name("purchase.getNota");
+Route::get('purchase/nota/{id}', [PurchaseOrderController::class, 'showNota'])->name('purchase.showNota');
+
+Route::resource('/productMove', ProductMovingController::class);
+
+
+
+
 
 
 

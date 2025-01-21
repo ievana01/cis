@@ -3,8 +3,9 @@
     <form method="POST" action="{{ route('customer.update', $customer->id_customer) }}">
         @csrf
         @method('PUT')
+        <h4 class="font-weight-bold">Edit Pelanggan</h4>
         <div class="form-group">
-            <label for="id_customer">ID Customer</label>
+            <label for="id_customer">ID Pelanggan</label>
             <input class="form-control" type="text" name="id_customer" id="id_customer" value="{{$customer->id_customer}}" disabled>
         </div>
         <div class="form-group">

@@ -3,39 +3,46 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <a class="btn btn-primary mb-2" href="{{ route('purchase.create') }}">+ Purchase Orders</a>
-    <table class="table table-hover">
+    <a class="btn btn-primary mb-2" href="{{ route('purchase.create') }}">+ Order Pembelian</a>
+    <table class="table table-hover text-center">
         <thead>
             <tr>
-                <th>Purchase Invoice</th>
-                <th>Purchase Date</th>
-                <th>Supplier</th>
+                <th>Nomor Ref</th>
+                <th>Tanggal Pembelian</th>
+                <th>Pemasok</th>
                 <th>Total</th>
-                <th>Payment Status</th>
+                <th>Status Pembayaran</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($purchase as $data)
                 <tr>
                     <td>{{ $data->purchase_invoice }}</td>
-                    <td>{{ $data->date }} </td>
+                    <td>{{ date('d-m-Y', strtotime($data->date)) }}</td>
                     <td>{{ $data->supplier_name }}</td>
-                    <td>Rp. {{ $data->total_purchase }}</td>
+                    <td>Rp. {{ number_format($data->total_purchase, 0, ',', '.') }}</td>
+
                     <td>
                         @if ($data->payment_method != null)
-                            Payment Success
+                            <label>Pembayaran Sukses</label>
                         @else
-                            Payment not Registered
-                        @if ($payProd->id_detail_configuration == 16 && $data->expected_arrival >= now()->toDateString())
-                                <a href="#modalPayment" class="btn btn-warning" data-toggle="modal"
-                                    onclick="paymentForm({{ $data->id_purchase }})">Payment</a>
+                            
+                            <label class="text-danger">Pembayaran blm terdaftar</label>
+                            @if ($payProd->id_detail_configuration == 21 && $data->expected_arrival <= now()->toDateString())
+                            <br>
+                                <a href="#modalPayment" class="btn btn-success" data-toggle="modal"
+                                    onclick="paymentForm({{ $data->id_purchase }})">Bayar</a>
                             @endif
                         @endif
+                    </td>
+                    <td>
+                        <a href="{{ route('purchase.showNota', $data->id_purchase) }}" class="btn btn-info">Tampilkan Nota</a>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center">Data not available.</td>
+                    <td colspan="5" class="text-center">Data tidak tersedia</td>
                 </tr>
             @endforelse
         </tbody>
@@ -45,7 +52,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Payment Register</h5>
+                    <h5 class="modal-title" id="exampleModalLongTitle">Registrasi Pembayaran</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>

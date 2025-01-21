@@ -2,20 +2,18 @@
 @section('content')
     <form method="POST" action="{{ route('warehouse.store') }}">
         @csrf
-        <h4>New Warehouse</h4>
+        <h4 class="font-weight-bold">Gudang Baru</h4>
         <div class="form-group">
-            <label for="name">Warehouse Name</label>
+            <label for="name">Nama Gudang</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"
-                placeholder="Insert warehouse name">
+                placeholder="Masukkan nama gudang">
         </div>
         <div class="form-group">
-            <label for="address">Address</label>
+            <label for="address">Alamat</label>
             <input type="text" class="form-control" id="address" name="address" aria-describedby="address"
-                placeholder="Insert warehouse address">
+                placeholder="Masukkan alamat gudang">
         </div>
-        <div style="text-align: right">
-            <a href="{{ route('warehouse.index') }}" type="button" class="btn btn-danger">Cancel</a>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </div>
+        <a href="{{ route('warehouse.index') }}" type="button" class="btn btn-danger">Cancel</a>
+        <button type="submit" class="btn btn-primary">Simpan</button>
     </form>
 @endsection

@@ -3,16 +3,16 @@
     <table class="table table-stripped">
         <thead>
             <tr>
-                <th>ID Product</th>
-                <th>Name</th>
-                <th>Stock</th>
-                <th>Location</th>
+                <th>No.</th>
+                <th>Nama Produk</th>
+                <th>Stok</th>
+                <th>Lokasi Penyimpanan</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($product as $p)
                 <tr>
-                    <td>{{ $p->id_product }}</td>
+                    <td>{{ $loop->iteration }}.</td>
                     <td>{{$p->name}}</td>
                     <td>{{$p->total_stock}}</td>
                     <td>{{$p->warehouse_name}}</td>

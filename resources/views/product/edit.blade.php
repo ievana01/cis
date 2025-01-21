@@ -4,7 +4,7 @@
     <form method="POST" action="{{ route('product.update', $product->id_product) }}">
         @csrf
         @method('PUT')
-
+        <h4 class="font-weight-bold">Edit Produk</h4>
         <div class="form-inline mb-3">
             <label for="id_product">ID</label>
             <div class="col-sm-10">
@@ -52,6 +52,20 @@
                 value="{{ $product->total_stock }}" placeholder="Masukkan jumlah produk yang dimiliki">
         </div>
 
+        @if ($pemProd->id_detail_configuration == 17)
+            <div class="form-group">
+                <label for="cost">Harga Pokok</label>
+                <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
+                    value="{{ $product->cost }}" placeholder="Masukkan harga pokok produk" disabled>
+            </div>
+        @else
+            <div class="form-group">
+                <label for="cost">Harga Pokok</label>
+                <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
+                    value="{{ $product->cost }}" placeholder="Masukkan harga pokok produk">
+            </div>
+        @endif
+
         <div class="form-group">
             <label for="price">Harga Jual</label>
             <input type="text" class="form-control" id="price" name="price" aria-describedby="price"
@@ -59,9 +73,9 @@
         </div>
 
         <div class="form-group">
-            <label for="cost">Harga Pokok</label>
-            <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
-                value="{{ $product->cost }}" placeholder="Masukkan harga pokok produk">
+            <label for="profit">Keuntungan(%)</label>
+            <input type="number" class="form-control" id="profit" name="profit" aria-describedby="profit"
+                value="{{ $product->profit }}" placeholder="Masukkan keuntungan untuk produk ini">
         </div>
 
         <div class="form-group">
@@ -78,7 +92,7 @@
         </div>
 
         <div class="form-group">
-            <label for="min_total_stock">Minimum Stok</label>
+            <label for="min_total_stock">Minimum Stok di Gudang</label>
             <input type="text" class="form-control" id="min_total_stock" name="min_total_stock"
                 value="{{ $product->min_total_stock }}" aria-describedby="min_total_stock"
                 placeholder="Silahkan atur minimum stok pada produk ini">
@@ -86,15 +100,10 @@
 
         <div class="form-group">
             <label class="control-label">Lokasi Produk</label>
-            <select class="form-control" name="warehouse_id" id="warehouse_id" disabled>
-                @foreach ($warehouse as $w)
-                    <option value="{{ $w->id_warehouse }}" >
-                        {{ $w->id_warehouse }} - {{ $w->name }}
-                    </option>
-                @endforeach
-            </select>
+            <input type="text" class="form-control" id="warehouse_id" name="warehouse_id"
+                value="{{ $warehouse->name }}" disabled>
         </div>
 
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
     </form>
 @endsection

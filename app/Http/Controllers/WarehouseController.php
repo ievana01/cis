@@ -55,7 +55,7 @@ class WarehouseController extends Controller
      */
     public function edit(Warehouse $warehouse)
     {
-        return view('warehouse.edit', compact('warehouse'));
+        return view('warehouse.getEditForm', compact('warehouse'));
     }
 
     public function getEditForm(Request $request)

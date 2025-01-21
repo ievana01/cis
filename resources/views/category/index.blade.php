@@ -3,47 +3,47 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <h4 class="font-weight-bold">List Category</h4>
-    <a class="btn btn-primary mb-2" href="{{ route('category.create') }}">+ Add Category</a>
+    <h4 class="font-weight-bold">Daftar Kategori Produk</h4>
+    <a class="btn btn-primary mb-2" href="{{ route('category.create') }}">+ Tambah Kategori</a>
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Category</th>
-                @if ($catProd && $catProd->id_detail_configuration == 18)
-                    <th>List Sub Category</th>
+                <th>No.</th>
+                <th>Nama Kategori</th>
+                @if ($catProd && $catProd->id_detail_configuration == 23)
+                    <th>Daftar Sub Kategori</th>
                 @endif
-                <th>Action</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($category as $data)
                 <tr>
-                    <td>{{ $data->id_category }}</td>
+                    <td>{{ $loop->iteration }}.</td>
                     <td>{{ $data->code_category }} - {{ $data->name }}</td>
-                    <td>
-                        @if ($catProd && $catProd->id_detail_configuration == 18)
+                    @if ($catProd && $catProd->id_detail_configuration == 23)
+                        <td>
                             @forelse ($subCategory->where('category_id', $data->id_category) as $sub)
                                 <ul>
                                     <li>{{ $sub->code_sub_category }} - {{ $sub->name }}</li>
                                 </ul>
                             @empty
-                                <span>Data not available</span>
+                                <span>Data tidak tersedia</span>
                             @endforelse
-                        @endif
-                    </td>
+                        </td>
+                    @endif
                     <td>
                         @if ($catProd && $catProd->id_detail_configuration != null)
                             <a href="#modalAddSub" class="btn btn-info btn-sm" data-toggle="modal"
-                                onclick="formSubCategory({{ $data->id_category }})">+Sub Category</a>
+                                onclick="formSubCategory({{ $data->id_category }})">+Sub Kategori</a>
                         @endif
                         <a href="{{ route('category.edit', $data->id_category) }}" class="btn btn-warning btn-sm">Edit</a>
                         <form method="POST" action="{{ route('category.destroy', $data->id_category) }}"
                             style="display:inline-block;">
                             @csrf
                             @method('DELETE')
-                            <input type="submit" value="Delete" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Are you sure to delete {{ $data->id_category }} - {{ $data->name }} ?');">
+                            <input type="submit" value="Hapus" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Apakah anda yaking menghapus {{ $data->id_category }} - {{ $data->name }} ?');">
                         </form>
                     </td>
                 </tr>
@@ -58,7 +58,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Add Sub Category</h5>
+                    <h5 class="modal-title" id="exampleModalLongTitle">Tambah Sub Kategori</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>

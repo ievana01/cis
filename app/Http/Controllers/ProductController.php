@@ -20,7 +20,13 @@ class ProductController extends Controller
     {
         // $product = Product::all();
         $product = Product::with('images')->get();
+        // dd($product);
         return view('product.index', ["product" => $product]);
+    }
+
+    public function move()
+    {
+        return view('product.move');
     }
 
     public function showReportStock()
@@ -108,14 +114,14 @@ class ProductController extends Controller
         $data = new Product();
         $data->name = $request->get('name');
         $data->description = $request->get('description');
-        $data->price = $request->get('cost') * ($request->get('profit')/100) + $request->get('cost');
+        $data->price = $request->get('cost') * ($request->get('profit') / 100) + $request->get('cost');
         $data->total_stock = $request->get('total_stock');
         $data->cost = $request->get('cost');
         $data->profit = $request->get('profit');
         $data->unit = $request->get('unit');
         $data->min_total_stock = $request->get('min_total_stock');
         $data->category_id = $request->get('category_id');
-        $data->supplier_id = $request->get('supplier_id');
+        // $data->supplier_id = $request->get('supplier_id');
         $data->save();
 
         if ($cogsMethod == 'FIFO') {
@@ -163,16 +169,29 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
+        // dd($product);
         $supplier = Supplier::all();
         $category = Category::all();
-        $warehouse = Warehouse::all();
-
+        // $warehouse = Warehouse::all();
+        $warehouse = ProductHasWarehouse::where('product_id', $product->id_product)
+            ->join('warehouses', 'product_has_warehouses.warehouse_id', '=', 'warehouses.id_warehouse')
+            ->select('warehouses.name')
+            ->first();
+        // dd($warehouse);
+        //pembelian prod
+        $pemProd = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 7)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->first();
+        // dd($pemProd);
         // Get the column details for 'unit'
         $unit = DB::select('SHOW COLUMNS FROM products WHERE Field = "unit"')[0];
         // Extract the ENUM options from the 'Type' attribute of the column
         preg_match("/^enum\('(.*)'\)$/", $unit->Type, $matches);
         $unitOptions = explode("','", $matches[1]);
-        return view('product.edit', compact('product', 'supplier', 'category', 'warehouse', 'unitOptions'));
+        return view('product.edit', compact('product', 'supplier', 'category', 'warehouse', 'unitOptions', 'pemProd'));
     }
 
     /**
@@ -182,7 +201,7 @@ class ProductController extends Controller
     {
         $product->name = $request->name;
         $product->description = $request->description;
-        $product->supplier_id = $request->supplier_id;
+        // $product->supplier_id = $request->supplier_id;
         $product->category_id = $request->category_id;
         $product->total_stock = $request->total_stock;
         $product->price = $request->price;
@@ -190,7 +209,7 @@ class ProductController extends Controller
         $product->unit = $request->unit;
         $product->min_total_stock = $request->min_total_stock;
         $product->save();
-        return redirect()->route('product.index')->with('status', 'Data Successfully Updated!');
+        return redirect()->route('product.index')->with('status', 'Data Berhasil Diubah!');
     }
 
     /**
@@ -206,4 +225,6 @@ class ProductController extends Controller
             return redirect()->route('product.index')->with('status', $msg);
         }
     }
+
+
 }

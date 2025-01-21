@@ -5,12 +5,13 @@
     @endif
     <form action="{{ route('purchase.configuration.save') }}" method="POST">
         @csrf
-        <button class="btn btn-danger" type="button">Cancel</button>
-        <button class="btn btn-success" type="submit">Save</button>
+        <a href="/" class="btn btn-danger">Batal</a>
+        <button class="btn btn-success" type="submit">Simpan</button>
 
         @foreach ($configuration as $c)
             <div class="card-body bg-white mt-2 mb-2">
                 <h5 class="card-title">{{ $c->name }}</h5>
+                <p>{{$c->description}}</p>
                 <ul>
                     @foreach ($c->details as $detail)
                         <div class="form-check">
@@ -21,6 +22,7 @@
                             <label class="form-check-label" for="radio{{ $detail->id_detail_configuration }}">
                                 {{ $detail->name }}
                             </label>
+                            <p>{{$detail->description}}</p>
                         </div>
                     @endforeach
                 </ul>

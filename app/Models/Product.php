@@ -19,10 +19,10 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class, 'category_id', 'id_category');
     }
-    public function supplier()
-    {
-        return $this->belongsTo(Supplier::class, 'supplier_id', 'id_supplier');
-    }
+    // public function supplier()
+    // {
+    //     return $this->belongsTo(Supplier::class, 'supplier_id', 'id_supplier');
+    // }
     public function images()
     {
         return $this->hasMany(ImageProduct::class, 'product_id'); // 'product_id' adalah kolom yang menghubungkan dengan produk

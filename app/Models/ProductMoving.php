@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProductMoving extends Model
 {
     use HasFactory;
+    protected $table = 'product_moving';
     protected $primaryKey = 'id_product_move';
     public $timestamps = false;
     public function product()

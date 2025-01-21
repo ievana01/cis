@@ -1,12 +1,12 @@
-@extends('layouts.blank')
+@extends('layouts.btemplate')
 @section('content')
     <form method="POST" action="{{ route('customer.store') }}">
         @csrf
-        <h4>New Customer</h4>
+        <h4 class="font-weight-bold">Tambah Pelanggan</h4>
         <div class="form-group">
             <label for="name">Nama</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"
-                placeholder="Masukkan nama customer">
+                placeholder="Masukkan nama pelanggan">
         </div>
         <div class="form-group">
             <label for="phone_number">Nomor Telepon</label>
@@ -23,6 +23,7 @@
             <input type="text" class="form-control" id="address" name="address" aria-describedby="address"
                 placeholder="Masukkan alamat">
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{{route('customer.index')}}" class="btn btn-danger">Batal</a>
+        <button type="submit" class="btn btn-primary">Simpan</button>
     </form>
 @endsection

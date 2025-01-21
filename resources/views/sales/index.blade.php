@@ -3,29 +3,31 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <a class="btn btn-primary mb-2" href="{{ route('sales.create') }}">+ Sales Orders</a>
-    <table class="table table-hover">
+    <a class="btn btn-primary mb-2" href="{{ route('sales.create') }}">+ Order Penjualan</a>
+    <table class="table table-hover text-center">
         <thead>
             <tr>
-                <th>Sales Invoice</th>
-                <th>Order Date</th>
-                <th>Customer</th>
-                <th>Total Price</th>
-                <th>Payment Method</th>
+                <th>Nomor Ref</th>
+                <th>Tanggal Order</th>
+                <th>Pelanggan</th>
+                <th>Total</th>
+                <th>Jenis Pembayaran</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($sales as $data)
                 <tr>
                     <td>{{ $data->sales_invoice }}</td>
-                    <td>{{ $data->date }}</td>
+                    <td>{{ date('d-m-Y', strtotime($data->date)) }}</td>
                     <td>{{ $data->customer_name ?? $data->custname }}</td>
-                    <td>Rp. {{ $data->total_price }}</td>
+                    <td>Rp. {{ number_format($data->total_price, 0, ',', '.') }}</td>
                     <td>{{ $data->payment_method_name }}</td>
+                    <td><a href="{{route('sales.showNota', $data->id_sales)}}" class="btn btn-info">Tampilkan Nota</a></td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center">Data not available.</td>
+                    <td colspan="5" class="text-center">Data tidak tersedia</td>
                 </tr>
             @endforelse
         </tbody>

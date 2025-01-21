@@ -4,17 +4,18 @@
     
     <input type="hidden" name="id_purchase" value="{{ $purchase->id_purchase }}">
 
-    <p>Purchase Invoice : {{ $purchase->purchase_invoice }}</p>
-    <p>Order Date : {{ $purchase->date }}</p>
-    <p>Total Payment : Rp. {{ $purchase->total_purchase }}</p>
+    <p>No Ref : {{ $purchase->purchase_invoice }}</p>
+    <p>Tanggal Order : {{ date('d-m-Y', strtotime($purchase->date)) }}</p>
 
-    <label for="payment_method">Payment Method</label>
+    <p>Total Pembayaran : Rp. {{ $purchase->total_purchase }}</p>
+
+    <label for="payment_method">Metode Pembayaran</label>
     <select class="form-control" name="payment_method" id="payment_method">
-        <option value="">Choose payment method</option>
+        <option value="">Pilih Metode Pembayaran</option>
         @foreach ($paymentMethod as $pay)
             <option value="{{ $pay->id_detail_configuration }}">{{ $pay->name }}</option>
         @endforeach
     </select>
 
-    <button type="submit" class="btn btn-success mt-2">Submit</button>
+    <button type="submit" class="btn btn-success mt-2">Bayar</button>
 </form>

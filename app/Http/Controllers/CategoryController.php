@@ -17,7 +17,7 @@ class CategoryController extends Controller
         $category = Category::all();
         $catProd = DB::table('detail_configurations')
             ->where('status_active', 1)
-            ->where('configuration_id', 8)
+            ->where('configuration_id', operator: 10)
             ->first();
         $subCategory = SubCategory::all();
         // dd($catProd);
@@ -51,7 +51,7 @@ class CategoryController extends Controller
             'code_sub_category' => $request->get('code_sub_category'),
             'name' => $request->get('name'),
         ]);
-        return redirect()->route('category.index')->with('status', 'Subcategory added successfully!');
+        return redirect()->route('category.index')->with('status', 'Sub kategori berhasil ditambahkan!');
     }
 
 
@@ -64,7 +64,7 @@ class CategoryController extends Controller
         $data->name = $request->get('name');
         $data->code_category = $request->get('code_category');
         $data->save();
-        return redirect()->route('category.index')->with('status', 'Successfully added data!');
+        return redirect()->route('category.index')->with('status', 'Sukses menambahkan data!');
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductMoving;
 use App\Models\SalesDetail;
 use App\Models\SalesOrder;
+use App\Models\StoreData;
 use DB;
 use Illuminate\Http\Request;
 use Log;
@@ -23,6 +24,7 @@ class SalesOrderController extends Controller
             ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
             ->leftJoin('detail_configurations', 'sales_orders.payment_method', '=', 'detail_configurations.id_detail_configuration')
             ->select(
+                'sales_orders.id_sales',
                 'sales_orders.sales_invoice',
                 'sales_orders.date',
                 'sales_orders.total_price',
@@ -30,6 +32,7 @@ class SalesOrderController extends Controller
                 'sales_orders.customer_name as custname',  // Menampilkan nama customer yang diinput manual
                 'detail_configurations.name as payment_method_name'  // Menampilkan metode pembayaran
             )
+            ->orderBy('sales_invoice', 'desc')
             ->get();
         return view('sales.index', ["sales" => $sales]);
     }
@@ -47,6 +50,8 @@ class SalesOrderController extends Controller
     {
         $configurations = $request->input('configurations', []);
         $discountValues = $request->input('discount_values', []);
+        $taxValues = $request->input('tax_values', []);
+        // dd($taxValues);
         $allConfigurations = DB::table('detail_configurations')
             ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
             ->where('configurations.menu_id', 1)
@@ -68,7 +73,7 @@ class SalesOrderController extends Controller
             DB::table('detail_configurations')
                 ->where('id_detail_configuration', $config->id_detail_configuration)
                 ->update(['status_active' => $isActive]);
-                
+
             if (isset($discountValues[$config->id_detail_configuration])) {
                 $discountValue = $discountValues[$config->id_detail_configuration];
                 // Update the discount value in the database (if needed)
@@ -76,8 +81,15 @@ class SalesOrderController extends Controller
                     ->where('id_detail_configuration', $config->id_detail_configuration)
                     ->update(['value' => $discountValue]);
             }
+
+            if ($config->id_detail_configuration == 4 && isset($taxValues[4])) {
+                $taxValues = $taxValues[4];
+                DB::table('detail_configurations')
+                    ->where('id_detail_configuration', 4)
+                    ->update(['value' => $taxValues]);
+            }
         }
-        return redirect()->route('sales.configuration')->with('status', 'Configurations updated successfully!');
+        return redirect()->route('sales.configuration')->with('status', 'Sukses mengubah konfigurasi!');
     }
 
     /**
@@ -89,6 +101,7 @@ class SalesOrderController extends Controller
         $sales = SalesOrder::all();
         $customer = Customer::all();
         $product = Product::all();
+        // dd($product);
         $paymentMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 3)
@@ -101,20 +114,34 @@ class SalesOrderController extends Controller
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 2)
             ->where('detail_configurations.status_active', 1)
-            ->select('detail_configurations.name')
+            ->select('detail_configurations.value')
             ->first();
-
+        // dd($tax);
         if ($tax) {
-            $taxRate = floatval(str_replace('%', '', $tax->name)) / 100; // Menghasilkan 0.11 untuk 11%
+            $taxRate = floatval(str_replace('%', '', $tax->value)) / 100; // Menghasilkan 0.11 untuk 11%
         }
 
         $discount = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 6)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name', 'detail_configurations.value', 'detail_configurations.status_active')
+            ->get();
+
+        $shippingMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
             ->where('configurations.id_configuration', 4)
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name', 'detail_configurations.value', 'detail_configurations.status_active')
             ->get();
-        // dd($discount);
+
+        $multiDiskon = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 5)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->get();
+        // dd($multiDiskon);
         return view('sales.create', [
             "invoiceNumber" => $invoiceNumber,
             "sales" => $sales,
@@ -122,7 +149,9 @@ class SalesOrderController extends Controller
             "product" => $product,
             "paymentMethod" => $paymentMethod,
             "taxRate" => $taxRate,
-            "discount" => $discount
+            "discount" => $discount,
+            "shippingMethod" => $shippingMethod,
+            "multiDiskon" => $multiDiskon
         ]);
     }
 
@@ -146,9 +175,11 @@ class SalesOrderController extends Controller
             ->select(
                 'sales_orders.sales_invoice as sales_invoice',
                 'products.name as product_name',
-                'product_moving.move_stock as stock'
+                'product_moving.*'
             )
+            ->orderBy('sales_invoice', 'asc')
             ->get();
+        // dd($data);
         return view('sales.datasales', ['data' => $data]);
     }
     /**
@@ -197,9 +228,50 @@ class SalesOrderController extends Controller
                 ->first();
 
             $sales->refreshCostSales($cogsMethod, $product, $warehouse, $sales);
+
+        }
+        // return redirect()->route('sales.index')->with('status', 'Data Berhasil Disimpan');
+        return redirect()->route('sales.showNota', $sales->id_sales)->with('status', 'Nota berhasil dibuat!');
+    }
+
+    public function getNota(Request $request)
+    {
+        $id_sales = $request->input('id_sales');
+
+        if (empty($id_sales)) {
+            return response()->json(['error' => 'ID Sales kosong'], 400);
         }
 
-        return redirect()->route('sales.index')->with('status', 'Data Berhasil Disimpan');
+        $sales = SalesOrder::find($id_sales);
+
+        if (!$sales) {
+            return response()->json(['error' => 'Sales order dengan ID tersebut tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Data successfully processed',
+            'id_sales' => $id_sales,
+        ]);
+    }
+
+
+
+    public function showNota($id)
+    {
+        $dataToko = StoreData::first();
+        $sales = DB::table('sales_orders')->where('id_sales', $id)->first();
+        // dd($sales);
+        $salesDetail = DB::table('sales_details')
+            ->join('products', 'sales_details.product_id', '=', 'products.id_product')
+            ->where('sales_details.sales_id', $id)
+            ->select('sales_details.*', 'products.name as product_name')
+            ->get();
+        // dd($salesDetail);
+        if (!$sales || $salesDetail->isEmpty()) {
+            return redirect()->back()->with('error', 'Sales order not found');
+        }
+
+        return view('sales.nota', compact('sales', 'salesDetail', 'dataToko'));
     }
 
     /**

@@ -75,6 +75,7 @@ class SalesOrder extends Model
                     DB::table('product_moving')->insert([
                         'product_id' => $product['id'],
                         'move_stock' => $toDecrement,
+                        'date' => $sales->date,
                         'warehouse_id_in' => $warehouse->warehouse_id,
                         'sales_id' => $sales->id_sales
                     ]);
@@ -96,6 +97,7 @@ class SalesOrder extends Model
             DB::table('product_moving')->insert([
                 'product_id' => $product['id'],
                 'move_stock' => $product['quantity'],
+                'date' => $sales->date,
                 'warehouse_id_in' => $warehouse->warehouse_id,
                 'sales_id' => $sales->id_sales,
             ]);

@@ -2,64 +2,51 @@
 @section('content')
     <form method="POST" action="{{ route('product.store') }}" enctype="multipart/form-data">
         @csrf
-        <h4 class="text-center">Add New Product</h4>
+        <h4 class="text-center">Tambah Produk Baru</h4>
         <div class="form-group">
-            <label for="id_image ">Insert photo product</label>
+            <label for="id_image ">Foto Produk</label>
             <input type="file" class="form-control-file" id="id_image" name="file_images[]" multiple>
+            <small id="id_image" class="form-text text-muted">Pilih foto produk</small>
         </div>
         <div id="previewContainer" style="display: flex; gap: 10px; flex-wrap: wrap;">
             <!-- Image previews will appear here -->
         </div>
         <div class="form-group">
-            <label for="name">Product Name</label>
+            <label for="name">Nama Produk</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"
-                placeholder="Insert product name">
+                placeholder="Masukkan nama produk">
         </div>
         <div class="form-group">
-            <label for="description">Description</label>
+            <label for="description">Deskripsi</label>
             <input type="text" class="form-control" id="description" name="description" aria-describedby="description"
-                placeholder="Insert description product">
+                placeholder="Masukkan deskripsi produk">
         </div>
         <div class="form-group">
-            <label class="control-label">Supplier Name</label>
-            <select class="form-control" name="supplier_id" id="supplier_id">
-                <option value="">Choose supplier</option>
-                @foreach ($supplier as $s)
-                    <option value="{{ $s->id_supplier }}">{{ $s->id_supplier }} - {{ $s->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="form-group">
-            <label class="control-label">Category Product</label>
+            <label class="control-label">Kategori Produk</label>
             <select class="form-control" name="category_id" id="category_id ">
-                <option value="">Choose Category</option>
+                <option value="">Pilih kategori</option>
                 @foreach ($category as $c)
                     <option value="{{ $c->id_category }}">{{ $c->id_category }} - {{ $c->name }}</option>
                 @endforeach
             </select>
         </div>
         <div class="form-group">
-            <label for="total_stock">Initial Product Quantity</label>
+            <label for="total_stock">Jumlah produk</label>
             <input type="text" class="form-control" id="total_stock" name="total_stock" aria-describedby="total_stock"
-                placeholder="Insert initial stock product">
+                placeholder="Masukkan jumlah produk yang dimiliki">
         </div>
-        {{-- <div class="form-group">
-            <label for="price">Product Price</label>
-            <input type="text" class="form-control" id="price" name="price" aria-describedby="price"
-                placeholder="Insert price product">
-        </div> --}}
         <div class="form-group">
-            <label for="cost">Product Cost</label>
+            <label for="cost">Harga Pokok Produk</label>
             <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
-                placeholder="Insert cost product">
+                placeholder="Masukkan harga pokok produk">
         </div>
         <div class="form-group">
-            <label for="profit">Profit Product</label>
+            <label for="profit">Keuntungan Produk (%)</label>
             <input type="number" class="form-control" id="profit" name="profit" aria-describedby="profit"
-                placeholder="How much profit do you want to get from this product? (in percent)">
+                placeholder="Berapa banyak keuntungan yang anda inginkan untuk produk ini?">
         </div>
         <div class="form-group">
-            <label for="unit">Type of Product</label>
+            <label for="unit">Tipe Produk</label>
             <div>
                 @foreach ($unit as $option)
                     <div class="form-check form-check-inline">
@@ -71,14 +58,15 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="min_total_stock">Minimum Stock</label>
+            <label for="min_total_stock">Minimum Stok di Gudang</label>
             <input type="text" class="form-control" id="min_total_stock" name="min_total_stock"
-                aria-describedby="min_total_stock" placeholder="Please set the minimum stock on this product">
+                aria-describedby="min_total_stock" placeholder="Masukkan minimum stok di gudang untuk produk ini">
         </div>
         <div class="form-group">
-            <label class="control-label">Location Product</label>
+            <label class="control-label">Lokasi Penyimpan Produk</label>
             <select class="form-control" name="warehouse_id" id="warehouse_id">
                 @foreach ($warehouse as $w)
+                    <option value="">Pilih lokasi</option>
                     <option value="{{ $w->id_warehouse }}">{{ $w->id_warehouse }} - {{ $w->name }}</option>
                 @endforeach
             </select>
