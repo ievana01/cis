@@ -19,8 +19,8 @@
         <div class="mb-4">
             <p><strong>Nomor Ref:</strong> {{ $sales->sales_invoice }}</p>
             <p><strong>Tanggal Order:</strong> {{ date('d-m-Y', strtotime($sales->date)) }}</p>
-            <p><strong>Pelanggan:</strong> {{ $sales->customer_name_by_id ?? $sales->customer_name}}</p>
-            <p><strong>Staf:</strong> {{ $sales->employee_id }}</p>
+            <p><strong>Pelanggan:</strong> {{ $sales->customer_name_by_id ?? $sales->customer_name }}</p>
+            <p><strong>Staf:</strong> {{ $sales->e_name }}</p>
         </div>
 
         <!-- Daftar Produk -->
@@ -43,6 +43,13 @@
                         <td>{{ number_format($detail->total_price, 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
+                <tr>
+                    <td>-</td>
+                    <td>Pajak</td>
+                    <td>{{ $sales->tax }}%</td>
+                    <td>{{ number_format(($sales->tax / 100) * $detail->total_price, 0, ',', '.') }}</td>
+
+                </tr>
                 <tr>
                     <td>-</td>
                     <td>Diskon</td>

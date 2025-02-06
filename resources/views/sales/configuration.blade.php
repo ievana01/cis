@@ -13,7 +13,7 @@
         @foreach ($configuration as $c)
             <div class="card-body bg-white mt-2 mb-2">
                 <h5 class="card-title">{{ $c->name }}</h5>
-                <p>{{$c->description}}</p>
+                <p>{{ $c->description }}</p>
                 <ul>
                     @foreach ($c->details as $detail)
                         {{-- metode HPP dan pajak --}}

@@ -87,7 +87,6 @@ class ProductController extends Controller
     public function create()
     {
         $category = Category::all();
-        $supplier = Supplier::all();
         $warehouse = Warehouse::all();
 
         // Get the column details for 'unit'
@@ -96,7 +95,7 @@ class ProductController extends Controller
         preg_match("/^enum\('(.*)'\)$/", $unit->Type, $matches);
         $unitOptions = explode("','", $matches[1]);
 
-        return view('product.createproduct', ["category" => $category, "supplier" => $supplier, "warehouse" => $warehouse, "unit" => $unitOptions]);
+        return view('product.createproduct', ["category" => $category,  "warehouse" => $warehouse, "unit" => $unitOptions]);
     }
 
     /**
@@ -201,11 +200,11 @@ class ProductController extends Controller
     {
         $product->name = $request->name;
         $product->description = $request->description;
-        // $product->supplier_id = $request->supplier_id;
         $product->category_id = $request->category_id;
         $product->total_stock = $request->total_stock;
-        $product->price = $request->price;
         $product->cost = $request->cost;
+        $product->price = $request->price;
+        $product->profit = $request->profit;
         $product->unit = $request->unit;
         $product->min_total_stock = $request->min_total_stock;
         $product->save();

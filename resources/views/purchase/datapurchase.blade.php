@@ -1,6 +1,6 @@
 @extends('layouts.btemplate')
 @section('content')
-    <h4 class="font-weight-bold">Data Pembelian Produk</h4>
+    <h4 class="font-weight-bold">Laporan Pembelian Produk</h4>
     <input class="form-control" id="myInput" type="text" placeholder="Cari..">
     <table class="table table-border text-center">
         <thead>
@@ -8,6 +8,7 @@
                 <th>No Ref</th>
                 <th>Nama Produk</th>
                 <th>Tanggal Order</th>
+                <th>Pemasok</th>
                 <th>Jumlah Pembelian</th>
             </tr>
         </thead>
@@ -17,6 +18,7 @@
                     <td>{{ $dp->purchase_invoice }}</td>
                     <td>{{ $dp->product_name }}</td>
                     <td>{{ date('d-m-Y', strtotime($dp->date)) }}</td>
+                    <td>{{ $dp->supplier_name }}</td>
                     <td>{{ $dp->move_stock }}</td>
                 </tr>
             @empty

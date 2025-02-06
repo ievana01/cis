@@ -10,7 +10,7 @@
     <meta name="author" content="">
 
     <title>Toko Aksesoris</title>
-    
+
     <!-- Custom fonts for this template-->
     <link href=" {{ asset('btemplate/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
     <link
@@ -104,7 +104,7 @@
                         <h6 class="collapse-header">Manajemen Produk</h6>
                         <a class="collapse-item" href="{{ route('product.index') }}">Produk</a>
                         <a class="collapse-item" href="{{ route('productMove.index') }}">Perpindahan Produk</a>
-                        <a class="collapse-item" href="{{ route( 'category.index') }}">Kategori Produk</a>
+                        <a class="collapse-item" href="{{ route('category.index') }}">Kategori Produk</a>
                         <a class="collapse-item" href="{{ route('warehouse.index') }}">Gudang</a>
 
                         {{-- <div class="collapse-divider"></div>
@@ -142,8 +142,9 @@
                 <div id="collapseReport" class="collapse" aria-labelledby="headingData"
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="sales-data">Laporan Penjualan Produk</a>
+                        <a class="collapse-item" href="sales-data">Laporan Produk Terjual</a>
                         <a class="collapse-item" href="purchase-data">Laporan Pembelian Produk</a>
+                        <a class="collapse-item" href="/laporan-laba">Laporan Laba Kotor</a>
                     </div>
                 </div>
             </li>
@@ -177,17 +178,21 @@
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 {{-- <img class="img-profile rounded-circle" src="img/undraw_profile.svg"> --}}
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Hello, Douglas McGee</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Hello,
+                                    {{ Auth::user()->username }}</span>
                             </a>
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#" data-toggle="modal"
-                                    data-target="#logoutModal">
-                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Logout
-                                </a>
+                                <form action="{{ route('logout') }}" method="post" class="px-3 py-2">
+                                    @csrf
+                                    <button type="submit"
+                                        class="btn btn-danger btn-sm w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2"></i> Logout
+                                    </button>
+                                </form>
                             </div>
+
                         </li>
 
                     </ul>

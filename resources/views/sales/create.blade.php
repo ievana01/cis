@@ -39,8 +39,15 @@
                 </tr>
                 <tr>
                     <th><label for="tax">Tarif Pajak</label></th>
-                    <th><input type="text" class="form-control" name="tax" id="tax"
-                            value="{{ $taxRate * 100 }}%" disabled></th>
+                    {{-- <th><input type="text" class="form-control" name="tax" id="tax"
+                            value="{{ $taxRate * 100 }}" readonly></th> --}}
+                    <th>
+                        <div style="display: flex; align-items: center;">
+                            <input type="text" class="form-control" name="tax" id="tax"
+                                value="{{ $taxRate * 100 }}" readonly style="width:50px; text-align: center;">
+                            <span style="margin-left: 5px;">(%)</span>
+                        </div>
+                    </th>
                 </tr>
             </tbody>
         </table>
@@ -203,7 +210,7 @@
                     <div class="modal-body" id="modalContent">
                         <div class="form-group">
                             @if ($multiDiskon->isNotEmpty())
-                                <p class="text-danger text-center">Jenis diskon dipilih lebih dari 1x</p>
+                                <p class="text-danger text-center">Jenis diskon dapat dipilih lebih dari 1x</p>
                             @else
                                 <p class="text-danger text-center">Tawarkan jenis diskon yang tersedia! Setiap transaksi
                                     hanya dapat memilih 1 jenis diskon!</p>
@@ -484,10 +491,15 @@
             }
         }
 
+        let jumDis = 0;
+
         function submitDiscount() {
+            let disPer = 0;
+            let disMem = 0;
+            let disMusOr = 0;
             const discount = parseFloat(document.getElementById('discount').value) || 0;
             console.log('diskon', discount);
-            const discountHidden = document.getElementById('hDiscount');// Ambil nilai dari hidden field
+            const discountHidden = document.getElementById('hDiscount'); // Ambil nilai dari hidden field
             const discountName = getSelectedDiscountName();
             console.log('diskonname', discountName);
             if (discountName === '') {
@@ -500,18 +512,28 @@
 
             if (discountName === 'Diskon Persentase') {
                 finalDiscount = totalAmount * (discount / 100); // Diskon berdasarkan persentase
-                discountHidden.value = finalDiscount;
-                console.log('%',discountHidden.value);
+                disPer = finalDiscount;
+
+                // discountHidden.value = finalDiscount;
+                console.log('%', disPer);
             } else if (discountName === 'Diskon Member') {
                 finalDiscount = totalAmount * (discount / 100); // Diskon member
-                discountHidden.value = finalDiscount;
-                console.log('mem', discountHidden.value);
+                disMem = finalDiscount;
+                // discountHidden.value = finalDiscount;
+                console.log('mem', disMem);
             } else {
                 finalDiscount = discount; // Diskon nominal (Musim atau Order)
-                discountHidden.value = finalDiscount;
-                console.log('musim/order', discountHidden.value);
+                disMusOr = finalDiscount;
+                // discountHidden.value = finalDiscount;
+                console.log('musim/order', disMusOr);
 
             }
+            jumDis += disPer + disMem + disMusOr;
+            console.log('jumDis', jumDis);
+
+            discountHidden.value = jumDis;
+            console.log('all dis', jumDis);
+
             const tableBody = document.getElementById('productsTable');
             const row = document.createElement('tr');
             row.innerHTML = `

@@ -72,8 +72,8 @@
             </select>
         </div>
         <div style="text-align: right;">
-            <a href="{{ route('product.index') }}" class="btn btn-danger" type="button">Cancel</a>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <a href="{{ route('product.index') }}" class="btn btn-danger" type="button">Batal</a>
+            <button type="submit" class="btn btn-primary">Simpan</button>
         </div>
 
         </div>

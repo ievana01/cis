@@ -102,44 +102,44 @@ class SalesOrderController extends Controller
         $customer = Customer::all();
         $product = Product::all();
         // dd($product);
-        $paymentMethod = DB::table('configurations')
-            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
-            ->where('configurations.id_configuration', 3)
-            ->where('detail_configurations.status_active', 1)
-            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+        $paymentMethod = DB::table('configurations as c')
+            ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
+            ->where('c.id_configuration', 3)
+            ->where('dc.status_active', 1)
+            ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
 
         $taxRate = 0;
-        $tax = DB::table('configurations')
-            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
-            ->where('configurations.id_configuration', 2)
-            ->where('detail_configurations.status_active', 1)
-            ->select('detail_configurations.value')
+        $tax = DB::table('configurations as c')
+            ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
+            ->where('c.id_configuration', 2)
+            ->where('dc.status_active', 1)
+            ->select('dc.value')
             ->first();
         // dd($tax);
         if ($tax) {
             $taxRate = floatval(str_replace('%', '', $tax->value)) / 100; // Menghasilkan 0.11 untuk 11%
         }
 
-        $discount = DB::table('configurations')
-            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
-            ->where('configurations.id_configuration', 6)
-            ->where('detail_configurations.status_active', 1)
-            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name', 'detail_configurations.value', 'detail_configurations.status_active')
+        $discount = DB::table('configurations as c')
+            ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
+            ->where('c.id_configuration', 6)
+            ->where('dc.status_active', 1)
+            ->select('dc.*')
             ->get();
 
-        $shippingMethod = DB::table('configurations')
-            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
-            ->where('configurations.id_configuration', 4)
-            ->where('detail_configurations.status_active', 1)
-            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name', 'detail_configurations.value', 'detail_configurations.status_active')
+        $shippingMethod = DB::table('configurations as c')
+            ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
+            ->where('c.id_configuration', 4)
+            ->where('dc.status_active', 1)
+            ->select('dc.*')
             ->get();
 
-        $multiDiskon = DB::table('configurations')
-            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
-            ->where('configurations.id_configuration', 5)
-            ->where('detail_configurations.status_active', 1)
-            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+        $multiDiskon = DB::table('configurations as c')
+            ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
+            ->where('c.id_configuration', 5)
+            ->where('dc.status_active', 1)
+            ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
         // dd($multiDiskon);
         return view('sales.create', [
@@ -169,16 +169,17 @@ class SalesOrderController extends Controller
 
     public function showData()
     {
-        $data = DB::table('product_moving')
-            ->join('products', 'product_moving.product_id', '=', 'products.id_product')
-            ->join('sales_orders', 'product_moving.sales_id', '=', 'sales_orders.id_sales')
-            ->select(
-                'sales_orders.sales_invoice as sales_invoice',
+        $data = DB::table('sales_orders')
+        ->leftJoin('product_moving', 'sales_orders.id_sales', '=', 'product_moving.sales_id')
+        ->leftJoin('products', 'product_moving.product_id', '=', 'products.id_product')
+        ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+        ->select('sales_orders.sales_invoice as sales_invoice',
+                'sales_orders.customer_name as cust_name',
+                'customers.name as cust_name_by_id',
                 'products.name as product_name',
-                'product_moving.*'
-            )
-            ->orderBy('sales_invoice', 'asc')
-            ->get();
+                'product_moving.*')
+                ->orderBy('sales_invoice', 'asc')
+                ->get();
         // dd($data);
         return view('sales.datasales', ['data' => $data]);
     }
@@ -208,7 +209,8 @@ class SalesOrderController extends Controller
         $sales->payment_method = $request->get('payment_method');
         $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
         $sales->discount = $request->get('hDiscount') ?? 0;
-        // dd($request->get('hDiscount'));
+        $sales->tax = $request->get('tax');
+        // dd($request->get('tax'));
         $sales->employee_id = $request->get('employee_id') ?? 1;
         $sales->save();
 
@@ -268,10 +270,12 @@ class SalesOrderController extends Controller
         //     ->first();
         $sales = DB::table('sales_orders')
             ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+            ->join('employees', 'sales_orders.employee_id', '=', 'employees.id_employee')
             ->where('sales_orders.id_sales', $id)
             ->select(
                 'sales_orders.*',
                 'customers.name as customer_name_by_id',
+                'employees.name as e_name'
             )
             ->first();
         // dd($sales);

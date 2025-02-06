@@ -6,6 +6,7 @@ use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductMoving;
 use App\Models\PurchaseOrder;
+use App\Models\SalesDetail;
 use App\Models\StoreData;
 use App\Models\Supplier;
 use App\Models\Warehouse;
@@ -210,8 +211,10 @@ class PurchaseOrderController extends Controller
         $data = DB::table('product_moving')
             ->join('products', 'product_moving.product_id', '=', 'products.id_product')
             ->join('purchase_orders', 'product_moving.purchase_id', '=', 'purchase_orders.id_purchase')
+            ->join('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id_supplier')
             ->select(
                 'purchase_orders.purchase_invoice as purchase_invoice',
+                'suppliers.name as supplier_name',
                 'products.name as product_name',
                 'product_moving.*'
             )
@@ -244,8 +247,12 @@ class PurchaseOrderController extends Controller
     public function showNota($id)
     {
         $dataToko = StoreData::first();
-        $purchase = DB::table('purchase_orders')->where('id_purchase', $id)->first();
-        // dd($sales);
+        $purchase = DB::table('purchase_orders')
+            ->join('employees', 'purchase_orders.employee_id', '=', 'employees.id_employee')
+            ->where('id_purchase', $id)
+            ->select('employees.name as e_name', 'purchase_orders.*')
+            ->first();
+        // dd($purchase);
         $purchaseDetail = DB::table('purchase_details')
             ->join('products', 'purchase_details.product_id', '=', 'products.id_product')
             ->where('purchase_details.purchase_id', $id)
@@ -313,4 +320,78 @@ class PurchaseOrderController extends Controller
     {
         //
     }
+
+    // public function laporanLabaKotor()
+    // {
+    //     $dataToko = StoreData::first();
+    //     $product = Product::select('id_product', 'name', 'price', 'cost')->get();
+    //     $laporan = $product->map(function ($product) {
+    //         // Hitung jumlah barang terjual dari sales_detail
+    //         $jumlahTerjual = SalesDetail::where('product_id', $product->id_product)->sum('total_quantity');
+
+    //         // Hitung pendapatan (harga jual * jumlah terjual)
+    //         $pendapatan = $product->price * $jumlahTerjual;
+    //         // Hitung laba kotor (pendapatan - HPP * jumlah terjual)
+    //         $labaKotor = $pendapatan - ($product->cost * $jumlahTerjual);
+    //         // dd($labaKotor);
+
+    //         // Kembalikan data yang diperlukan
+    //         return [
+    //             'name' => $product->name,
+    //             'jumlahTerjual' => $jumlahTerjual,
+    //             'hargaJual' => $product->price,
+    //             'hpp' => $product->cost,
+    //             'pendapatan' => $pendapatan,
+    //             'labaKotor' => $labaKotor,
+    //         ];
+    //     });
+    //     // dd($laporan);
+    //     return view('laporanlaba', ['dataToko' => $dataToko, 'product' => $product, 'laporan' => $laporan]);
+    // }
+    public function laporanLabaKotor()
+    {
+        $products = Product::all();
+        $dataToko = StoreData::first();
+        $laporan = $products->map(function ($product) {
+            $jumlahTerjual = SalesDetail::where('product_id', $product->id_product)->sum('total_quantity');
+            $pendapatan = $product->price * $jumlahTerjual;
+
+            // FIFO - Ambil stok yang tersisa berdasarkan pembelian awal (terlama)
+            $totalCOGS = 0;
+            $remainingToDeduct = $jumlahTerjual;
+
+            $fifoStocks = DB::table('product_fifo')
+                ->where('product_id', $product->id_product)
+                ->where('stock', '>', 0)
+                ->orderBy('purchase_date', 'asc')
+                ->get();
+
+            foreach ($fifoStocks as $fifo) {
+                if ($remainingToDeduct <= 0)
+                    break;
+
+                if ($fifo->stock >= $remainingToDeduct) {
+                    $totalCOGS += $remainingToDeduct * $fifo->cost;
+                    $remainingToDeduct = 0;
+                } else {
+                    $totalCOGS += $fifo->stock * $fifo->cost;
+                    $remainingToDeduct -= $fifo->stock;
+                }
+            }
+
+            $labaKotor = $pendapatan - $totalCOGS;
+
+            return [
+                'name' => $product->name,
+                'jumlahTerjual' => $jumlahTerjual,
+                'hargaJual' => $product->price,
+                'hpp' => ($jumlahTerjual > 0) ? $totalCOGS / $jumlahTerjual : 0,
+                'pendapatan' => $pendapatan,
+                'labaKotor' => $labaKotor,
+            ];
+        });
+        // dd($laporan);
+        return view('laporanlaba', ['laporan' => $laporan, 'dataToko' => $dataToko]);
+    }
+
 }

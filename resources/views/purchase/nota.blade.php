@@ -19,7 +19,7 @@
         <div class="mb-4">
             <p><strong>Nomor Ref:</strong> {{ $purchase->purchase_invoice }}</p>
             <p><strong>Tanggal Order:</strong> {{ date('d-m-Y', strtotime($purchase->date)) }}</p>
-            <p><strong>Staf:</strong> {{ $purchase->employee_id }}</p>
+            <p><strong>Staf:</strong> {{ $purchase->e_name }}</p>
         </div>
 
         <!-- Daftar Produk -->

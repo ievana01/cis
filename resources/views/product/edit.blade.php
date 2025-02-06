@@ -49,7 +49,7 @@
         <div class="form-group">
             <label for="total_stock">Jumlah Produk</label>
             <input type="text" class="form-control" id="total_stock" name="total_stock" aria-describedby="total_stock"
-                value="{{ $product->total_stock }}" placeholder="Masukkan jumlah produk yang dimiliki">
+                value="{{ $product->total_stock }}"disabled>
         </div>
 
         @if ($pemProd->id_detail_configuration == 17)

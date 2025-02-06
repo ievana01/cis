@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
@@ -27,68 +28,60 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
-Route::get('/', [HomeController::class, 'index']);
 
-Route::resource('/sales', SalesOrderController::class);
-Route::resource('/purchase', PurchaseOrderController::class);
-Route::resource('/category', CategoryController::class);
-Route::resource('/supplier', SupplierController::class);
-Route::resource('/product', ProductController::class);
-Route::resource('/warehouse', WarehouseController::class);
-Route::resource('/product', ProductController::class);
-Route::resource('/customer', CustomerController::class);
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 
-Route::post('warehouse/getEditForm', [WarehouseController::class, 'getEditForm'])->name("warehouse.getEditForm");
+Route::middleware(["auth"])->group(function () {
+    Route::get('/', [HomeController::class, 'index']);
+    Route::get('/laporan-laba', [PurchaseOrderController::class, 'laporanLabaKotor'])->name('laporan-laba');
 
-Route::post('/purchase/add-product', [PurchaseOrderController::class, 'addProduct'])->name('purchase.addProduct');
-Route::post('/purchase/calculate-total', [PurchaseOrderController::class, 'calculateTotal'])->name('purchase.calculateTotal');
+    Route::resource('/sales', SalesOrderController::class);
+    Route::resource('/purchase', PurchaseOrderController::class);
+    Route::resource('/category', CategoryController::class);
+    Route::resource('/supplier', SupplierController::class);
+    Route::resource('/product', ProductController::class);
+    Route::resource('/warehouse', WarehouseController::class);
+    Route::resource('/product', ProductController::class);
+    Route::resource('/customer', CustomerController::class);
 
-Route::get('sales-configuration', [SalesOrderController::class, 'showConfiguration'])->name('sales.configuration');
-Route::get('purchase-configuration', [PurchaseOrderController::class, 'showConfiguration'])->name('purchase.configuration');
-Route::get('inventory-configuration', [ProductController::class, 'showConfiguration'])->name('product.configuration');
+    Route::post('warehouse/getEditForm', [WarehouseController::class, 'getEditForm'])->name("warehouse.getEditForm");
 
-Route::post('/sales-configuration/save', [SalesOrderController::class, 'save'])->name('sales.configuration.save');
-Route::post('/purchase-configuration/save', [PurchaseOrderController::class, 'save'])->name('purchase.configuration.save');
-Route::post('/inventory-configuration/save', [ProductController::class, 'save'])->name('inventory.configuration.save');
+    Route::post('/purchase/add-product', [PurchaseOrderController::class, 'addProduct'])->name('purchase.addProduct');
+    Route::post('/purchase/calculate-total', [PurchaseOrderController::class, 'calculateTotal'])->name('purchase.calculateTotal');
 
+    Route::get('sales-configuration', [SalesOrderController::class, 'showConfiguration'])->name('sales.configuration');
+    Route::get('purchase-configuration', [PurchaseOrderController::class, 'showConfiguration'])->name('purchase.configuration');
+    Route::get('inventory-configuration', [ProductController::class, 'showConfiguration'])->name('product.configuration');
 
-Route::get('/sales-data', [SalesOrderController::class, 'showData'])->name('sales.data');
-Route::get('/purchase-data', [PurchaseOrderController::class, 'showData'])->name('purchase.data');
-
-Route::post('purchase/paymentForm', [PurchaseOrderController::class, 'paymentForm'])->name("purchase.paymentForm");
-Route::put('purchase/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase.update');
-
-Route::post('category/formSubCategory', [CategoryController::class, 'formSubCategory'])->name("category.formSubCategory");
-Route::post('category/addSub', [CategoryController::class, 'addSub'])->name('category.addSub');
-
-Route::get('report-stock', [ProductController::class, 'showReportStock'])->name('product.reportstock');
-
-// Route untuk menampilkan form create customer
-// Route::post('/customer/create', [CustomerController::class, 'create'])->name('customer.create');
-Route::post('/sales/getCreateCust', [SalesOrderController::class, 'getCreateCust'])->name('sales.getCreateCust');
+    Route::post('/sales-configuration/save', [SalesOrderController::class, 'save'])->name('sales.configuration.save');
+    Route::post('/purchase-configuration/save', [PurchaseOrderController::class, 'save'])->name('purchase.configuration.save');
+    Route::post('/inventory-configuration/save', [ProductController::class, 'save'])->name('inventory.configuration.save');
 
 
-Route::resource('/dataStore', controller: StoreDataController::class);  
-// Route::get('/dataStore', [StoreDataController::class, 'index'])->name('dataStore.index');
-// Route::get('/dataStore/edit', [StoreDataController::class, 'edit'])->name('dataStore.edit');
-// Route::put('/dataStore/update', [StoreDataController::class, 'update'])->name('dataStore.update');
+    Route::get('/sales-data', [SalesOrderController::class, 'showData'])->name('sales.data');
+    Route::get('/purchase-data', [PurchaseOrderController::class, 'showData'])->name('purchase.data');
 
-Route::post('sales/getNota', [SalesOrderController::class, 'getNota'])->name("sales.getNota");
-Route::get('sales/nota/{id}', [SalesOrderController::class, 'showNota'])->name('sales.showNota');
+    Route::post('purchase/paymentForm', [PurchaseOrderController::class, 'paymentForm'])->name("purchase.paymentForm");
+    Route::put('purchase/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase.update');
 
-Route::post('purchase/getNota', [PurchaseOrderController::class, 'getNota'])->name("purchase.getNota");
-Route::get('purchase/nota/{id}', [PurchaseOrderController::class, 'showNota'])->name('purchase.showNota');
+    Route::post('category/formSubCategory', [CategoryController::class, 'formSubCategory'])->name("category.formSubCategory");
+    Route::post('category/addSub', [CategoryController::class, 'addSub'])->name('category.addSub');
 
-Route::resource('/productMove', ProductMovingController::class);
+    Route::get('report-stock', [ProductController::class, 'showReportStock'])->name('product.reportstock');
 
+    Route::post('/sales/getCreateCust', [SalesOrderController::class, 'getCreateCust'])->name('sales.getCreateCust');
 
+    Route::resource('/dataStore', controller: StoreDataController::class);
 
+    Route::post('sales/getNota', [SalesOrderController::class, 'getNota'])->name("sales.getNota");
+    Route::get('sales/nota/{id}', [SalesOrderController::class, 'showNota'])->name('sales.showNota');
 
+    Route::post('purchase/getNota', [PurchaseOrderController::class, 'getNota'])->name("purchase.getNota");
+    Route::get('purchase/nota/{id}', [PurchaseOrderController::class, 'showNota'])->name('purchase.showNota');
 
+    Route::resource('/productMove', ProductMovingController::class);
+});
 
+Auth::routes();
 
-
-
-
-
-
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
