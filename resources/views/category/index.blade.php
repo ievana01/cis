@@ -21,25 +21,38 @@
                 <tr>
                     <td>{{ $loop->iteration }}.</td>
                     <td>{{ $data->code_category }} - {{ $data->name }}</td>
-                    @if ($catProd && $catProd->id_detail_configuration == 23)
-                        <td>
-                            @forelse ($subCategory->where('category_id', $data->id_category) as $sub)
-                                <ul>
-                                    <li>{{ $sub->code_sub_category }} - {{ $sub->name }} <a href=""
-                                            class="btn btn-warning btn-sm">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </a>
+                    <td >
+                        @if ($catProd && $catProd->id_detail_configuration == 23)
+                            <ul class="list-unstyled">
+                                @foreach ($subCategory->where('category_id', $data->id_category) as $sub)
+                                    <li class="d-flex justify-content-between align-items-center mt-1">
+                                        <span>{{ $sub->code_sub_category }} - {{ $sub->name }}</span>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ route('subCategory.edit', $sub->id_sub_category) }}"
+                                                class="btn btn-warning btn-sm mr-1">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+                                            <form method="POST"
+                                                action="{{ route('subCategory.destroy', $sub->id_sub_category) }}"
+                                                onsubmit="return confirm('Apakah anda yakin menghapus {{ $sub->id_sub_category }} - {{ $sub->name }} ?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </li>
-                                </ul>
-                            @empty
-                                <span>Data tidak tersedia</span>
-                            @endforelse
-                        </td>
-                    @endif
+                                @endforeach
+                            </ul>
+                        @endif
+                    </td>
                     <td>
                         @if ($catProd && $catProd->id_detail_configuration != null)
-                            <a href="#modalAddSub" class="btn btn-info btn-sm" data-toggle="modal"
-                                onclick="formSubCategory({{ $data->id_category }})">+Sub Kategori</a>
+                            {{-- <a href="#modalAddSub" class="btn btn-info btn-sm" data-toggle="modal"
+                                onclick="formSubCategory({{ $data->id_category }})">+Sub Kategori</a> --}}
+                            <a href="{{ route('subCategory.create', $data->id_category) }}" class="btn btn-info btn-sm">+
+                                Sub Kategori</a>
                         @endif
                         <a href="{{ route('category.edit', $data->id_category) }}" class="btn btn-warning btn-sm">Edit</a>
                         <form method="POST" action="{{ route('category.destroy', $data->id_category) }}"
@@ -53,71 +66,9 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center">Data not available.</td>
+                    <td colspan="4" class="text-center">Data tidak tersedia</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
-    <div class="modal fade" id="modalAddSub" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Tambah Sub Kategori</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="modalContent">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalEditSub" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Edit Sub Kategori</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="modalContent">
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
-
-
-@section('javascript')
-    <script>
-        function formSubCategory(id_category) {
-            $.ajax({
-                type: 'POST',
-                url: '{{ route('category.formSubCategory') }}',
-                data: {
-                    '_token': '<?php echo csrf_token(); ?>',
-                    'id': id_category
-                },
-                success: function(data) {
-                    $('#modalContent').html(data.msg)
-                }
-            });
-        }
-
-        function formEditSubCategory(id_sub_category) {
-            $.ajax({
-                type: 'POST',
-                url: '{{ route('category.formSubCategory') }}',
-                data: {
-                    '_token': '<?php echo csrf_token(); ?>',
-                    'id': id_category
-                },
-                success: function(data) {
-                    $('#modalContent').html(data.msg)
-                }
-            });
-        }
-    </script>
 @endsection

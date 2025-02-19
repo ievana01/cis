@@ -65,8 +65,8 @@ Route::middleware(["auth"])->group(function () {
     Route::post('purchase/paymentForm', [PurchaseOrderController::class, 'paymentForm'])->name("purchase.paymentForm");
     Route::put('purchase/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase.update');
 
-    Route::post('category/formSubCategory', [CategoryController::class, 'formSubCategory'])->name("category.formSubCategory");
-    Route::post('category/addSub', [CategoryController::class, 'addSub'])->name('category.addSub');
+    // Route::post('category/formSubCategory', [CategoryController::class, 'formSubCategory'])->name("category.formSubCategory");
+    // Route::post('category/addSub', [CategoryController::class, 'addSub'])->name('category.addSub');
 
     Route::get('report-stock', [ProductController::class, 'showReportStock'])->name('product.reportstock');
 
@@ -85,7 +85,7 @@ Route::middleware(["auth"])->group(function () {
     Route::get('/subCategory/{category_id}', [ProductController::class, 'getSubCategory']);
 
     Route::resource('/subCategory', SubCategoryController::class);
-    
+    Route::get('/subCategory/create/{id_category}', [SubCategoryController::class, 'create'])->name('subCategory.create');
 });
 
 Auth::routes();

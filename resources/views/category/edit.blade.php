@@ -17,7 +17,7 @@
         <div class="form-group">
             <label for="code_category">Code Kategori</label>
             <input type="text" class="form-control" id="code_category" name="code_category" aria-describedby="code_category"
-                placeholder="Masukkan nama kategori" value="{{ $category->code_category }}">
+                placeholder="Masukkan kode kategori" value="{{ $category->code_category }}">
         </div>
         <button type="submit" class="btn btn-primary">Simpan</button>
         <a href="{{route('category.index')}}" class="btn btn-danger">Batal</a>

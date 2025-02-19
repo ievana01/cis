@@ -106,6 +106,7 @@ class ProductController extends Controller
         return view('product.createproduct', ["category" => $category, "warehouse" => $warehouse, "unit" => $unitOptions, "subKat" => $subKat, "nameSubKat" => $nameSubKat]);
     }
 
+    //dapetin data sub kategori di create dan edit produk
     public function getSubCategory($category_id)
     {
         $subCat = SubCategory::where('category_id', $category_id)->get();

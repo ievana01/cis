@@ -20,7 +20,7 @@ class CategoryController extends Controller
             ->where('configuration_id', operator: 10)
             ->first();
         $subCategory = SubCategory::all();
-        // dd($catProd);
+        // dd($subCategory);
         return view('category.index', ["category" => $category, "catProd" => $catProd, "subCategory" => $subCategory]);
     }
 
@@ -29,30 +29,29 @@ class CategoryController extends Controller
      */
     public function create()
     {
-
         return view('category.createcategory');
     }
 
-    public function formSubCategory(Request $request)
-    {
-        $id = $request->id;
-        $category = Category::find($id);
-        // dd($subCategory);
-        return response()->json(array(
-            'status' => 'oke',
-            'msg' => view('category.formSubCategory', compact('category'))->render()
-        ), 200);
-    }
+    // public function formSubCategory(Request $request)
+    // {
+    //     $id = $request->id;
+    //     $category = Category::find($id);
+    //     // dd($subCategory);
+    //     return response()->json(array(
+    //         'status' => 'oke',
+    //         'msg' => view('category.formSubCategory', compact('category'))->render()
+    //     ), 200);
+    // }
 
-    public function addSub(Request $request)
-    {
-        DB::table('sub_categories')->insert([
-            'category_id' => $request->get('category_id'),
-            'code_sub_category' => $request->get('code_sub_category'),
-            'name' => $request->get('name'),
-        ]);
-        return redirect()->route('category.index')->with('status', 'Sub kategori berhasil ditambahkan!');
-    }
+    // public function addSub(Request $request)
+    // {
+    //     DB::table('sub_categories')->insert([
+    //         'category_id' => $request->get('category_id'),
+    //         'code_sub_category' => $request->get('code_sub_category'),
+    //         'name' => $request->get('name'),
+    //     ]);
+    //     return redirect()->route('category.index')->with('status', 'Sub kategori berhasil ditambahkan!');
+    // }
 
 
     /**
