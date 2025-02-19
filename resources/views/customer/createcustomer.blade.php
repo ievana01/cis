@@ -23,7 +23,7 @@
             <input type="text" class="form-control" id="address" name="address" aria-describedby="address"
                 placeholder="Masukkan alamat">
         </div>
-        <a href="{{route('customer.index')}}" class="btn btn-danger">Batal</a>
         <button type="submit" class="btn btn-primary">Simpan</button>
+        <a href="{{route('customer.index')}}" class="btn btn-danger">Batal</a>
     </form>
 @endsection

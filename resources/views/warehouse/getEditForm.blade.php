@@ -19,7 +19,7 @@
             <input type="text" class="form-control" id="address" name="address" aria-describedby="address"
                 placeholder="Masukkan alamat" value="{{ $warehouse->address }}">
         </div>
-        <a href="{{route('warehouse.index')}}" class="btn btn-danger">Batal</a>
         <button type="submit" class="btn btn-success">Simpan</button>
+        <a href="{{route('warehouse.index')}}" class="btn btn-danger">Batal</a>
     </form>
 @endsection

@@ -10,6 +10,6 @@ class SubCategory extends Model
 {
     use HasFactory;
     use SoftDeletes;
-    protected $primaryKey = 'id_sub_categories';
+    protected $primaryKey = 'id_sub_category';
     public $timestamps = false;
 }

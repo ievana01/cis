@@ -110,6 +110,7 @@ class ProductMovingController extends Controller
             'warehouse_id_out' => $newWarehouse,
             'move_stock' => $moveStock,
             'date' => now()->toDateString(),
+            'note' => $request->note,
         ]);
 
         return redirect()->route('productMove.index')->with('success', 'Produk berhasil dipindahkan.');

@@ -13,7 +13,7 @@
             <input type="text" class="form-control" id="code_category" name="code_category"
                 placeholder="Masukkan kode kategori">
         </div>
-        <a href="{{ route('category.index') }}" type="button" class="btn btn-danger">Batal</a>
         <button type="submit" class="btn btn-primary">Simpan</button>
+        <a href="{{ route('category.index') }}" type="button" class="btn btn-danger">Batal</a>
     </form>
 @endsection

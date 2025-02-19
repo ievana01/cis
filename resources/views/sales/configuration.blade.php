@@ -17,7 +17,7 @@
                 <ul>
                     @foreach ($c->details as $detail)
                         {{-- metode HPP dan pajak --}}
-                        @if ($c->id_configuration == 1 || $c->id_configuration == 2)
+                        @if ($c->id_configuration == 1 || $c->id_configuration == 2 || $c->id_configuration == 4)
                             <div class="form-check">
                                 <input type="radio" class="form-check-input"
                                     id="radio{{ $detail->id_detail_configuration }}"

@@ -19,6 +19,11 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class, 'category_id', 'id_category');
     }
+
+    public function subCategory()
+    {
+        return $this->belongsTo(SubCategory::class, 'sub_categories_id', 'id_sub_category');
+    }
     // public function supplier()
     // {
     //     return $this->belongsTo(Supplier::class, 'supplier_id', 'id_supplier');
@@ -27,7 +32,8 @@ class Product extends Model
     {
         return $this->hasMany(ImageProduct::class, 'product_id'); // 'product_id' adalah kolom yang menghubungkan dengan produk
     }
-    public function productMoving(){
+    public function productMoving()
+    {
         return $this->hasMany(ProductMoving::class, 'product_id');
     }
 }

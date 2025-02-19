@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\ImageProduct;
 use App\Models\Product;
 use App\Models\ProductHasWarehouse;
+use App\Models\SubCategory;
 use App\Models\Supplier;
 use App\Models\Warehouse;
 use DB;
@@ -79,7 +80,7 @@ class ProductController extends Controller
                 ->update(['status_active' => DB::raw($isActive)]);
         }
 
-        return redirect()->route('product.configuration')->with('status', 'Configurations updated successfully!');
+        return redirect()->route('product.configuration')->with('status', 'Sukses mengubah data konfigurasi!');
     }
     /**
      * Show the form for creating a new resource.
@@ -95,8 +96,22 @@ class ProductController extends Controller
         preg_match("/^enum\('(.*)'\)$/", $unit->Type, $matches);
         $unitOptions = explode("','", $matches[1]);
 
-        return view('product.createproduct', ["category" => $category,  "warehouse" => $warehouse, "unit" => $unitOptions]);
+        $subKat = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 10)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->first();
+        $nameSubKat = SubCategory::all();
+        return view('product.createproduct', ["category" => $category, "warehouse" => $warehouse, "unit" => $unitOptions, "subKat" => $subKat, "nameSubKat" => $nameSubKat]);
     }
+
+    public function getSubCategory($category_id)
+    {
+        $subCat = SubCategory::where('category_id', $category_id)->get();
+        return response()->json($subCat);
+    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -110,6 +125,13 @@ class ProductController extends Controller
             ->first();
         $cogsMethod = $cogsChoose->name;
 
+        $subKat = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 10)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->first();
+
         $data = new Product();
         $data->name = $request->get('name');
         $data->description = $request->get('description');
@@ -120,6 +142,13 @@ class ProductController extends Controller
         $data->unit = $request->get('unit');
         $data->min_total_stock = $request->get('min_total_stock');
         $data->category_id = $request->get('category_id');
+        if ($subKat != null) {
+            $data->sub_categories_id = $request->get('sub_category');
+            // dd($data->sub_categories_id);
+        } else {
+            $data->sub_categories_id = null;
+            // dd($data->sub_categories_id);
+        }
         // $data->supplier_id = $request->get('supplier_id');
         $data->save();
 
@@ -129,7 +158,8 @@ class ProductController extends Controller
                 'purchase_date' => now()->toDateString(),
                 'price' => $data->price,
                 'cost' => $data->cost,
-                'stock' => $data->total_stock
+                'initial_stock' => $data->total_stock,
+                'sold' => 0
             ]);
         }
 
@@ -184,13 +214,22 @@ class ProductController extends Controller
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->first();
-        // dd($pemProd);
+        $categoryId = $product->category_id;
+        // dd($categoryId);
+        $konfigSubCat = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 10)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->first();
+        $subCat = SubCategory::where('category_id', $categoryId)->get();
+        // dd($subCat);
         // Get the column details for 'unit'
         $unit = DB::select('SHOW COLUMNS FROM products WHERE Field = "unit"')[0];
         // Extract the ENUM options from the 'Type' attribute of the column
         preg_match("/^enum\('(.*)'\)$/", $unit->Type, $matches);
         $unitOptions = explode("','", $matches[1]);
-        return view('product.edit', compact('product', 'supplier', 'category', 'warehouse', 'unitOptions', 'pemProd'));
+        return view('product.edit', compact('product', 'supplier', 'category', 'warehouse', 'unitOptions', 'pemProd', 'konfigSubCat', 'subCat'));
     }
 
     /**
@@ -203,10 +242,12 @@ class ProductController extends Controller
         $product->category_id = $request->category_id;
         $product->total_stock = $request->total_stock;
         $product->cost = $request->cost;
-        $product->price = $request->price;
+        $product->price = ($request->cost * ($request->profit/100))+$request->cost;
+        // dd($product->price);
         $product->profit = $request->profit;
         $product->unit = $request->unit;
         $product->min_total_stock = $request->min_total_stock;
+        $product->sub_categories_id = $request->sub_category_id;
         $product->save();
         return redirect()->route('product.index')->with('status', 'Data Berhasil Diubah!');
     }

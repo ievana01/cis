@@ -89,6 +89,7 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $category->name = $request->name;
+        $category->code_category = $request->code_category;
         $category->save();
         return redirect()->route('category.index')->with('status', 'Data Berhasil Diubah');
     }

@@ -31,7 +31,7 @@
                                 style="display:inline-block;">
                                 @csrf
                                 @method('DELETE')
-                                <input type="submit" value="Hapus" class="btn btn-danger"
+                                <input type="submit" value="Hapus" class="btn btn-danger btn-sm"
                                     onclick="return confirm('Are you sure to delete {{ $data->id_warehouse }} - {{ $data->name }} ?');">
                             </form>
                         @endif

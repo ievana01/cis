@@ -13,7 +13,7 @@
             <input type="text" class="form-control" id="address" name="address" aria-describedby="address"
                 placeholder="Masukkan alamat gudang">
         </div>
-        <a href="{{ route('warehouse.index') }}" type="button" class="btn btn-danger">Cancel</a>
         <button type="submit" class="btn btn-primary">Simpan</button>
+        <a href="{{ route('warehouse.index') }}" type="button" class="btn btn-danger">Batal</a>
     </form>
 @endsection

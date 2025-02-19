@@ -71,10 +71,11 @@ class PurchaseOrder extends Model
 
             DB::table('product_fifo')->insert([
                 'product_id' => $product['id'],
-                'stock' => $product['quantity'],
+                'initial_stock' => $product['quantity'],
                 'purchase_date' =>$date,
                 'cost' => $cost,
-                'price' => $price
+                'price' => $price,
+                'sold' => 0
             ]);
 
             DB::table('products')

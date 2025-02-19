@@ -23,13 +23,22 @@
         </div>
         <div class="form-group">
             <label class="control-label">Kategori Produk</label>
-            <select class="form-control" name="category_id" id="category_id ">
+            <select class="form-control" name="category_id" id="category_id">
                 <option value="">Pilih kategori</option>
                 @foreach ($category as $c)
-                    <option value="{{ $c->id_category }}">{{ $c->id_category }} - {{ $c->name }}</option>
+                    <option value="{{ $c->id_category }}">{{ $c->code_category }} - {{ $c->name }}</option>
                 @endforeach
             </select>
+
         </div>
+        @if ($subKat != null)
+            <div class="form-group">
+                <label class="control-label" for="sub_category">Sub Kategori Produk</label>
+                <select class="form-control" name="sub_category" id="sub_category">
+                    <option value="">Pilih sub kategori</option>
+                </select>
+            </div>
+        @endif
         <div class="form-group">
             <label for="total_stock">Jumlah produk</label>
             <input type="text" class="form-control" id="total_stock" name="total_stock" aria-describedby="total_stock"
@@ -65,8 +74,8 @@
         <div class="form-group">
             <label class="control-label">Lokasi Penyimpan Produk</label>
             <select class="form-control" name="warehouse_id" id="warehouse_id">
+                <option value="">Pilih lokasi</option>
                 @foreach ($warehouse as $w)
-                    <option value="">Pilih lokasi</option>
                     <option value="{{ $w->id_warehouse }}">{{ $w->id_warehouse }} - {{ $w->name }}</option>
                 @endforeach
             </select>
@@ -81,6 +90,7 @@
 @endsection
 
 @section('javascript')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         var cost = document.getElementById('cost');
         console.log(cost);
@@ -90,7 +100,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const productImages = document.getElementById('id_image');
             console.log('productImages:', productImages); // Should log the input element
-
+            
             const previewContainer = document.getElementById('previewContainer');
             console.log('previewContainer:', previewContainer); // Should log the preview container
 
@@ -116,6 +126,41 @@
                     });
                 });
             }
+        });
+
+        $(document).ready(function() {
+            $('#category_id').on('change', function() {
+                var categoryId = $(this).val();
+                console.log("Kategori yang dipilih: ", categoryId); // Debugging
+
+                $('#sub_category').empty().append('<option value="">Pilih Sub Kategori</option>');
+
+                if (categoryId) {
+                    $.ajax({
+                        url: '/subCategory/' + categoryId,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(data) {
+                            console.log("Data sub kategori diterima: ", data); // Debugging
+                            if (data.length > 0) {
+                                $.each(data, function(key, sub_category) {
+                                    $('#sub_category').append('<option value="' +
+                                        sub_category.id_sub_category + '">' +
+                                        sub_category.code_sub_category +
+                                        ' - ' +
+                                        sub_category.name + '</option>');
+                                });
+                            } else {
+                                console.log("Tidak ada sub kategori ditemukan.");
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error saat fetch data: ", xhr.responseText);
+                            alert("Terjadi kesalahan saat memuat sub kategori.");
+                        }
+                    });
+                }
+            });
         });
     </script>
 @endsection

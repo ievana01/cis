@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductMovingController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\SalesOrderController;
 use App\Http\Controllers\StoreDataController;
+use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
@@ -80,6 +81,11 @@ Route::middleware(["auth"])->group(function () {
     Route::get('purchase/nota/{id}', [PurchaseOrderController::class, 'showNota'])->name('purchase.showNota');
 
     Route::resource('/productMove', ProductMovingController::class);
+
+    Route::get('/subCategory/{category_id}', [ProductController::class, 'getSubCategory']);
+
+    Route::resource('/subCategory', SubCategoryController::class);
+    
 });
 
 Auth::routes();

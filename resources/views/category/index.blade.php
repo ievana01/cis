@@ -13,7 +13,7 @@
                 @if ($catProd && $catProd->id_detail_configuration == 23)
                     <th>Daftar Sub Kategori</th>
                 @endif
-                <th>Aksi</th>
+                <th>Aksi Kategori</th>
             </tr>
         </thead>
         <tbody>
@@ -25,7 +25,11 @@
                         <td>
                             @forelse ($subCategory->where('category_id', $data->id_category) as $sub)
                                 <ul>
-                                    <li>{{ $sub->code_sub_category }} - {{ $sub->name }}</li>
+                                    <li>{{ $sub->code_sub_category }} - {{ $sub->name }} <a href=""
+                                            class="btn btn-warning btn-sm">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                    </li>
                                 </ul>
                             @empty
                                 <span>Data tidak tersedia</span>
@@ -68,12 +72,41 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalEditSub" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Edit Sub Kategori</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalContent">
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 
 @section('javascript')
     <script>
         function formSubCategory(id_category) {
+            $.ajax({
+                type: 'POST',
+                url: '{{ route('category.formSubCategory') }}',
+                data: {
+                    '_token': '<?php echo csrf_token(); ?>',
+                    'id': id_category
+                },
+                success: function(data) {
+                    $('#modalContent').html(data.msg)
+                }
+            });
+        }
+
+        function formEditSubCategory(id_sub_category) {
             $.ajax({
                 type: 'POST',
                 url: '{{ route('category.formSubCategory') }}',

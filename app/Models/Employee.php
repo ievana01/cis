@@ -17,4 +17,13 @@ class Employee extends Model
         'address',
         'user_id',
     ];
+
+    public function salesOrders()
+    {
+        return $this->hasMany(SalesOrder::class, 'employee_id', 'id_employee');
+    }
+    public function purchaseOrders()
+    {
+        return $this->hasMany(PurchaseOrder::class, 'employee_id', 'id_employee');
+    }
 }

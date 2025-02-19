@@ -57,16 +57,20 @@ class SalesOrder extends Model
                 }
 
                 // Tentukan stok yang bisa dikurangi dari stok ini
-                $toDecrement = min($quantity, $stock->stock);
+                $toDecrement = min($quantity, $stock->initial_stock - $stock->sold);
 
                 // Jika stok habis atau ada stok yang cukup untuk dikurangi
                 if ($toDecrement > 0) {
                     // Mengurangi stok di product_fifo
-                    DB::table('product_fifo')
-                        ->where('product_id', $stock->product_id)
-                        ->where('id_product_fifo', $stock->id_product_fifo) // Pastikan hanya mengupdate stok yang tepat
-                        ->decrement('stock', $toDecrement);
+                    // DB::table('product_fifo')
+                    //     ->where('product_id', $stock->product_id)
+                    //     ->where('id_product_fifo', $stock->id_product_fifo) // Pastikan hanya mengupdate stok yang tepat
+                    //     ->decrement('stock', $toDecrement);
 
+                    DB::table('product_fifo')
+                        ->where('id_product_fifo', $stock->id_product_fifo) // Pastikan hanya mengupdate stok yang sesuai
+                        ->increment('sold', $toDecrement);
+                        
                     DB::table('products')
                         ->where('id_product', $product['id'])
                         ->decrement('total_stock', $toDecrement);

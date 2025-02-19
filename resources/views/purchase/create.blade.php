@@ -33,7 +33,11 @@
                         <th><input type="date" name="expected_arrival" id="expected_arrival" class="form-control"></th>
                     @elseif($payProd->id_detail_configuration == 21 && $receiveProdMethod->id_detail_configuration == 20)
                         <th><label for="expected_arrival">Tanggal Pengambilan barang</label></th>
-                        <th><input type="date" name="expected_arrival" id="expected_arrival" class="form-control"></th>
+                        <th>
+                            <input type="text" class="form-control" name="expected_arrival" id="dateInput"
+                                placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">
+                        </th>
+                        <input type="hidden" name="expected_arrival" id="dateHidden">
                     @endif
                 </tr>
                 <tr>
@@ -111,9 +115,61 @@
         <div style="text-align: right;">
             <a href="{{ route('purchase.index') }}" type="button" class="btn btn-danger">Batal</a>
 
-            <button type="submit" class="btn btn-primary" onclick="getNota($purchase->id_purchase)">Buat Pesanan</button>
+            {{-- <button type="submit" class="btn btn-primary" onclick="getNota($purchase->id_purchase)">Buat Pesanan</button> --}}
+
+            <a href="#modalPayment" class="btn btn-primary" data-toggle="modal">Buat Pesanan</a>
+
+        </div>
+
+        <div class="modal fade" id="modalPayment" tabindex="-1" role="basic" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body" id="modalContent">
+                        <div class="form-group">
+                            <label for="payment_method">Metode Pembayaran</label>
+                            <select class="form-control" id="payment_method" name="payment_method">
+                                @if ($payProd->id_detail_configuration == 22)
+                                    <option value="">Pilih metode pembayaran</option>
+                                    @foreach ($paymentMethod as $pay)
+                                        <option value="{{ $pay->id_detail_configuration }}">{{ $pay->name }}</option>
+                                    @endforeach
+                                @else
+                                    <option value="">Pembayaran dilakukan setelah produk diterima di gudang</option>
+                                @endif
+                            </select>
+                        </div>
+                        {{-- <div class="modal-body" id="modalContent"> --}}
+                        <div class="form-group">
+                            <label for="">Apakah pesanan sudah benar?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="radioPayment" id="radioYes"
+                                    value="ya" required>
+                                <label class="form-check-label" for="radioYes">Ya</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="radioPayment" id="radioNo"
+                                    value="tidak">
+                                <label class="form-check-label" for="radioNo">Tidak</label>
+                            </div>
+                        </div>
+                        {{-- </div> --}}
+                    </div>
+                    {{-- <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
+                        <a href="#modalKonfirmasiPay" class="btn btn-primary" data-toggle="modal"
+                            onclick="openConfirmationModal()">Verifikasi</a>
+                    </div> --}}
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
+                        <button type="submit" class="btn btn-primary" onclick="getNota($purchase->id_purchase)"
+                            id="btnCetakNota" disabled>Cetak
+                            Nota</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </form>
+
     <div class="modal fade" id="modalHistoryPurchase" tabindex="-1" role="basic" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
@@ -130,7 +186,7 @@
                         <tbody>
                             @foreach ($hisPurchase as $h)
                                 <tr>
-                                    <th>{{ $h->date }}</th>
+                                    <td>{{ date('d-m-Y', strtotime($h->date)) }}</td>
                                     <th>{{ $h->supplier_name }}</th>
                                     <th>{{ $h->product_name }}</th>
                                     <th>{{ $h->move_stock }}</th>
@@ -167,6 +223,42 @@
                     alert('Terjadi kesalahan: ' + (xhr.responseJSON?.error || 'URL tidak ditemukan.'));
                 }
             });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnCetakNota = document.getElementById('btnCetakNota');
+            const radioYes = document.getElementById('radioYes');
+            const radioNo = document.getElementById('radioNo');
+            if (!btnCetakNota || !radioYes || !radioNo) {
+                console.error("Element tidak ditemukan!");
+                return;
+            }
+            // Fungsi untuk mengupdate status tombol
+            function updateButtonState() {
+                console.log('Radio "Ya" checked:', radioYes.checked); // Debugging
+                btnCetakNota.disabled = !radioYes.checked;
+            }
+            radioYes.addEventListener('change', updateButtonState);
+            radioNo.addEventListener('change', updateButtonState);
+        });
+
+        function formatDate(input) {
+            if (input.value) {
+                let date = new Date(input.value);
+                let day = String(date.getDate()).padStart(2, '0');
+                let month = String(date.getMonth() + 1).padStart(2, '0');
+                let year = date.getFullYear();
+
+                // Tampilkan ke user dalam format DD/MM/YYYY
+                input.type = 'text';
+                input.value = `${day}/${month}/${year}`;
+
+                // Simpan ke input hidden dalam format YYYY-MM-DD untuk database
+                document.getElementById('dateHidden').value = `${year}-${month}-${day}`;
+            } else {
+                input.type = 'text';
+                document.getElementById('dateHidden').value = '';
+            }
         }
 
         let totalAmount = 0;

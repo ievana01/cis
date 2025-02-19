@@ -8,7 +8,6 @@
             <tr>
                 <th>Produk</th>
                 <th>Jumlah Terjual</th>
-                <th>Harga Jual</th>
                 <th>HPP</th>
                 <th>Pendapatan</th>
                 <th>Laba Kotor</th>
@@ -17,12 +16,11 @@
         <tbody>
             @foreach ($laporan as $item)
                 <tr>
-                    <td>{{ $item['name'] }}</td>
-                    <td>{{ $item['jumlahTerjual'] }}</td>
-                    <td>{{ number_format($item['hargaJual'], 0, ',', '.') }}</td>
+                    <td>{{ $item['produk'] }}</td>
+                    <td>{{ $item['jumlah_terjual'] }}</td>
                     <td>{{ number_format($item['hpp'], 0, ',', '.') }}</td>
                     <td>{{ number_format($item['pendapatan'], 0, ',', '.') }}</td>
-                    <td>{{ number_format($item['labaKotor'], 0, ',', '.') }}</td>
+                    <td>{{ number_format($item['laba_kotor'], 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>

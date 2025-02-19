@@ -40,16 +40,31 @@
                 <option value="">Pilih Kategori</option>
                 @foreach ($category as $c)
                     <option value="{{ $c->id_category }}" {{ $c->id_category == $product->category_id ? 'selected' : '' }}>
-                        {{ $c->id_category }} - {{ $c->name }}
+                        {{ $c->code_category }} - {{ $c->name }}
                     </option>
                 @endforeach
             </select>
         </div>
+        
+        @if ($konfigSubCat != null)
+            <div class="form-group">
+                <label class="control-label">Sub Kategori Produk</label>
+                <select class="form-control" name="sub_category_id" id="sub_category_id">
+                    <option value="">Pilih Sub Kategori</option>
+                    @foreach ($subCat as $sc)
+                        <option value="{{ $sc->id_sub_category }}"
+                            {{ $sc->id_sub_category == $product->sub_categories_id ? 'selected' : '' }}>
+                            {{ $sc->code_sub_category }} - {{ $sc->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
 
         <div class="form-group">
             <label for="total_stock">Jumlah Produk</label>
             <input type="text" class="form-control" id="total_stock" name="total_stock" aria-describedby="total_stock"
-                value="{{ $product->total_stock }}"disabled>
+                value="{{ $product->total_stock }}" readonly>
         </div>
 
         @if ($pemProd->id_detail_configuration == 17)
@@ -104,6 +119,7 @@
                 value="{{ $warehouse->name }}" disabled>
         </div>
 
+        <a href="{{route('product.index')}}" class="btn btn-danger">Batal</a>
         <button type="submit" class="btn btn-primary">Simpan</button>
     </form>
 @endsection

@@ -35,7 +35,12 @@
                 </tr>
                 <tr>
                     <th><label for="date">Tanggal Order</label></th>
-                    <th><input type="date" class="form-control" name="date"></th>
+                    {{-- <th><input type="date" class="form-control" name="date" data-placeholder="Silahkan pilih tanggal"></th> --}}
+                    <th>
+                        <input type="text" class="form-control" name="date" id="dateInput"
+                            placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">
+                    </th>
+                    <input type="hidden" name="date" id="dateHidden">
                 </tr>
                 <tr>
                     <th><label for="tax">Tarif Pajak</label></th>
@@ -146,18 +151,39 @@
                                 @endforeach
                             </select>
                         </div>
+                        {{-- <div class="modal-body" id="modalContent"> --}}
+                        <div class="form-group">
+                            <label for="">Apakah pembayaran sukses?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="radioPayment" id="radioYes"
+                                    value="ya" required>
+                                <label class="form-check-label" for="radioYes">Ya</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="radioPayment" id="radioNo"
+                                    value="tidak">
+                                <label class="form-check-label" for="radioNo">Tidak</label>
+                            </div>
+                        </div>
+                        {{-- </div> --}}
                     </div>
-                    <div class="modal-footer">
+                    {{-- <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
                         <a href="#modalKonfirmasiPay" class="btn btn-primary" data-toggle="modal"
                             onclick="openConfirmationModal()">Verifikasi</a>
+                    </div> --}}
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
+                        <button type="submit" class="btn btn-primary" onclick="getNota($sales->id_sales)"
+                            id="btnCetakNota" disabled>Cetak
+                            Nota</button>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- cek apakah pembayaran sukses --}}
-        <div class="modal fade" id="modalKonfirmasiPay" tabindex="-1" role="basic" aria-hidden="true">
+        {{-- <div class="modal fade" id="modalKonfirmasiPay" tabindex="-1" role="basic" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form id="formKonfirmasi">
@@ -184,7 +210,7 @@
                     </form>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <div class="modal fade" id="modalShipping" tabindex="-1" role="basic" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -263,20 +289,47 @@
             });
         }
 
+        function formatDate(input) {
+            if (input.value) {
+                let date = new Date(input.value);
+                let day = String(date.getDate()).padStart(2, '0');
+                let month = String(date.getMonth() + 1).padStart(2, '0');
+                let year = date.getFullYear();
+
+                // Tampilkan ke user dalam format DD/MM/YYYY
+                input.type = 'text';
+                input.value = `${day}/${month}/${year}`;
+
+                // Simpan ke input hidden dalam format YYYY-MM-DD untuk database
+                document.getElementById('dateHidden').value = `${year}-${month}-${day}`;
+            } else {
+                input.type = 'text';
+                document.getElementById('dateHidden').value = '';
+            }
+        }
+
+
         document.addEventListener('DOMContentLoaded', () => {
             const btnCetakNota = document.getElementById('btnCetakNota');
             const radioYes = document.getElementById('radioYes');
-            const radioButtons = document.querySelectorAll('input[name="radioPayment"]');
+            const radioNo = document.getElementById('radioNo');
+            // const radioButtons = document.querySelectorAll('input[name="radioPayment"]');
+
+            if (!btnCetakNota || !radioYes || !radioNo) {
+                console.error("Element tidak ditemukan!");
+                return;
+            }
             // Fungsi untuk mengupdate status tombol
             function updateButtonState() {
                 console.log('Radio "Ya" checked:', radioYes.checked); // Debugging
                 btnCetakNota.disabled = !radioYes.checked;
             }
             // Tambahkan event listener untuk setiap radio button
-            radioButtons.forEach((radio) => {
-                radio.addEventListener('change', updateButtonState);
-            });
-
+            // radioButtons.forEach((radio) => {
+            //     radio.addEventListener('change', updateButtonState);
+            // });
+            radioYes.addEventListener('change', updateButtonState);
+            radioNo.addEventListener('change', updateButtonState);
             // Memanggil toggleDiscountButton saat halaman dimuat untuk memastikan tombol dalam kondisi yang tepat
             toggleDiscountButton();
 

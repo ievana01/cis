@@ -1,6 +1,6 @@
 @extends('layouts.btemplate')
 @section('content')
-    <form method="POST" action="{{route('productMove.update', $product->id_product)}}">
+    <form method="POST" action="{{ route('productMove.update', $product->id_product) }}">
         @csrf
         @method('PUT')
         <table class="table table-bordered">
@@ -30,7 +30,8 @@
             <tbody>
                 <tr>
                     <th>
-                        <input type="number" id="move_stock" name="move_stock" class="form-control" min="1" value="1">
+                        <input type="number" id="move_stock" name="move_stock" class="form-control" min="1"
+                            value="1">
                     </th>
                     <th>
                         <select class="form-control" id="warehouse_id" name="warehouse_id">
@@ -43,7 +44,12 @@
                 </tr>
             </tbody>
         </table>
-        <a href="{{route('productMove.index')}}" class="btn btn-danger">Batal</a>
+        <div class="form-group">
+            <label for="note">Alasan</label>
+            <input type="text" class="form-control" id="note" name="note" aria-describedby="note"
+                placeholder="Masukkan alasan memindahkan produk">
+        </div>
         <button type="submit" class="btn btn-success">Pindah</button>
+        <a href="{{ route('productMove.index') }}" class="btn btn-danger">Batal</a>
     </form>
 @endsection

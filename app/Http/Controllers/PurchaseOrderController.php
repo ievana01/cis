@@ -10,6 +10,7 @@ use App\Models\SalesDetail;
 use App\Models\StoreData;
 use App\Models\Supplier;
 use App\Models\Warehouse;
+use Auth;
 use DB;
 use Illuminate\Http\Request;
 use Log;
@@ -114,6 +115,7 @@ class PurchaseOrderController extends Controller
             ->first();
         // dd($receiveProdMethod);
 
+        //detail pada supplier
         $hisPurchase = ProductMoving::whereNotNull('purchase_id')
             ->join('products', 'product_moving.product_id', '=', 'products.id_product')
             ->join('purchase_orders', 'product_moving.purchase_id', '=', 'purchase_orders.id_purchase')
@@ -122,6 +124,14 @@ class PurchaseOrderController extends Controller
             ->orderBy('product_moving.date', 'desc')
             ->get();
         // dd($hisPurchase);
+
+        $paymentMethod = DB::table('configurations as c')
+            ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
+            ->where('c.id_configuration', 3)
+            ->where('dc.status_active', 1)
+            ->select('dc.id_detail_configuration', 'dc.name')
+            ->get();
+            
         return view('purchase.create', [
             'invoiceNumber' => $invoiceNumber,
             'supplier' => $supplier,
@@ -130,7 +140,8 @@ class PurchaseOrderController extends Controller
             'purchasePriceMethod' => $purchasePriceMethod,
             'receiveProdMethod' => $receiveProdMethod,
             'payProd' => $payProd,
-            'hisPurchase' => $hisPurchase
+            'hisPurchase' => $hisPurchase,
+            'paymentMethod' => $paymentMethod
         ]);
     }
     public function generateInvoiceNumber()
@@ -167,12 +178,17 @@ class PurchaseOrderController extends Controller
         $purchase->date = $request->get(key: 'date');
         $purchase->expected_arrival = $request->get('expected_arrival');
         $purchase->total_purchase = $request->get('total_price');
-        if ($payProd->id_detail_configuration == 22) {
-            $purchase->payment_method = $request->get('payment_method') ?? 6;
-        }
+        // if ($payProd->id_detail_configuration == 22) {
+        //     $purchase->payment_method = $request->get('payment_method') ?? 6;
+        // }
+        $purchase->payment_method = ($payProd->id_detail_configuration == 22)
+            ? ($request->get('payment_method'))
+            : null;
+        // dd($purchase->payment_method);
         // $purchase->payment_method = $request->get('payment_method');
         $purchase->supplier_id = $request->get('id_supplier');
-        $purchase->employee_id = $request->get('employee_id') ?? 1;
+        // $purchase->employee_id = $request->get('employee_id') ?? 1;
+        $purchase->employee_id = Auth::user()->employee->id_employee;
         $purchase->save();
 
         $products = json_decode($request->get('products'), true);
@@ -321,77 +337,63 @@ class PurchaseOrderController extends Controller
         //
     }
 
-    // public function laporanLabaKotor()
-    // {
-    //     $dataToko = StoreData::first();
-    //     $product = Product::select('id_product', 'name', 'price', 'cost')->get();
-    //     $laporan = $product->map(function ($product) {
-    //         // Hitung jumlah barang terjual dari sales_detail
-    //         $jumlahTerjual = SalesDetail::where('product_id', $product->id_product)->sum('total_quantity');
-
-    //         // Hitung pendapatan (harga jual * jumlah terjual)
-    //         $pendapatan = $product->price * $jumlahTerjual;
-    //         // Hitung laba kotor (pendapatan - HPP * jumlah terjual)
-    //         $labaKotor = $pendapatan - ($product->cost * $jumlahTerjual);
-    //         // dd($labaKotor);
-
-    //         // Kembalikan data yang diperlukan
-    //         return [
-    //             'name' => $product->name,
-    //             'jumlahTerjual' => $jumlahTerjual,
-    //             'hargaJual' => $product->price,
-    //             'hpp' => $product->cost,
-    //             'pendapatan' => $pendapatan,
-    //             'labaKotor' => $labaKotor,
-    //         ];
-    //     });
-    //     // dd($laporan);
-    //     return view('laporanlaba', ['dataToko' => $dataToko, 'product' => $product, 'laporan' => $laporan]);
-    // }
     public function laporanLabaKotor()
     {
         $products = Product::all();
         $dataToko = StoreData::first();
-        $laporan = $products->map(function ($product) {
-            $jumlahTerjual = SalesDetail::where('product_id', $product->id_product)->sum('total_quantity');
-            $pendapatan = $product->price * $jumlahTerjual;
 
-            // FIFO - Ambil stok yang tersisa berdasarkan pembelian awal (terlama)
-            $totalCOGS = 0;
-            $remainingToDeduct = $jumlahTerjual;
+        // Ambil metode perhitungan HPP (FIFO atau Average)
+        $cogsChoose = DB::table('detail_configurations')
+            ->where('status_active', 1)
+            ->where('configuration_id', 1)
+            ->first();
 
-            $fifoStocks = DB::table('product_fifo')
-                ->where('product_id', $product->id_product)
-                ->where('stock', '>', 0)
-                ->orderBy('purchase_date', 'asc')
-                ->get();
+        if (!$cogsChoose) {
+            return redirect()->back()->with('error', 'Konfigurasi COGS tidak ditemukan.');
+        }
 
-            foreach ($fifoStocks as $fifo) {
-                if ($remainingToDeduct <= 0)
-                    break;
+        $cogsMethod = $cogsChoose->name;
 
-                if ($fifo->stock >= $remainingToDeduct) {
-                    $totalCOGS += $remainingToDeduct * $fifo->cost;
-                    $remainingToDeduct = 0;
-                } else {
-                    $totalCOGS += $fifo->stock * $fifo->cost;
-                    $remainingToDeduct -= $fifo->stock;
+        $laporan = $products->map(function ($product) use ($cogsMethod) {
+            if ($cogsMethod == 'FIFO') {
+                // Ambil semua transaksi berdasarkan FIFO
+                $productFifo = DB::table('product_fifo')
+                    ->where('product_id', $product->id_product)
+                    ->orderBy('purchase_date', 'asc') // FIFO = yang masuk pertama dijual dulu
+                    ->get();
+
+                if ($productFifo->isEmpty()) {
+                    return null; // Jika tidak ada data FIFO, lewati produk ini
                 }
+
+                $jumlahTerjual = $productFifo->sum('sold');
+                $pendapatan = $productFifo->sum(fn($fifo) => $fifo->price * $fifo->sold);
+                $hpp = $productFifo->sum(fn($fifo) => $fifo->cost * $fifo->sold);
+                $labaKotor = $pendapatan - $hpp;
+
+            } elseif ($cogsMethod == "Average") {
+                // Ambil jumlah terjual dari sales_details
+                $jumlahTerjual = SalesDetail::where('product_id', $product->id_product)->sum('total_quantity');
+                // Ambil harga pokok rata-rata dari tabel products
+                $cost = $product->cost ?? 0; // Pastikan cost tidak null
+                $hpp = $cost * $jumlahTerjual;
+                $pendapatan = $product->price * $jumlahTerjual;
+                $labaKotor = $pendapatan - $hpp;
+            } else {
+                return null; // Jika metode COGS tidak dikenali, lewati produk ini
             }
 
-            $labaKotor = $pendapatan - $totalCOGS;
-
             return [
-                'name' => $product->name,
-                'jumlahTerjual' => $jumlahTerjual,
-                'hargaJual' => $product->price,
-                'hpp' => ($jumlahTerjual > 0) ? $totalCOGS / $jumlahTerjual : 0,
+                'produk' => $product->name,
+                'jumlah_terjual' => $jumlahTerjual,
+                'hpp' => $hpp,
                 'pendapatan' => $pendapatan,
-                'labaKotor' => $labaKotor,
+                'laba_kotor' => $labaKotor,
             ];
-        });
+        })->filter(); // Hapus data yang null
         // dd($laporan);
-        return view('laporanlaba', ['laporan' => $laporan, 'dataToko' => $dataToko]);
+        return view('laporanlaba', compact('laporan', 'dataToko'));
     }
+
 
 }
