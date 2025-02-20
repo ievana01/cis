@@ -29,11 +29,28 @@ class CustomerController extends Controller
      */
     public function store(Request $request)
     {
+        $messages = [
+            'name.required' => 'Nama pelanggan harus diisi!',
+            'name.max' => 'Nama pelanggan tidak boleh lebih dari 45 karakter!',
+            'phone_number.required' => 'Nomor telepon wajib diisi!',
+            'phone_number.numeric' => 'Nomor telepon harus berupa angka!',
+            'phone_number.digits_between' => 'Nomor telepon harus antara 1-11 digit!',
+            'email.required' => 'Email wajib diisi!',
+            'email.email' => 'Format email tidak valid!',
+            'address.required' => 'Alamat harus diisi!',
+            'address.max' => 'Alamat tidak boleh lebih dari 45 karakter!',
+        ];
+        $validated = $request->validate([
+            'name' => 'required|string|max:45',
+            'phone_number' => 'required|numeric|digits_between:1,11',
+            'email' => 'required|email',
+            'address' => 'required|string|max:45'
+        ], $messages);
         $data = new Customer();
-        $data->name = $request->get('name');
-        $data->phone_number = $request->get('phone_number');
-        $data->email = $request->get('email');
-        $data->address = $request->get('address');
+        $data->name = $validated['name'];
+        $data->phone_number = $validated['phone_number'];
+        $data->email = $validated['email'];
+        $data->address = $validated['address'];
         $data->save();
         return redirect()->route('customer.index')->with('status', 'Data Berhasil Disimpan');
     }

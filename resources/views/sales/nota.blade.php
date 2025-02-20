@@ -3,12 +3,21 @@
 @section('content')
     <div class="container mt-4">
         <!-- Informasi Toko -->
-        <div class="mb-4">
-            <h5 class="font-weight-bold">{{ $dataToko->name }}</h5>
-            <p>{{ $dataToko->address }}</p>
-            <p>Email: {{ $dataToko->email }}</p>
-            <p>Kontak: {{ $dataToko->contact_person }} ({{ $dataToko->phone_number }})</p>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <img src="{{ asset('storage/' . $dataToko->logo) }}" alt="Logo {{ $dataToko->name }}"
+                    style="width: 50px; height: 50px; margin-right: 15px;">
+                <h5 class="font-weight-bold">{{ $dataToko->name }}</h5>
+            </div>
+            <div>
+                <p>{{ $dataToko->address }}</p>
+                <p>Email: {{ $dataToko->email }}</p>
+                <p>Kontak: {{ $dataToko->contact_person }} ({{ $dataToko->phone_number }})</p>
+            </div>
         </div>
+        <hr style="border: 1px solid black; margin-top: 5px;">
+
+
 
         <!-- Judul Nota Penjualan -->
         <div class="text-center mb-4">

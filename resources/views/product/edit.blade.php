@@ -1,7 +1,7 @@
 @extends('layouts.btemplate')
 
 @section('content')
-    <form method="POST" action="{{ route('product.update', $product->id_product) }}">
+    <form method="POST" action="{{ route('product.update', $product->id_product) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <h4 class="font-weight-bold">Edit Produk</h4>
@@ -11,6 +11,37 @@
                 <input type="text" readonly class="form-control " id="id_product" value="{{ $product->id_product }}">
             </div>
         </div>
+
+        <div class="form-group">
+            <label for="imageUpload">Foto Produk</label><br>
+            <!-- Menampilkan foto produk sebelumnya -->
+            <div id="existingImages" style="display: flex; gap: 10px; flex-wrap: wrap;" class="mb-2">
+                @foreach ($images as $image)
+                    <div>
+                        <img src="{{ asset('storage/' . $image) }}" alt="Foto Produk" width="200" height="200" />
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Input file untuk mengganti gambar -->
+            <input type="file" class="form-control-file" id="imageUpload" name="imageUpload">
+
+            <small id="file_image" class="form-text text-muted">Masukkan foto produk</small>
+
+            <!-- Preview gambar baru yang dipilih -->
+            <div id="previewContainer" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+        </div>
+        {{-- <div class="form-group">
+            <label for="file_image">Foto Produk</label><br>
+            <img src="{{ asset('storage/product_images/' . $images) }}" alt="Foto Produk" width="50"
+                height="50" />
+            <input type="file" class="form-control-file" id="logo" name="logo">
+            <small id="file_image" class="form-text text-muted">Masukkan foto produk</small>
+        </div>
+        <div id="previewContainer" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <!-- Image previews will appear here -->
+        </div> --}}
+
         <div class="form-group">
             <label for="name">Nama</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"
@@ -45,7 +76,7 @@
                 @endforeach
             </select>
         </div>
-        
+
         @if ($konfigSubCat != null)
             <div class="form-group">
                 <label class="control-label">Sub Kategori Produk</label>
@@ -81,11 +112,11 @@
             </div>
         @endif
 
-        <div class="form-group">
+        {{-- <div class="form-group">
             <label for="price">Harga Jual</label>
             <input type="text" class="form-control" id="price" name="price" aria-describedby="price"
                 value="{{ $product->price }}" placeholder="Masukkan harga jual barang">
-        </div>
+        </div> --}}
 
         <div class="form-group">
             <label for="profit">Keuntungan(%)</label>
@@ -119,7 +150,41 @@
                 value="{{ $warehouse->name }}" disabled>
         </div>
 
-        <a href="{{route('product.index')}}" class="btn btn-danger">Batal</a>
         <button type="submit" class="btn btn-primary">Simpan</button>
+        <a href="{{ route('product.index') }}" class="btn btn-danger">Batal</a>
     </form>
+@endsection
+@section('javascript')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const productImages = document.getElementById('imageUpload');
+            console.log('imageUpload:', productImages); // Should log the input element
+
+            const previewContainer = document.getElementById('previewContainer');
+            console.log('previewContainer:', previewContainer); // Should log the preview container
+
+            if (productImages) {
+                productImages.addEventListener('change', function(event) {
+                    previewContainer.innerHTML = '';
+                    Array.from(event.target.files).forEach(file => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const img = document.createElement('img');
+                                img.src = e.target.result;
+                                img.style.width = '100px';
+                                img.style.height = '100px';
+                                img.style.objectFit = 'cover';
+                                img.style.border = '1px solid #ddd';
+                                img.style.borderRadius = '5px';
+                                img.style.margin = '5px';
+                                previewContainer.appendChild(img);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 @endsection

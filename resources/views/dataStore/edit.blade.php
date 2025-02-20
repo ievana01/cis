@@ -47,14 +47,14 @@
 @section('javascript')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const productImages = document.getElementById('logo');
-            console.log('logo:', productImages); // Should log the input element
+            const logo = document.getElementById('logo');
+            console.log('logo:', logo); // Should log the input element
 
             const previewContainer = document.getElementById('previewContainer');
             console.log('previewContainer:', previewContainer); // Should log the preview container
 
-            if (productImages) {
-                productImages.addEventListener('change', function(event) {
+            if (logo) {
+                logo.addEventListener('change', function(event) {
                     previewContainer.innerHTML = '';
                     Array.from(event.target.files).forEach(file => {
                         if (file.type.startsWith('image/')) {

@@ -11,6 +11,7 @@ use App\Models\Supplier;
 use App\Models\Warehouse;
 use DB;
 use Illuminate\Http\Request;
+use Storage;
 
 class ProductController extends Controller
 {
@@ -177,7 +178,7 @@ class ProductController extends Controller
             foreach ($request->file('file_images') as $file) {
                 $path = $file->store('product_images', 'public');
                 DB::table('image_products')
-                    ->insert(values: [
+                    ->insert([
                         'product_id' => $data->id_product,
                         'file_image' => $path,
                     ]);
@@ -200,6 +201,11 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         // dd($product);
+        $images = DB::table('image_products')
+            ->where('product_id', $product->id_product)
+            ->pluck('file_image'); // Mengambil hanya nilai file_image dalam bentuk array
+
+        // dd($images);
         $supplier = Supplier::all();
         $category = Category::all();
         // $warehouse = Warehouse::all();
@@ -230,7 +236,7 @@ class ProductController extends Controller
         // Extract the ENUM options from the 'Type' attribute of the column
         preg_match("/^enum\('(.*)'\)$/", $unit->Type, $matches);
         $unitOptions = explode("','", $matches[1]);
-        return view('product.edit', compact('product', 'supplier', 'category', 'warehouse', 'unitOptions', 'pemProd', 'konfigSubCat', 'subCat'));
+        return view('product.edit', compact('images', 'product', 'supplier', 'category', 'warehouse', 'unitOptions', 'pemProd', 'konfigSubCat', 'subCat'));
     }
 
     /**
@@ -243,12 +249,45 @@ class ProductController extends Controller
         $product->category_id = $request->category_id;
         $product->total_stock = $request->total_stock;
         $product->cost = $request->cost;
-        $product->price = ($request->cost * ($request->profit/100))+$request->cost;
+        $product->price = ($request->cost * ($request->profit / 100)) + $request->cost;
         // dd($product->price);
         $product->profit = $request->profit;
         $product->unit = $request->unit;
         $product->min_total_stock = $request->min_total_stock;
         $product->sub_categories_id = $request->sub_category_id;
+        // dd($request->all(), $request->hasFile('imageUpload'), $_FILES);
+
+
+
+        // Cek apakah ada file gambar baru
+        if ($request->hasFile('imageUpload')) {
+            $image = $request->file('imageUpload');
+            // dd($image);
+            // Simpan gambar baru di storage
+            $imagePath = $image->store('product_images', 'public'); // Simpan di storage/app/public/product_images
+            $imageData = file_get_contents($image->getRealPath()); // Ambil data gambar untuk BLOB
+
+            // Cek apakah produk sudah punya gambar di tabel image_products
+            $existingImage = DB::table('image_products')
+                ->where('product_id', $product->id_product)
+                ->select('file_image')
+                ->first();
+
+            // ImageProduct::where('product_id', $product->id)->first();
+            // dd($existingImage);
+            if ($existingImage) {
+                // Hapus gambar lama dari storage jika ada
+                if ($existingImage->file_image && Storage::disk('public')->exists($existingImage->file_image)) {
+                    Storage::disk('public')->delete($existingImage->file_image);
+                }
+
+                DB::table('image_products')
+                    ->where('product_id', $product->id_product)
+                    ->update([
+                        'file_image' => $imagePath, // Simpan path gambar
+                    ]);
+            }
+        }
         $product->save();
         return redirect()->route('product.index')->with('status', 'Data Berhasil Diubah!');
     }

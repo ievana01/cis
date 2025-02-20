@@ -32,7 +32,7 @@
                         <th><label for="expected_arrival">Deadline Order</label></th>
                         <th><input type="date" name="expected_arrival" id="expected_arrival" class="form-control"></th>
                     @elseif($payProd->id_detail_configuration == 21 && $receiveProdMethod->id_detail_configuration == 20)
-                        <th><label for="expected_arrival">Tanggal Pengambilan barang</label></th>
+                        <th><label for="expected_arrival">Tanggal Pengambilan Produk</label></th>
                         <th>
                             <input type="text" class="form-control" name="expected_arrival" id="dateInput"
                                 placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">

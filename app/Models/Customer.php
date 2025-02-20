@@ -12,6 +12,8 @@ class Customer extends Model
     use SoftDeletes;
     protected $primaryKey = 'id_customer';
     public $timestamps = false;
+    protected $fillable = ['name', 'phone_number', 'email', 'address'];
+
     protected $attributes = [
         'active_status' => 1, // Default aktif
     ];
