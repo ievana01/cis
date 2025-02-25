@@ -19,7 +19,7 @@
                     <td>{{ $ds->product_name }}</td>
                     <td>{{ date('d-m-Y', strtotime($ds->date)) }}</td>
                     <td>{{$ds->cust_name ?? $ds->cust_name_by_id}}</td>
-                    <td>{{ $ds->move_stock }}</td>
+                    <td>{{ $ds->total_quantity }}</td>
                 </tr>
             @empty
                 <tr>

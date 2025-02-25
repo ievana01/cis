@@ -33,8 +33,7 @@ class CustomerController extends Controller
             'name.required' => 'Nama pelanggan harus diisi!',
             'name.max' => 'Nama pelanggan tidak boleh lebih dari 45 karakter!',
             'phone_number.required' => 'Nomor telepon wajib diisi!',
-            'phone_number.numeric' => 'Nomor telepon harus berupa angka!',
-            'phone_number.digits_between' => 'Nomor telepon harus antara 1-11 digit!',
+            'phone_number.max' => 'Nomor telepon tidak boleh dari 15 karakter!',
             'email.required' => 'Email wajib diisi!',
             'email.email' => 'Format email tidak valid!',
             'address.required' => 'Alamat harus diisi!',
@@ -42,7 +41,7 @@ class CustomerController extends Controller
         ];
         $validated = $request->validate([
             'name' => 'required|string|max:45',
-            'phone_number' => 'required|numeric|digits_between:1,11',
+            'phone_number' => 'required|max:15',
             'email' => 'required|email',
             'address' => 'required|string|max:45'
         ], $messages);
@@ -76,10 +75,23 @@ class CustomerController extends Controller
      */
     public function update(Request $request, Customer $customer)
     {
-        $customer->name = $request->name;
-        $customer->phone_number = $request->phone_number;
-        $customer->email = $request->email;
-        $customer->address = $request->address;
+        $messages = [
+            'name.max' => 'Nama pelanggan tidak boleh lebih dari 45 karakter!',
+            'phone_number.max' => 'Nomor telepon tidak boleh lebih dari 15 karakter!',
+            'email.email' => 'Format email tidak valid!',
+            'address.max' => 'Alamat tidak boleh lebih dari 45 karakter!',
+        ];
+        $validated = $request->validate([
+            'name' => 'string|max:45',
+            'phone_number' => 'max:15',
+            'email' => 'email',
+            'address' => 'string|max:45'
+        ], $messages);
+        
+        $customer->name = $validated['name'];
+        $customer->phone_number = $validated['phone_number'];
+        $customer->email = $validated['email'];
+        $customer->address = $validated['address'];
         $customer->save();
         return redirect()->route('customer.index')->with('status', 'Data Berhasil Diubah');
     }

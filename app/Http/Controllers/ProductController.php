@@ -12,6 +12,7 @@ use App\Models\Warehouse;
 use DB;
 use Illuminate\Http\Request;
 use Storage;
+use View;
 
 class ProductController extends Controller
 {
@@ -120,6 +121,39 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        $message = [
+            'name.required' => 'Nama wajib diisi.',
+            'name.string' => 'Nama harus berupa teks.',
+            'name.max' => 'Nama tidak boleh lebih dari 45 karakter.',
+            'description.required' => 'Deskripsi wajib diisi.',
+            'total_stock.required' => 'Total stok wajib diisi.',
+            'total_stock.numeric' => 'Total stok harus berupa angka.',
+            'cost.required' => 'Biaya wajib diisi.',
+            'cost.numeric' => 'Biaya harus berupa angka.',
+            'profit.required' => 'Keuntungan wajib diisi.',
+            'profit.numeric' => 'Keuntungan harus berupa angka.',
+            'unit.required' => 'Satuan wajib diisi.',
+            'min_total_stock.required' => 'Stok minimum wajib diisi.',
+            'min_total_stock.numeric' => 'Stok minimum harus berupa angka.',
+            'category_id.required' => 'Kategori wajib dipilih.',
+            'warehouse_id.required' => 'Gudang wajib dipilih.',
+            'file_images.*.image' => 'File harus berupa gambar.',
+            'file_images.*.mimes' => 'Format gambar harus jpeg, png, atau jpg.',
+            'file_images.*.max' => 'Ukuran gambar tidak boleh lebih dari 2MB.',
+        ];
+        $validated = $request->validate([
+            'name' => 'required|string|max:45',
+            'description' => 'required',
+            'total_stock' => 'required|numeric',
+            'cost' => 'required',
+            'profit' => 'required|numeric',
+            'unit' => 'required',
+            'min_total_stock' => 'required|numeric',
+            'category_id' => 'required',
+            'warehouse_id' => 'required',
+            'file_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
+        ], $message);
+
         //ambil id detail konfigurasi yg aktif
         $cogsChoose = DB::table('detail_configurations')
             ->where('status_active', 1)
@@ -135,15 +169,25 @@ class ProductController extends Controller
             ->first();
 
         $data = new Product();
-        $data->name = $request->get('name');
-        $data->description = $request->get('description');
-        $data->price = $request->get('cost') * ($request->get('profit') / 100) + $request->get('cost');
-        $data->total_stock = $request->get('total_stock');
-        $data->cost = $request->get('cost');
-        $data->profit = $request->get('profit');
-        $data->unit = $request->get('unit');
-        $data->min_total_stock = $request->get('min_total_stock');
-        $data->category_id = $request->get('category_id');
+        // $data->name = $request->get('name');
+        // $data->description = $request->get('description');
+        // $data->price = $request->get('cost') * ($request->get('profit') / 100) + $request->get('cost');
+        // $data->total_stock = $request->get('total_stock');
+        // $data->cost = $request->get('cost');
+        // $data->profit = $request->get('profit');
+        // $data->unit = $request->get('unit');
+        // $data->min_total_stock = $request->get('min_total_stock');
+        // $data->category_id = $request->get('category_id');
+        $data->name = $validated['name'];
+        $data->description = $validated['description'];
+        $data->price = $validated['cost'] * ($validated['profit'] / 100) + $validated['cost'];
+        $data->total_stock = $validated['total_stock'];
+        $data->cost = $validated['cost'];
+        $data->profit = $validated['profit'];
+        $data->unit = $validated['unit'];
+        $data->min_total_stock = $validated['min_total_stock'];
+        $data->category_id = $validated['category_id'];
+
         if ($subKat != null) {
             $data->sub_categories_id = $request->get('sub_category');
             // dd($data->sub_categories_id);
@@ -244,20 +288,48 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $product->name = $request->name;
+        $message = [
+            'name.string' => 'Nama harus berupa teks.',
+            'name.max' => 'Nama tidak boleh lebih dari 45 karakter.',
+            'total_stock.numeric' => 'Total stok harus berupa angka.',
+            'cost.numeric' => 'Harga pokok harus berupa angka.',
+            'profit.numeric' => 'Keuntungan harus berupa angka.',
+            'min_total_stock.numeric' => 'Stok minimum harus berupa angka.',
+            'file_images.*.image' => 'File harus berupa gambar.',
+            'file_images.*.mimes' => 'Format gambar harus jpeg, png, atau jpg.',
+            'file_images.*.max' => 'Ukuran gambar tidak boleh lebih dari 2MB.',
+        ];
+        $validated = $request->validate([
+            'name' => 'string|max:45',
+            'total_stock' => 'numeric',
+            'cost' => 'numeric',
+            'profit' => 'numeric',
+            'min_total_stock' => 'numeric',
+            'file_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
+        ], $message);
+
+        // $product->name = $request->name;
+        // $product->description = $request->description;
+        // $product->category_id = $request->category_id;
+        // $product->total_stock = $request->total_stock;
+        // $product->cost = $request->cost;
+        // $product->price = ($request->cost * ($request->profit / 100)) + $request->cost;
+        // // dd($product->price);
+        // $product->profit = $request->profit;
+        // $product->unit = $request->unit;
+        // $product->min_total_stock = $request->min_total_stock;
+        // $product->sub_categories_id = $request->sub_category_id;
+        // // dd($request->all(), $request->hasFile('imageUpload'), $_FILES);
+        $product->name = $validated['name'];
         $product->description = $request->description;
         $product->category_id = $request->category_id;
-        $product->total_stock = $request->total_stock;
-        $product->cost = $request->cost;
-        $product->price = ($request->cost * ($request->profit / 100)) + $request->cost;
-        // dd($product->price);
-        $product->profit = $request->profit;
+        $product->total_stock = $validated['total_stock'];
+        $product->cost = $validated['cost'];
+        $product->price = ($validated['cost'] * ($validated['profit'] / 100)) + $validated['cost'];
+        $product->profit = $validated['profit'];
         $product->unit = $request->unit;
-        $product->min_total_stock = $request->min_total_stock;
+        $product->min_total_stock = $validated['min_total_stock'];
         $product->sub_categories_id = $request->sub_category_id;
-        // dd($request->all(), $request->hasFile('imageUpload'), $_FILES);
-
-
 
         // Cek apakah ada file gambar baru
         if ($request->hasFile('imageUpload')) {
@@ -306,5 +378,13 @@ class ProductController extends Controller
         }
     }
 
-
+    // public function showMultiGudang()
+    // {
+    //     $multiWh = DB::table('detail_configurations')
+    //         ->where('status_active', 1)
+    //         ->where('configuration_id', 11)
+    //         ->first();
+    //     View::share('multiWh', $multiWh);
+    //     return view('layouts.btemplate');
+    // }
 }

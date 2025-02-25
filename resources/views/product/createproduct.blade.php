@@ -7,6 +7,9 @@
             <label for="id_image ">Foto Produk</label>
             <input type="file" class="form-control-file" id="id_image" name="file_images[]" multiple>
             <small id="id_image" class="form-text text-muted">Pilih foto produk</small>
+            @error('file_images')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         <div id="previewContainer" style="display: flex; gap: 10px; flex-wrap: wrap;">
             <!-- Image previews will appear here -->
@@ -15,11 +18,17 @@
             <label for="name">Nama Produk</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"
                 placeholder="Masukkan nama produk">
+            @error('name')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         <div class="form-group">
             <label for="description">Deskripsi</label>
             <input type="text" class="form-control" id="description" name="description" aria-describedby="description"
                 placeholder="Masukkan deskripsi produk">
+            @error('description')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         <div class="form-group">
             <label class="control-label">Kategori Produk</label>
@@ -29,7 +38,9 @@
                     <option value="{{ $c->id_category }}">{{ $c->code_category }} - {{ $c->name }}</option>
                 @endforeach
             </select>
-
+            @error('category_id')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         @if ($subKat != null)
             <div class="form-group">
@@ -43,16 +54,25 @@
             <label for="total_stock">Jumlah produk</label>
             <input type="text" class="form-control" id="total_stock" name="total_stock" aria-describedby="total_stock"
                 placeholder="Masukkan jumlah produk yang dimiliki">
+            @error('total_stock')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         <div class="form-group">
             <label for="cost">Harga Pokok Produk</label>
             <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
                 placeholder="Masukkan harga pokok produk">
+            @error('cost')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         <div class="form-group">
             <label for="profit">Keuntungan Produk (%)</label>
             <input type="number" class="form-control" id="profit" name="profit" aria-describedby="profit"
                 placeholder="Berapa banyak keuntungan yang anda inginkan untuk produk ini?">
+            @error('profit')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         <div class="form-group">
             <label for="unit">Tipe Produk</label>
@@ -65,11 +85,17 @@
                     </div>
                 @endforeach
             </div>
+            @error('unit')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         <div class="form-group">
             <label for="min_total_stock">Minimum Stok di Gudang</label>
             <input type="text" class="form-control" id="min_total_stock" name="min_total_stock"
                 aria-describedby="min_total_stock" placeholder="Masukkan minimum stok di gudang untuk produk ini">
+            @error('min_total_stock')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
         <div class="form-group">
             <label class="control-label">Lokasi Penyimpan Produk</label>
@@ -79,12 +105,12 @@
                     <option value="{{ $w->id_warehouse }}">{{ $w->id_warehouse }} - {{ $w->name }}</option>
                 @endforeach
             </select>
+            @error('warehouse_id')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
-        <div style="text-align: right;">
-            <a href="{{ route('product.index') }}" class="btn btn-danger" type="button">Batal</a>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-
+        <button type="submit" class="btn btn-primary">Simpan</button>
+        <a href="{{ route('product.index') }}" class="btn btn-danger" type="button">Batal</a>
         </div>
     </form>
 @endsection
@@ -100,7 +126,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const productImages = document.getElementById('id_image');
             console.log('productImages:', productImages); // Should log the input element
-            
+
             const previewContainer = document.getElementById('previewContainer');
             console.log('previewContainer:', previewContainer); // Should log the preview container
 

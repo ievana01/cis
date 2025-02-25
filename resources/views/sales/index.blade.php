@@ -23,11 +23,14 @@
                     <td>{{ $data->customer_name ?? $data->custname }}</td>
                     <td>Rp. {{ number_format($data->total_price, 0, ',', '.') }}</td>
                     <td>{{ $data->payment_method_name }}</td>
-                    <td><a href="{{route('sales.showNota', $data->id_sales)}}" class="btn btn-info">Tampilkan Nota</a></td>
+                    <td>
+                        <a href="" class="btn btn-warning">Kirim Produk</a>
+                        <a href="{{ route('sales.showNota', $data->id_sales) }}" class="btn btn-info">Tampilkan Nota</a>
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center">Data tidak tersedia</td>
+                    <td colspan="6" class="text-center">Data tidak tersedia</td>
                 </tr>
             @endforelse
         </tbody>

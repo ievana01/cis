@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Configuration;
 use App\Models\Customer;
+use App\Models\DetailConfiguration;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductMoving;
@@ -33,6 +35,7 @@ class SalesOrderController extends Controller
                 'sales_orders.customer_name as custname',  // Menampilkan nama customer yang diinput manual
                 'detail_configurations.name as payment_method_name'  // Menampilkan metode pembayaran
             )
+            // ->where('employee_id', Auth::user()->employee->id_employee)
             ->orderBy('sales_invoice', 'desc')
             ->get();
         return view('sales.index', ["sales" => $sales]);
@@ -135,7 +138,8 @@ class SalesOrderController extends Controller
             ->where('dc.status_active', 1)
             ->select('dc.*')
             ->get();
-
+        // dd($shippingMethod);
+        
         $multiDiskon = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
             ->where('c.id_configuration', 5)
@@ -143,6 +147,9 @@ class SalesOrderController extends Controller
             ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
         // dd($multiDiskon);
+
+        $pengiriman = DetailConfiguration::where('configuration_id', operator: 4)->get();
+        // dd($pengiriman);
         return view('sales.create', [
             "invoiceNumber" => $invoiceNumber,
             "sales" => $sales,
@@ -152,7 +159,8 @@ class SalesOrderController extends Controller
             "taxRate" => $taxRate,
             "discount" => $discount,
             "shippingMethod" => $shippingMethod,
-            "multiDiskon" => $multiDiskon
+            "multiDiskon" => $multiDiskon,
+            "pengiriman" => $pengiriman
         ]);
     }
 
@@ -171,18 +179,32 @@ class SalesOrderController extends Controller
     public function showData()
     {
         $data = DB::table('sales_orders')
-            ->leftJoin('product_moving', 'sales_orders.id_sales', '=', 'product_moving.sales_id')
-            ->leftJoin('products', 'product_moving.product_id', '=', 'products.id_product')
+            ->leftJoin('sales_details', 'sales_orders.id_sales', '=', 'sales_details.sales_id')
+            ->leftJoin('products', 'sales_details.product_id', '=', 'products.id_product')
             ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
             ->select(
                 'sales_orders.sales_invoice as sales_invoice',
+                'sales_orders.date as date',
                 'sales_orders.customer_name as cust_name',
                 'customers.name as cust_name_by_id',
                 'products.name as product_name',
-                'product_moving.*'
+                'sales_details.total_quantity as total_quantity'
             )
-            ->orderBy('sales_invoice', 'asc')
+            ->orderBy('sales_orders.sales_invoice', 'asc')
             ->get();
+        // $data = DB::table('sales_orders')
+        //     ->leftJoin('product_moving', 'sales_orders.id_sales', '=', 'product_moving.sales_id')
+        //     ->leftJoin('products', 'product_moving.product_id', '=', 'products.id_product')
+        //     ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+        //     ->select(
+        //         'sales_orders.sales_invoice as sales_invoice',
+        //         'sales_orders.customer_name as cust_name',
+        //         'customers.name as cust_name_by_id',
+        //         'products.name as product_name',
+        //         'product_moving.*'
+        //     )
+        //     ->orderBy('sales_invoice', 'asc')
+        //     ->get();
         // dd($data);
         return view('sales.datasales', ['data' => $data]);
     }

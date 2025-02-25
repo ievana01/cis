@@ -2,7 +2,7 @@
 @section('content')
     <form method="POST" action="{{ route('purchase.store') }}">
         @csrf
-        <h4 class="text-center">Nota Pembelian</h4>
+        <h4 class="text-center">Nota Pembelian Baru</h4>
         <table class="table table-condensed">
             <tbody>
                 <tr>
@@ -30,7 +30,10 @@
                 <tr>
                     @if ($receiveProdMethod->id_detail_configuration == 19)
                         <th><label for="expected_arrival">Deadline Order</label></th>
-                        <th><input type="date" name="expected_arrival" id="expected_arrival" class="form-control"></th>
+                        <th>
+                            <input type="text" class="form-control" name="date" id="dateInput"
+                                placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">
+                        </th>
                     @elseif($payProd->id_detail_configuration == 21 && $receiveProdMethod->id_detail_configuration == 20)
                         <th><label for="expected_arrival">Tanggal Pengambilan Produk</label></th>
                         <th>

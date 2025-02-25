@@ -2,7 +2,7 @@
 @section('content')
     <form method="POST" action="{{ route('sales.store') }}" enctype="multipart/form-data">
         @csrf
-        <h4 class="text-center">Nota Penjualan</h4>
+        <h4 class="text-center">Nota Penjualan Baru</h4>
         <table class="table table-condensed">
             <tbody>
                 <tr>
@@ -43,6 +43,19 @@
                     <input type="hidden" name="date" id="dateHidden">
                 </tr>
                 <tr>
+                    @foreach ($shippingMethod as $sp)
+                        @if ($sp->id_detail_configuration == 10)
+                            <th><label for="date">Tanggal Kirim</label></th>
+                            <th>
+                                <input type="text" class="form-control" name="date" id="dateInput"
+                                    placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
+                                    onblur="formatDate(this)">
+                            </th>
+                            <input type="hidden" name="date" id="dateHidden">
+                        @endif
+                    @endforeach
+                </tr>
+                <tr>
                     <th><label for="tax">Tarif Pajak</label></th>
                     {{-- <th><input type="text" class="form-control" name="tax" id="tax"
                             value="{{ $taxRate * 100 }}" readonly></th> --}}
@@ -52,6 +65,21 @@
                                 value="{{ $taxRate * 100 }}" readonly style="width:50px; text-align: center;">
                             <span style="margin-left: 5px;">(%)</span>
                         </div>
+                    </th>
+                </tr>
+                <tr>
+                    <th><label for="">Metode Pengiriman</label></th>
+                    <th>
+                        @foreach ($pengiriman as $p)
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="pengiriman"
+                                    id="pengiriman{{ $p->id }}" {{ $p->status_active == 0 ? 'disabled' : '' }}>
+                                <label class="form-check-label" for="pengiriman{{ $p->id }}">
+                                    {{ $p->name }}
+                                </label>
+                            </div>
+                        @endforeach
+
                     </th>
                 </tr>
             </tbody>
@@ -114,9 +142,11 @@
         </table>
 
         <div style="text-align: right;" class="mb-4 mt-2">
-            @if ($shippingMethod->isNotEmpty())
-                <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">+ Biaya Pengiriman</a>
-            @endif
+            @foreach ($shippingMethod as $shippingMethod)
+                @if ($shippingMethod->id_detail_configuration == 10)
+                    <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">+ Biaya Pengiriman</a>
+                @endif
+            @endforeach
             @if ($discount->isNotEmpty())
                 <a href="#modalDiscount" class="btn btn-success" data-toggle="modal" id="discountButton">+ Diskon</a>
             @endif

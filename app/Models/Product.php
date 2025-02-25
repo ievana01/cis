@@ -12,6 +12,8 @@ class Product extends Model
     use SoftDeletes;
     protected $primaryKey = 'id_product';
     public $timestamps = false;
+    protected $fillable = ['name', 'description', 'total_stock', 'cost', 'profit', 'unit', 'min_total_stock', 'category_id', 'warehouse_id', 'file_images'];
+
     protected $attributes = [
         'status_active' => 1, // Default aktif saat produk baru dibuat
     ];

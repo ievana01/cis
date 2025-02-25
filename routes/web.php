@@ -86,6 +86,8 @@ Route::middleware(["auth"])->group(function () {
 
     Route::resource('/subCategory', SubCategoryController::class);
     Route::get('/subCategory/create/{id_category}', [SubCategoryController::class, 'create'])->name('subCategory.create');
+
+    // Route::get('/multiWh', [ProductController::class, 'showMultiGudang'])->name('showMultiGudang');
 });
 
 Auth::routes();

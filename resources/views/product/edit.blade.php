@@ -25,7 +25,9 @@
 
             <!-- Input file untuk mengganti gambar -->
             <input type="file" class="form-control-file" id="imageUpload" name="imageUpload">
-
+            @error('file_images')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
             <small id="file_image" class="form-text text-muted">Masukkan foto produk</small>
 
             <!-- Preview gambar baru yang dipilih -->
@@ -46,23 +48,15 @@
             <label for="name">Nama</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"
                 value="{{ $product->name }}" placeholder="Masukkan nama produk">
+            @error('name')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">
             <label for="description">Deskripsi</label>
             <input type="text" class="form-control" id="description" name="description" aria-describedby="description"
                 value="{{ $product->description }}" placeholder="Masukkan deskripsi produk">
-        </div>
-
-        <div class="form-group">
-            <label class="control-label">Nama Pemasok</label>
-            <select class="form-control" name="supplier_id" id="supplier_id">
-                @foreach ($supplier as $s)
-                    <option value="{{ $s->id_supplier }}" {{ $s->id_supplier == $product->supplier_id ? 'selected' : '' }}>
-                        {{ $s->id_supplier }} - {{ $s->name }}
-                    </option>
-                @endforeach
-            </select>
         </div>
 
         <div class="form-group">
@@ -96,6 +90,9 @@
             <label for="total_stock">Jumlah Produk</label>
             <input type="text" class="form-control" id="total_stock" name="total_stock" aria-describedby="total_stock"
                 value="{{ $product->total_stock }}" readonly>
+            @error('total_stock')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         @if ($pemProd->id_detail_configuration == 17)
@@ -110,18 +107,18 @@
                 <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
                     value="{{ $product->cost }}" placeholder="Masukkan harga pokok produk">
             </div>
+            @error('cost')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         @endif
-
-        {{-- <div class="form-group">
-            <label for="price">Harga Jual</label>
-            <input type="text" class="form-control" id="price" name="price" aria-describedby="price"
-                value="{{ $product->price }}" placeholder="Masukkan harga jual barang">
-        </div> --}}
 
         <div class="form-group">
             <label for="profit">Keuntungan(%)</label>
             <input type="number" class="form-control" id="profit" name="profit" aria-describedby="profit"
                 value="{{ $product->profit }}" placeholder="Masukkan keuntungan untuk produk ini">
+            @error('profit')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">
@@ -142,6 +139,9 @@
             <input type="text" class="form-control" id="min_total_stock" name="min_total_stock"
                 value="{{ $product->min_total_stock }}" aria-describedby="min_total_stock"
                 placeholder="Silahkan atur minimum stok pada produk ini">
+            @error('min_total_stock')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">

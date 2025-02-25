@@ -27,17 +27,18 @@
                         @if ($data->payment_method != null)
                             <label>Pembayaran Sukses</label>
                         @else
-                            
                             <label class="text-danger">Pembayaran blm terdaftar</label>
                             @if ($payProd->id_detail_configuration == 21 && $data->expected_arrival <= now()->toDateString())
-                            <br>
+                                <br>
                                 <a href="#modalPayment" class="btn btn-success" data-toggle="modal"
                                     onclick="paymentForm({{ $data->id_purchase }})">Bayar</a>
                             @endif
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('purchase.showNota', $data->id_purchase) }}" class="btn btn-info">Tampilkan Nota</a>
+                        <a href="" class="btn btn-warning">Terima Barang</a>
+                        <a href="{{ route('purchase.showNota', $data->id_purchase) }}" class="btn btn-info">Tampilkan
+                            Nota</a>
                     </td>
                 </tr>
             @empty

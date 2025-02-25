@@ -18,9 +18,16 @@ class ProductMovingController extends Controller
         ->join('products', 'product_has_warehouses.product_id', '=', 'products.id_product')
         ->join('warehouses', 'warehouses.id_warehouse', '=', 'product_has_warehouses.warehouse_id')
         ->select('product_has_warehouses.*', 'warehouses.name as warehouse_name', 'products.name as product_name', 'products.id_product as id_product')
+        ->orderBy('products.name')
+        ->orderBy('warehouses.name')
         ->get();
-        // dd($product);
-        return view('product.move', ['product' => $product]);
+
+        $multiWh = DB::table('detail_configurations')
+        ->where('status_active', 1)
+        ->where('configuration_id', 11)
+        ->first();
+        // dd($multiWh);
+        return view('product.move', ['product' => $product, 'multiWh' => $multiWh]);
     }
 
     /**
@@ -113,7 +120,7 @@ class ProductMovingController extends Controller
             'note' => $request->note,
         ]);
 
-        return redirect()->route('productMove.index')->with('success', 'Produk berhasil dipindahkan.');
+        return redirect()->route('productMove.index')->with('status', 'Produk berhasil dipindahkan.');
     }
 
     /**
