@@ -26,4 +26,9 @@ class DeliveryNote extends Model
     {
         return $this->belongsTo(PurchaseOrder::class, 'purchase_id', 'id_purchase');
     }
+    public function deliveryNoteHasProducts()
+    {
+        return $this->hasMany(DeliveryNoteHasProducts::class, 'delivery_note_id', 'id');
+    }
+
 }

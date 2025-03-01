@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class DeliveryNoteHasProducts extends Model
 {
     use HasFactory;
+    protected $table = 'delivery_note_has_products';
+
     public $timestamps = false;
     public function product()
     {

@@ -3,23 +3,46 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <h4 class="font-weight-bold">Pindah Produk</h4>
+    <h4 class="font-weight-bold">Daftar Pindah Produk</h4>
     <a class="btn btn-primary mb-2" href="{{ route('pindahProduk.create') }}">+ Pindah Produk</a>
     @forelse ($pindah as $p)
         <div class="card mb-2">
             <div class="card-body">
-                <h5 class="card-title">Pindah Produk</h5>
-                <div class="d-flex">
-                    <p class="card-text">Dari Gudang : {{ $p->warehouse_in_name }}</p>
-                    <p class="card-text">Ke Gudang : {{ $p->warehouse_out_name }}</p>
+                <h5 class="card-title"><i class="fa-solid fa-exchange-alt text-primary"></i> Pindah Produk</h5>
+                <p>Tanggal Pindah: {{ date('d-m-Y', strtotime($p->date)) }}</p>
+
+                <div class="d-flex mr-6 mb-2">
+                    <i class="fa-solid fa-warehouse text-danger"></i>
+                    <p class="mb-2"><strong>Dari Gudang:</strong> {{ $p->w_in }}</p>
                 </div>
-                <label for="">Daftar produk yang dipindah:</label>
-                <ol class="list-group list-group-flush">
-                    <li class="list-group-item"> {{$p->product_name}} - {{$p->quantity}}</li>
-                </ol>
+                <div class="d-flex">
+                    <i class="fa-solid fa-warehouse text-success"></i>
+                    <p class="mb-0"><strong>Ke Gudang:</strong> {{ $p->w_out }}</p>
+                </div>
+
+                <br>
+                <label class="font-weight-bold">Daftar produk yang dipindah:</label>
+                <table class="table table-striped text-center">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Nama Produk</th>
+                            <th>Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($p->products as $prod)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $prod['prod_name'] }}</td>
+                                <td>{{ $prod['quantity'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
     @empty
-    <p>DATA TIDAK TERSEDIA</p>
+        <p>DATA TIDAK TERSEDIA</p>
     @endforelse
 @endsection

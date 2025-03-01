@@ -32,59 +32,84 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseDetail::class, 'purchase_id');
     }
 
-    public function refreshCost($cogsMethod, $product, $date)
+    public function refreshCost($product, $date, $metode_pengiriman)
     {
-    //     if ($cogsMethod == 'Average') {
-    //         $productData = DB::table('products')->where('id_product', $product['id'])->first();
-    //         $profit = $productData->profit / 100;
+        $cogsChoose = DB::table('detail_configurations')
+            ->where('status_active', 1)
+            ->where('configuration_id', 1)
+            ->first();
+        $cogsMethod = $cogsChoose->name;
 
-    //         $oldStock = $productData->total_stock;
-    //         $oldCost = $productData->cost;
-    //         $oldPrice = $productData->price;
-    //         $totalOldCost = $oldCost * $oldStock;
+        if ($metode_pengiriman == 'diambil') {
+            if ($cogsMethod == 'Average') {
+                $productData = DB::table('products')->where('id_product', $product['id'])->first();
+                $profit = $productData->profit / 100;
 
-    //         $newStock = $product['quantity'];
-    //         $totalNewCost = $product['amount'];
-    //         $newCost = $totalNewCost / $newStock;
+                $oldStock = $productData->total_stock;
+                $oldCost = $productData->cost;
+                $oldPrice = $productData->price;
+                $totalOldCost = $oldCost * $oldStock;
 
-    //         $totalAllCost = $totalOldCost + $totalNewCost;
-    //         $totalAllStock = $oldStock + $newStock;
-    //         $averageCost = $totalAllCost / $totalAllStock;
-    //         // $ratioPrice = $oldPrice / $oldCost;
+                $newStock = $product['quantity'];
+                $totalNewCost = $product['amount'];
+                $newCost = $totalNewCost / $newStock;
 
-    //         $newPrice = ($averageCost * $profit) + $averageCost;
+                $totalAllCost = $totalOldCost + $totalNewCost;
+                $totalAllStock = $oldStock + $newStock;
+                $averageCost = $totalAllCost / $totalAllStock;
+                // $ratioPrice = $oldPrice / $oldCost;
 
-    //         DB::table('products')
-    //             ->where('id_product', $product['id'])
-    //             ->update([
-    //                 'price' => $newPrice,
-    //                 'cost' => $averageCost,
-    //                 'total_stock' => $totalAllStock,
-    //             ]);
+                $newPrice = ($averageCost * $profit) + $averageCost;
 
-    //     } else if ($cogsMethod == 'FIFO') {
-    //         $productData = DB::table('products')->where('id_product', $product['id'])->first();
-    //         $profit = $productData->profit / 100;
-    //         $cost = $product['amount'] / $product['quantity'];
-    //         $price = ($cost * $profit) + $cost;
-    //         $totalStock = $productData->total_stock + $product['quantity'];
+                DB::table('products')
+                    ->where('id_product', $product['id'])
+                    ->update([
+                        'price' => $newPrice,
+                        'cost' => $averageCost,
+                        'total_stock' => $totalAllStock,
+                    ]);
 
-    //         DB::table('product_fifo')->insert([
-    //             'product_id' => $product['id'],
-    //             'initial_stock' => $product['quantity'],
-    //             'purchase_date' =>$date,
-    //             'cost' => $cost,
-    //             'price' => $price,
-    //             'sold' => 0
-    //         ]);
+            } else if ($cogsMethod == 'FIFO') {
+                $productData = DB::table('products')->where('id_product', $product['id'])->first();
+                $profit = $productData->profit / 100;
+                $cost = $product['amount'] / $product['quantity'];
+                $price = ($cost * $profit) + $cost;
+                $totalStock = $productData->total_stock + $product['quantity'];
 
-    //         DB::table('products')
-    //             ->where('id_product', $product['id'])
-    //             ->update([
-    //                 'total_stock' => $totalStock,
-    //                 'cost' => $cost,
-    //                 'price' => $price,
-    //             ]);
-    //     }
+                DB::table('product_fifo')->insert([
+                    'product_id' => $product['id'],
+                    'initial_stock' => $product['quantity'],
+                    'purchase_date' => $date,
+                    'cost' => $cost,
+                    'price' => $price,
+                    'sold' => 0
+                ]);
+
+                DB::table('products')
+                    ->where('id_product', $product['id'])
+                    ->update([
+                        'total_stock' => $totalStock,
+                        'cost' => $cost,
+                        'price' => $price,
+                    ]);
+            }
+            DB::table('product_has_warehouses')
+                ->where('product_id', $product['id'])
+                ->increment('stock', $product['quantity']);
+
+        } else if ($metode_pengiriman == 'dikirim') {
+            if ($cogsMethod == 'FIFO') {
+                DB::table('products')
+                    ->where('id_product', $product['id'])
+                    ->increment('on_order', $product['quantity']);
+                DB::table('product_fifo')
+                    ->where('product_id', $product['id'])
+                    ->increment('on_order', $product['quantity']);
+            } else if ($cogsMethod == 'Average') {
+                DB::table('products')
+                    ->where('id_product', $product['id'])
+                    ->increment('on_order', $product['quantity']);
+            }
+        }
     }
 }

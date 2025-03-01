@@ -16,30 +16,32 @@ class DeliveryNoteController extends Controller
      */
     public function index()
     {
-        // $pindah = DeliveryNote::with(DeliveryNoteHasProducts::class)->where('type', 'pindah')->get();
         $pindah = DB::table('delivery_note as dn')
-            ->join('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
-            ->join('products as p', 'dnp.product_id', '=', 'p.id_product')
-            ->join('warehouses as w_in', 'dn.warehouses_id_in', '=', 'w_in.id_warehouse')  // Join untuk Gudang Tujuan
-            ->join('warehouses as w_out', 'dn.warehouses_id_out', '=', 'w_out.id_warehouse') // Join untuk Gudang Asal
+            ->leftJoin('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
+            ->leftJoin('products as p', 'dnp.product_id', '=', 'p.id_product')
+            ->leftJoin('warehouses as w', 'dn.warehouses_id_in', '=', 'w.id_warehouse')
+            ->leftJoin('warehouses as w2', 'dn.warehouses_id_out', '=', 'w2.id_warehouse')
             ->where('dn.type', 'pindah')
-            ->select(
-                'dn.id as delivery_note_id',
-                'dn.date',
-                'dn.note',
-                'dn.warehouses_id_in',
-                'w_in.name as warehouse_in_name',  // Nama Gudang Tujuan
-                'dn.warehouses_id_out',
-                'w_out.name as warehouse_out_name', // Nama Gudang Asal
-                'dnp.product_id',
-                'dnp.quantity',
-                'p.name as product_name'
-            )
-            ->orderBy('dn.id', 'desc')
-            ->get();
+            ->select('dn.*', 'w.name as w_in', 'w2.name as w_out', 'p.name as prod_name', 'dnp.product_id', 'dnp.quantity')
+            ->get()
+            ->groupBy('id'); // Kelompokkan berdasarkan ID delivery_note
 
+        // Konversi ke format array (jika perlu)
+        $pindah = $pindah->map(function ($items) {
+            $first = $items->first(); // Ambil data utama
+            $first->products = $items->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'prod_name' => $item->prod_name,
+                    'quantity' => $item->quantity,
+                ];
+            })->values(); // Buat array produk dalam satu pengiriman
+            return $first;
+        })->values();
 
+        // Cek hasil
         // dd($pindah);
+
         return view('deliveryNote.index', compact('pindah'));
     }
 
@@ -48,13 +50,26 @@ class DeliveryNoteController extends Controller
      */
     public function create()
     {
+        $invoiceNumber = $this->generateInvoiceNumber();
         $warehouse = Warehouse::all();
-        return view('deliveryNote.create', ['warehouse' => $warehouse]);
+        return view('deliveryNote.create', ['warehouse' => $warehouse, 'invoiceNumber' => $invoiceNumber]);
     }
 
+    public function generateInvoiceNumber()
+    {
+        $lastInvoice = DeliveryNote::orderBy('id', 'desc')->first();
+        if ($lastInvoice) {
+            $lastNumber = intval(substr($lastInvoice->invoice_number, 1));
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        return 'MV-'. str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+    }
     /**
      * Store a newly created resource in storage.
      */
+    //kirim
     public function store(Request $request)
     {
         $cogsChoose = DB::table('detail_configurations')
@@ -241,52 +256,60 @@ class DeliveryNoteController extends Controller
 
     public function storePindah(Request $request)
     {
+        // Simpan data Delivery Note
         $dn = new DeliveryNote();
+        $invoiceNumber = $this->generateInvoiceNumber();
+        $dn->invoice_number = $invoiceNumber;
         $dn->date = $request->get('date');
         $dn->note = $request->get('note');
         $dn->type = 'pindah';
-        $dn->warehouses_id_in = $request->get('warehouses_id_in');
-        $dn->warehouses_id_out = $request->get('warehouses_id_out');
+        $dn->warehouses_id_in = $request->get('warehouses_id_in'); // Gudang asal
+        $dn->warehouses_id_out = $request->get('warehouses_id_out'); // Gudang tujuan
         $dn->save();
 
+        // Decode produk dari request
         $products = json_decode($request->get('products'), true);
-        if (!empty($products)) {
-            foreach ($products as $product) {
-                // Kurangi stok dari gudang asal
+        foreach ($products as $product) {
+            $productId = $product['id'];
+            $quantity = $product['quantity'];
+
+            DB::table('delivery_note_has_products')->insert([
+                'delivery_note_id' => $dn->id,
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'note' => $product['note'] ?? null,
+            ]);
+
+            // Kurangi stok di gudang asal
+            DB::table('product_has_warehouses')
+                ->where('product_id', $productId)
+                ->where('warehouse_id', $dn->warehouses_id_in)
+                ->decrement('stock', $quantity);
+
+            // Cek apakah produk sudah ada di gudang tujuan
+            $existing = DB::table('product_has_warehouses')
+                ->where('product_id', $productId)
+                ->where('warehouse_id', $dn->warehouses_id_out)
+                ->first();
+
+            if ($existing) {
+                // Jika produk sudah ada di gudang tujuan, tambahkan stoknya
                 DB::table('product_has_warehouses')
-                    ->where('product_id', $product['id'])
-                    ->where('warehouse_id', $dn->warehouses_id_in)
-                    ->decrement('stock', $product['quantity']);
-
-                // Cek apakah produk sudah ada di gudang tujuan
-                $existing = DB::table('product_has_warehouses')
-                    ->where('product_id', $product['id'])
-                    ->where('warehouse_id', $dn->warehouses_id_in)
-                    ->first();
-
-                if ($existing) {
-                    // Jika sudah ada, tambahkan stoknya
-                    DB::table('product_has_warehouses')
-                        ->where('product_id', $product['id'])
-                        ->where('warehouse_id', $dn->warehouses_id_in)
-                        ->increment('stock', $product['quantity']);
-                } else {
-                    // Jika belum ada, buat entri baru
-                    DB::table('product_has_warehouses')->insert([
-                        'product_id' => $product['id'],
-                        'warehouse_id' => $dn->warehouses_id_in,
-                        'stock' => $product['quantity']
-                    ]);
-                }
+                    ->where('product_id', $productId)
+                    ->where('warehouse_id', $dn->warehouses_id_out)
+                    ->increment('stock', $quantity);
+            } else {
+                // Jika belum ada, buat entri baru
+                DB::table('product_has_warehouses')->insert([
+                    'product_id' => $productId,
+                    'warehouse_id' => $dn->warehouses_id_out,
+                    'stock' => $quantity
+                ]);
             }
         }
-
         return redirect()->route('pindahProduk.index')->with('status', 'Berhasil pindah produk!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         //

@@ -33,11 +33,12 @@ class PurchaseOrderController extends Controller
                 'purchase_orders.expected_arrival',
                 'purchase_orders.total_purchase',
                 'suppliers.name as supplier_name',
-                'detail_configurations.name as payment_method'
+                'detail_configurations.name as payment_method',
+                'purchase_orders.expected_arrival as expected_arrival'
             )
             ->orderBy('purchase_invoice', 'desc')
             ->get();
-
+        // dd($purchase);
         $payProd = DB::table('detail_configurations')
             ->where('status_active', 1)
             ->where('configuration_id', 9)
@@ -170,35 +171,14 @@ class PurchaseOrderController extends Controller
      */
     public function store(Request $request)
     {
-        $cogsChoose = DB::table('detail_configurations')
-            ->where('status_active', 1)
-            ->where('configuration_id', 1)
-            ->first();
-        $cogsMethod = $cogsChoose->name;
-
-        $payProd = DB::table('detail_configurations')
-            ->where('status_active', 1)
-            ->where('configuration_id', 9)
-            ->first();
-
         $purchase = new PurchaseOrder();
         $invoiceNumber = $this->generateInvoiceNumber();
         $purchase->purchase_invoice = $invoiceNumber;
         $purchase->date = $request->get(key: 'date');
-        // dd(request()->all());
-
-        $purchase->expected_arrival = $request->get('expected_arrival');
+        $purchase->expected_arrival = $request->get('expected_arrival') ?? null;
         $purchase->total_purchase = $request->get('total_price');
-        // if ($payProd->id_detail_configuration == 22) {
-        //     $purchase->payment_method = $request->get('payment_method') ?? 6;
-        // }
-        $purchase->payment_method = ($payProd->id_detail_configuration == 22)
-            ? ($request->get('payment_method'))
-            : null;
-        // dd($purchase->payment_method);
-        // $purchase->payment_method = $request->get('payment_method');
+        $purchase->payment_method = $request->get('payment_method') ?? null;
         $purchase->supplier_id = $request->get('id_supplier');
-        // $purchase->employee_id = $request->get('employee_id') ?? 1;
         $purchase->employee_id = Auth::user()->employee->id_employee;
         $purchase->save();
 
@@ -213,90 +193,9 @@ class PurchaseOrderController extends Controller
                 ]
             );
 
-            // $purchase->refreshCost($cogsMethod, $product, $request->get('date'));
-            if ($request->metode_pengiriman == 'diambil') {
-                if ($cogsMethod == 'Average') {
-                    $productData = DB::table('products')->where('id_product', $product['id'])->first();
-                    $profit = $productData->profit / 100;
-
-                    $oldStock = $productData->total_stock;
-                    $oldCost = $productData->cost;
-                    $oldPrice = $productData->price;
-                    $totalOldCost = $oldCost * $oldStock;
-
-                    $newStock = $product['quantity'];
-                    $totalNewCost = $product['amount'];
-                    $newCost = $totalNewCost / $newStock;
-
-                    $totalAllCost = $totalOldCost + $totalNewCost;
-                    $totalAllStock = $oldStock + $newStock;
-                    $averageCost = $totalAllCost / $totalAllStock;
-                    // $ratioPrice = $oldPrice / $oldCost;
-
-                    $newPrice = ($averageCost * $profit) + $averageCost;
-
-                    DB::table('products')
-                        ->where('id_product', $product['id'])
-                        ->update([
-                            'price' => $newPrice,
-                            'cost' => $averageCost,
-                            'total_stock' => $totalAllStock,
-                        ]);
-
-                } else if ($cogsMethod == 'FIFO') {
-                    $productData = DB::table('products')->where('id_product', $product['id'])->first();
-                    $profit = $productData->profit / 100;
-                    $cost = $product['amount'] / $product['quantity'];
-                    $price = ($cost * $profit) + $cost;
-                    $totalStock = $productData->total_stock + $product['quantity'];
-
-                    DB::table('product_fifo')->insert([
-                        'product_id' => $product['id'],
-                        'initial_stock' => $product['quantity'],
-                        'purchase_date' => $request->get('date'),
-                        'cost' => $cost,
-                        'price' => $price,
-                        'sold' => 0
-                    ]);
-
-                    DB::table('products')
-                        ->where('id_product', $product['id'])
-                        ->update([
-                            'total_stock' => $totalStock,
-                            'cost' => $cost,
-                            'price' => $price,
-                        ]);
-                }
-            } else if ($request->metode_pengiriman == 'dikirim') {
-                if ($cogsMethod == 'FIFO') {
-                    DB::table('products')
-                        ->where('id_product', $product['id'])
-                        ->increment('on_order', $product['quantity']);
-                    DB::table('product_fifo')
-                        ->where('product_id', $product['id'])
-                        ->increment('on_order', $product['quantity']);
-                } else if ($cogsMethod == 'Average') {
-                    DB::table('products')
-                        ->where('id_product', $product['id'])
-                        ->increment('on_order', $product['quantity']);
-                }
-            }
-
-            // DB::table('product_moving')->insert([
-            //     'move_stock' => $product['quantity'],
-            //     'date' => $purchase->date,
-            //     'product_id' => $product['id'],
-            //     'warehouse_id_in' => $request->get('id_warehouse'),
-            //     'purchase_id' => $purchase->id_purchase,
-            // ]);
-
-            DB::table('product_has_warehouses')
-                ->where('product_id', $product['id'])
-                ->increment('stock', $product['quantity']);
+            $purchase->refreshCost($product, $request->get('date'), $request->get('metode_pengiriman'));
         }
-        // return redirect()->route('purchase.index')->with('status', 'Data successfully added');
         return redirect()->route('purchase.showNota', $purchase->id_purchase)->with('status', 'Nota berhasil dibuat!');
-
     }
 
 
@@ -388,7 +287,7 @@ class PurchaseOrderController extends Controller
             ->where('pd.purchase_id', $id)
             ->select('dnp.quantity as terima', 'pd.total_quantity_product as jumlah', 'dnp.product_id')
             ->get();
-                // dd($terima);
+        // dd($terima);
 
         return view('purchase.terima', compact('purchase', 'purchaseDetail', 'gudang', 'terima'));
     }

@@ -184,6 +184,8 @@ class ProductController extends Controller
         } else {
             $data->sub_categories_id = null;
         }
+        $data->in_order = 0;
+        $data->on_order = 0;
         $data->save();
 
         if ($cogsMethod == 'FIFO') {
@@ -193,7 +195,9 @@ class ProductController extends Controller
                 'price' => $data->price,
                 'cost' => $data->cost,
                 'initial_stock' => $data->total_stock,
-                'sold' => 0
+                'sold' => 0,
+                'in_order' => 0,
+                'on_order' => 0
             ]);
         }
 

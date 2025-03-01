@@ -25,7 +25,8 @@
                     <td>{{ $data->payment_method_name }}</td>
                     <td class="d-flex justify-content-center">
                         @if ($data->delivery_date != null)
-                            <a href="{{route('sales.showProd', $data->id_sales)}}" class="btn btn-warning btn-sm mr-2">Kirim Produk</a>
+                            <a href="{{ route('sales.showProd', $data->id_sales) }}" class="btn btn-warning btn-sm mr-2">Kirim
+                                Produk</a>
                         @endif
                         <a href="{{ route('sales.showNota', $data->id_sales) }}" class="btn btn-info btn-sm">Tampilkan
                             Nota</a>

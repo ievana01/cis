@@ -3,13 +3,22 @@
     <form action="{{ route('delivery-note.storePindah') }}" method="POST">
         <h4 class="text-center">Pindah Produk</h4>
         @csrf
-        <div class="mb-2">
-            <label for="date">Tanggal Pindah</label>
-            <input type="text" class="form-control" name="date_display" id="dateInput" placeholder="Silahkan pilih tanggal"
-                onfocus="this.type='date'" onblur="formatDate(this)">
-            <input type="hidden" name="date" id="dateHidden">
-        </div>
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <th><label for="invoice_number">No Ref</label></th>
+                    <th><input type="text" readonly class="form-control" id="invoice_number" value="{{ $invoiceNumber }}">
+                    </th>
+                </tr>
+                <tr>
+                    <th><label for="date">Tanggal Pindah</label></th>
+                    <th><input type="text" class="form-control" name="date_display" id="dateInput"
+                            placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)"></th>
+                    <input type="hidden" name="date" id="dateHidden">
 
+                </tr>
+            </tbody>
+        </table>
         <table class="table table-bordered text-center">
             <thead>
                 <tr>
@@ -78,6 +87,7 @@
         <table class="table table-bordered text-center">
             <thead>
                 <tr>
+                    <th>No.</th>
                     <th>Nama Produk</th>
                     <th>Jumlah</th>
                     <th>Aksi</th>

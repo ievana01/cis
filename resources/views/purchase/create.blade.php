@@ -25,26 +25,11 @@
                 <tr>
                     <th><label for="date">Tanggal Order</label></th>
                     <th>
-                        <input type="date" class="form-control" name="date" value="<?= date('Y-m-d') ?>" readonly>
+                        <input type="text" class="form-control" name="date" id="dateInput"
+                            placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">
                     </th>
                     <input type="hidden" name="date" id="dateHidden">
                 </tr>
-                {{-- <tr>
-                    @if ($receiveProdMethod->id_detail_configuration == 19)
-                        <th><label for="expected_arrival">Deadline Order</label></th>
-                        <th>
-                            <input type="text" class="form-control" name="date" id="dateInput"
-                                placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">
-                        </th>
-                    @elseif($payProd->id_detail_configuration == 21 && $receiveProdMethod->id_detail_configuration == 20)
-                        <th><label for="expected_arrival">Tanggal Pengambilan Produk</label></th>
-                        <th>
-                            <input type="text" class="form-control" name="expected_arrival" id="dateInput"
-                                placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">
-                        </th>
-                        <input type="hidden" name="expected_arrival" id="dateHidden">
-                    @endif
-                </tr> --}}
                 <tr>
                     <th><label for="warehouse">Dikirim ke</label></th>
                     <th>
@@ -293,6 +278,7 @@
             const textDigudang = document.getElementById('text-digudang');
             const radioDikirim = document.getElementById('dikirim');
             const textDikirim = document.getElementById('text-dikirim');
+            const radioDiambil = document.getElementById('diambil');
             const paymentMethod = document.getElementById('paymentMethod');
 
             function updateModalContent() {
@@ -306,12 +292,15 @@
                     textDigudang.style.display = "none";
                     textDikirim.style.display = "block";
                     paymentMethod.style.display = "none";
+                } else if (radioDiambil.checked && radioDimuka.checked) {
+                    textDikirim.style.display = "none";
                 }
             }
 
             radioDigudang.addEventListener('change', updateModalContent);
             radioDimuka.addEventListener('change', updateModalContent);
             radioDikirim.addEventListener('change', updateModalContent);
+            radioDiambil.addEventListener('change', updateModalContent);
         });
 
         function formatDate(input) {
@@ -327,7 +316,10 @@
 
                 // Simpan ke input hidden dalam format YYYY-MM-DD untuk database
                 document.getElementById('dateHidden').value = `${year}-${month}-${day}`;
-                document.getElementById('expected_arrival').value = `${year}-${month}-${day}`;
+                // document.getElementById('expected_arrival').value = `${year}-${month}-${day}`;
+                if (document.getElementById('text-dikirim').style.display !== "none") {
+                    document.getElementById('expected_arrival').value = `${year}-${month}-${day}`;
+                }
             } else {
                 input.type = 'text';
                 document.getElementById('dateHidden').value = '';

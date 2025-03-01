@@ -36,7 +36,9 @@
                         @endif
                     </td>
                     <td class="d-flex justify-content-center">
+                        @if ($data->expected_arrival != null)
                         <a href="{{route('purchase.showProd', $data->id_purchase)}}" class="btn btn-warning btn-sm mr-2">Terima Produk</a>
+                        @endif
                         <a href="{{ route('purchase.showNota', $data->id_purchase) }}" class="btn btn-info btn-sm">Tampilkan
                             Nota</a>
                     </td>

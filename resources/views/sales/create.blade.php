@@ -41,7 +41,7 @@
                     </th>
                     <input type="hidden" name="date" id="dateHidden">
                 </tr>
-                <tr>
+                {{-- <tr>
                     @foreach ($shippingMethod as $sp)
                         @if ($sp->id_detail_configuration == 10)
                             <th><label for="delivery_date">Tanggal Kirim</label></th>
@@ -53,7 +53,7 @@
                             <input type="hidden" name="delivery_date" id="delivery_date">
                         @endif
                     @endforeach
-                </tr>
+                </tr> --}}
                 <tr>
                     <th><label for="tax">Tarif Pajak</label></th>
                     <th>
@@ -180,6 +180,13 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body" id="modalContent">
+                        <div id="text-dikirim" style="display: none">
+                            <label for="expected_arrival">Perkiraan tanggal kirim</label>
+                            <input type="text" class="form-control" name="delivery_date" id="dateInput"
+                                placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
+                                onblur="formatDate(this)">
+                            <input type="hidden" name="delivery_date" id="delivery_date">
+                        </div>
                         <div class="form-group">
                             <label for="payment_method">Metode Pembayaran</label>
                             <select class="form-control" id="payment_method" name="payment_method">
@@ -189,7 +196,6 @@
                                 @endforeach
                             </select>
                         </div>
-                        {{-- <div class="modal-body" id="modalContent"> --}}
                         <div class="form-group">
                             <label for="">Apakah pembayaran sukses?</label>
                             <div class="form-check">
@@ -203,13 +209,7 @@
                                 <label class="form-check-label" for="radioNo">Tidak</label>
                             </div>
                         </div>
-                        {{-- </div> --}}
                     </div>
-                    {{-- <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
-                        <a href="#modalKonfirmasiPay" class="btn btn-primary" data-toggle="modal"
-                            onclick="openConfirmationModal()">Verifikasi</a>
-                    </div> --}}
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
                         <button type="submit" class="btn btn-primary" onclick="getNota($sales->id_sales)"
@@ -340,13 +340,13 @@
 
                 // Simpan ke input hidden dalam format YYYY-MM-DD untuk database
                 document.getElementById('dateHidden').value = `${year}-${month}-${day}`;
-                document.getElementById('delivery_date').value = `${year}-${month}-${day}`;
-
+                if (document.getElementById('text-dikirim').style.display !== "none") {
+                    document.getElementById('delivery_date').value = `${year}-${month}-${day}`;
+                }
             } else {
                 input.type = 'text';
                 document.getElementById('dateHidden').value = '';
                 document.getElementById('delivery_date').value = '';
-
             }
         }
 
@@ -382,6 +382,17 @@
                         (); // Memperbarui status tombol setelah memilih jenis diskon
                 });
             });
+
+            const radioDikirim = document.getElementById('dikirim');
+            const textDikirim = document.getElementById('text-dikirim');
+
+            function updateModalContent() {
+                if (radioDikirim.checked) {
+                    textDikirim.style.display = "block";
+                }
+            }
+
+            radioDikirim.addEventListener('change', updateModalContent);
         });
 
         function toggleOtherCustomerInput() {
