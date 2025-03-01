@@ -24,10 +24,12 @@
                 </tr>
                 <tr>
                     <th><label for="date">Tanggal Order</label></th>
-                    <th><input type="date" class="form-control" name="date" value="<?= date('Y-m-d') ?>" readonly>
+                    <th>
+                        <input type="date" class="form-control" name="date" value="<?= date('Y-m-d') ?>" readonly>
                     </th>
+                    <input type="hidden" name="date" id="dateHidden">
                 </tr>
-                <tr>
+                {{-- <tr>
                     @if ($receiveProdMethod->id_detail_configuration == 19)
                         <th><label for="expected_arrival">Deadline Order</label></th>
                         <th>
@@ -42,7 +44,7 @@
                         </th>
                         <input type="hidden" name="expected_arrival" id="dateHidden">
                     @endif
-                </tr>
+                </tr> --}}
                 <tr>
                     <th><label for="warehouse">Dikirim ke</label></th>
                     <th>
@@ -55,8 +57,51 @@
                     </th>
                 </tr>
                 <tr>
+                    <th><label for="">Metode Pengiriman</label></th>
+                    <th>
+                        @php
+                            $dikirim = $pengiriman->firstWhere('name', 'Produk dikirim oleh pemasok');
+                            $diambil = $pengiriman->firstWhere('name', 'Produk diambil di pemasok');
+                        @endphp
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metode_pengiriman" id="dikirim"
+                                value="dikirim" {{ $dikirim ? '' : 'disabled' }}>
+                            <label class="form-check-label" for="dikirim">
+                                Produk dikirim oleh pemasok
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metode_pengiriman" id="diambil"
+                                value="diambil" {{ $diambil ? '' : 'disabled' }}>
+                            <label class="form-check-label" for="diambil">
+                                Produk diambil di pemasok
+                            </label>
+                        </div>
+                    </th>
+                </tr>
+                <tr>
                     <th><label>Tipe Pembayaran</label></th>
-                    <th><input type="text" class="form-control" value="{{ $payProd->name }}" disabled></th>
+                    <th>
+                        @php
+                            $digudang = $payProd->firstWhere('name', 'Produk diterima di gudang');
+                            $dimuka = $payProd->firstWhere('name', 'Pembayaran produk dimuka');
+                        @endphp
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipe_pembayaran" id="digudang"
+                                value="digudang" {{ $digudang ? '' : 'disabled' }}>
+                            <label class="form-check-label" for="digudang">
+                                Produk diterima di gudang
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipe_pembayaran" id="dimuka"
+                                value="dimuka" {{ $dimuka ? '' : 'disabled' }}>
+                            <label class="form-check-label" for="dimuka">
+                                Pembayaran produk dimuka
+                            </label>
+                        </div>
+                    </th>
+
                 </tr>
             </tbody>
         </table>
@@ -117,9 +162,6 @@
         </div>
         <div style="text-align: right;">
             <a href="{{ route('purchase.index') }}" type="button" class="btn btn-danger">Batal</a>
-
-            {{-- <button type="submit" class="btn btn-primary" onclick="getNota($purchase->id_purchase)">Buat Pesanan</button> --}}
-
             <a href="#modalPayment" class="btn btn-primary" data-toggle="modal">Buat Pesanan</a>
 
         </div>
@@ -128,20 +170,28 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body" id="modalContent">
-                        <div class="form-group">
-                            <label for="payment_method">Metode Pembayaran</label>
-                            <select class="form-control" id="payment_method" name="payment_method">
-                                @if ($payProd->id_detail_configuration == 22)
+                        <div id="text-digudang" style="display: none;">
+                            <label for="">Pembayaran dilakukan ketika:</label>
+                            <p>Produk diterima di gudang</p>
+                        </div>
+                        <div id="text-dikirim" style="display: none">
+                            <label for="expected_arrival">Deadline Order</label>
+                            <input type="text" class="form-control" name="expected_arrival" id="dateInput"
+                                placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
+                                onblur="formatDate(this)">
+                            <input type="hidden" name="expected_arrival" id="expected_arrival">
+                        </div>
+                        <div id="paymentMethod" style="display: none;">
+                            <div class="form-group">
+                                <label for="payment_method">Metode Pembayaran</label>
+                                <select class="form-control" id="payment_method" name="payment_method">
                                     <option value="">Pilih metode pembayaran</option>
                                     @foreach ($paymentMethod as $pay)
                                         <option value="{{ $pay->id_detail_configuration }}">{{ $pay->name }}</option>
                                     @endforeach
-                                @else
-                                    <option value="">Pembayaran dilakukan setelah produk diterima di gudang</option>
-                                @endif
-                            </select>
+                                </select>
+                            </div>
                         </div>
-                        {{-- <div class="modal-body" id="modalContent"> --}}
                         <div class="form-group">
                             <label for="">Apakah pesanan sudah benar?</label>
                             <div class="form-check">
@@ -155,13 +205,7 @@
                                 <label class="form-check-label" for="radioNo">Tidak</label>
                             </div>
                         </div>
-                        {{-- </div> --}}
                     </div>
-                    {{-- <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
-                        <a href="#modalKonfirmasiPay" class="btn btn-primary" data-toggle="modal"
-                            onclick="openConfirmationModal()">Verifikasi</a>
-                    </div> --}}
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
                         <button type="submit" class="btn btn-primary" onclick="getNota($purchase->id_purchase)"
@@ -192,7 +236,7 @@
                                     <td>{{ date('d-m-Y', strtotime($h->date)) }}</td>
                                     <th>{{ $h->supplier_name }}</th>
                                     <th>{{ $h->product_name }}</th>
-                                    <th>{{ $h->move_stock }}</th>
+                                    <th>{{ $h->total }}</th>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -243,6 +287,31 @@
             }
             radioYes.addEventListener('change', updateButtonState);
             radioNo.addEventListener('change', updateButtonState);
+
+            const radioDigudang = document.getElementById('digudang');
+            const radioDimuka = document.getElementById('dimuka');
+            const textDigudang = document.getElementById('text-digudang');
+            const radioDikirim = document.getElementById('dikirim');
+            const textDikirim = document.getElementById('text-dikirim');
+            const paymentMethod = document.getElementById('paymentMethod');
+
+            function updateModalContent() {
+                if (radioDigudang.checked) {
+                    textDigudang.style.display = "block";
+                    paymentMethod.style.display = "none";
+                } else if (radioDimuka.checked) {
+                    textDigudang.style.display = "none";
+                    paymentMethod.style.display = "block";
+                } else if (radioDikirim.checked) {
+                    textDigudang.style.display = "none";
+                    textDikirim.style.display = "block";
+                    paymentMethod.style.display = "none";
+                }
+            }
+
+            radioDigudang.addEventListener('change', updateModalContent);
+            radioDimuka.addEventListener('change', updateModalContent);
+            radioDikirim.addEventListener('change', updateModalContent);
         });
 
         function formatDate(input) {
@@ -258,9 +327,11 @@
 
                 // Simpan ke input hidden dalam format YYYY-MM-DD untuk database
                 document.getElementById('dateHidden').value = `${year}-${month}-${day}`;
+                document.getElementById('expected_arrival').value = `${year}-${month}-${day}`;
             } else {
                 input.type = 'text';
                 document.getElementById('dateHidden').value = '';
+                document.getElementById('expected_arrival').value = '';
             }
         }
 

@@ -15,11 +15,12 @@
                 <ul>
                     @foreach ($c->details as $detail)
                         <div class="form-check">
-                            <input type="radio" class="form-check-input" id="radio{{ $detail->id_detail_configuration }}"
-                                name="configurations[{{ $c->id_configuration }}]"
+                            <input type="checkbox" class="form-check-input"
+                                id="checkbox{{ $detail->id_detail_configuration }}"
+                                name="configurations[{{ $c->id_configuration }}][]"
                                 value="{{ $detail->id_detail_configuration }}"
                                 {{ $detail->status_active == 1 ? 'checked' : '' }}>
-                            <label class="form-check-label" for="radio{{ $detail->id_detail_configuration }}">
+                            <label class="form-check-label" for="checkbox{{ $detail->id_detail_configuration }}">
                                 {{ $detail->name }}
                             </label>
                             <p>{{ $detail->description }}</p>
@@ -29,6 +30,7 @@
             </div>
         @endforeach
 
+
         <div class="modal fade" id="modalVerifikasi" tabindex="-1" role="basic" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -36,11 +38,13 @@
                         <div class="form-group">
                             <label for="">Apakah anda yakin menyimpan konfigurasi ini?</label>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" id="radioYes" name="verifikasi" value="ya" required>
+                                <input class="form-check-input" type="radio" id="radioYes" name="verifikasi"
+                                    value="ya" required>
                                 <label class="form-check-label" for="radioYes">Ya</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" id="radioNo" name="verifikasi" value="tidak">
+                                <input class="form-check-input" type="radio" id="radioNo" name="verifikasi"
+                                    value="tidak">
                                 <label class="form-check-label" for="radioNo">Tidak</label>
                             </div>
                         </div>

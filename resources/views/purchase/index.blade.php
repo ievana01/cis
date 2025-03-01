@@ -30,20 +30,20 @@
                             <label class="text-danger">Pembayaran blm terdaftar</label>
                             @if ($payProd->id_detail_configuration == 21 && $data->expected_arrival <= now()->toDateString())
                                 <br>
-                                <a href="#modalPayment" class="btn btn-success" data-toggle="modal"
+                                <a href="#modalPayment" class="btn btn-success btn-sm" data-toggle="modal"
                                     onclick="paymentForm({{ $data->id_purchase }})">Bayar</a>
                             @endif
                         @endif
                     </td>
-                    <td>
-                        <a href="" class="btn btn-warning">Terima Barang</a>
-                        <a href="{{ route('purchase.showNota', $data->id_purchase) }}" class="btn btn-info">Tampilkan
+                    <td class="d-flex justify-content-center">
+                        <a href="{{route('purchase.showProd', $data->id_purchase)}}" class="btn btn-warning btn-sm mr-2">Terima Produk</a>
+                        <a href="{{ route('purchase.showNota', $data->id_purchase) }}" class="btn btn-info btn-sm">Tampilkan
                             Nota</a>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center">Data tidak tersedia</td>
+                    <td colspan="6" class="text-center">Data tidak tersedia</td>
                 </tr>
             @endforelse
         </tbody>

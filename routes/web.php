@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductMovingController;
@@ -44,6 +45,7 @@ Route::middleware(["auth"])->group(function () {
     Route::resource('/warehouse', WarehouseController::class);
     Route::resource('/product', ProductController::class);
     Route::resource('/customer', CustomerController::class);
+    Route::resource('/delivery-note', DeliveryNoteController::class);
 
     Route::post('warehouse/getEditForm', [WarehouseController::class, 'getEditForm'])->name("warehouse.getEditForm");
 
@@ -87,7 +89,16 @@ Route::middleware(["auth"])->group(function () {
     Route::resource('/subCategory', SubCategoryController::class);
     Route::get('/subCategory/create/{id_category}', [SubCategoryController::class, 'create'])->name('subCategory.create');
 
-    // Route::get('/multiWh', [ProductController::class, 'showMultiGudang'])->name('showMultiGudang');
+    // Route::post('sales/getProduct', [SalesOrderController::class, 'getProduct'])->name("sales.getProduct");
+    Route::get('/sales/showProd/{id}', [SalesOrderController::class, 'showProd'])->name('sales.showProd');
+
+    Route::get('/purchase/showProd/{id}', [PurchaseOrderController::class, 'showProd'])->name('purchase.showProd');
+    Route::post('/purchase/terima', [DeliveryNoteController::class, 'storeTerima'])->name('delivery-note.storeTerima');
+    Route::resource('/pindahProduk', controller: DeliveryNoteController::class);
+
+    Route::get('/get-products/{warehouse_id}', [ProductController::class, 'getProductsByWarehouse']);
+    Route::post('/pindah', [DeliveryNoteController::class, 'storePindah'])->name('delivery-note.storePindah');
+
 });
 
 Auth::routes();

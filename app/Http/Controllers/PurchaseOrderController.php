@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DetailConfiguration;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductMoving;
@@ -58,28 +59,29 @@ class PurchaseOrderController extends Controller
     public function save(Request $request)
     {
         $configurations = $request->input('configurations', []);
+
         $allConfigurations = DB::table('detail_configurations')
             ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
             ->where('configurations.menu_id', 2)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id')
             ->get();
 
-        // Loop untuk memproses setiap konfigurasi yang dikirim
         foreach ($allConfigurations as $config) {
-            $isActive = 0; // Default: tidak aktif
+            // Pastikan bahwa konfigurasi yang dipilih adalah array
+            $selectedConfigurations = $configurations[$config->configuration_id] ?? [];
 
-            // Jika konfigurasi ini dipilih oleh user, aktifkan
-            if (
-                isset($configurations[$config->configuration_id]) &&
-                $configurations[$config->configuration_id] == $config->id_detail_configuration
-            ) {
-                $isActive = 1;
+            // Jika hanya satu nilai, ubah ke array
+            if (!is_array($selectedConfigurations)) {
+                $selectedConfigurations = [$selectedConfigurations];
             }
 
-            // Update status aktif untuk detail konfigurasi ini
+            // Cek apakah konfigurasi ini dipilih
+            $isActive = in_array($config->id_detail_configuration, $selectedConfigurations) ? 1 : 0;
+
+            // Update database
             DB::table('detail_configurations')
                 ->where('id_detail_configuration', $config->id_detail_configuration)
-                ->update(['status_active' => DB::raw($isActive)]);
+                ->update(['status_active' => $isActive]);
         }
 
         return redirect()->route('purchase.configuration')->with('status', 'Berhasil mengubah konfigurasi!');
@@ -97,7 +99,7 @@ class PurchaseOrderController extends Controller
         $payProd = DB::table('detail_configurations')
             ->where('status_active', 1)
             ->where('configuration_id', 9)
-            ->first();
+            ->get();
         // dd($payProd);
 
         $warehouse = Warehouse::all();
@@ -116,22 +118,28 @@ class PurchaseOrderController extends Controller
         // dd($receiveProdMethod);
 
         //detail pada supplier
-        $hisPurchase = ProductMoving::whereNotNull('purchase_id')
-            ->join('products', 'product_moving.product_id', '=', 'products.id_product')
-            ->join('purchase_orders', 'product_moving.purchase_id', '=', 'purchase_orders.id_purchase')
-            ->join('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id_supplier') // Inner join dengan tabel products
-            ->select('product_moving.*', 'products.name as product_name', 'suppliers.name as supplier_name') // Pilih kolom yang dibutuhkan
-            ->orderBy('product_moving.date', 'desc')
+        $hisPurchase = DB::table('purchase_orders')
+            ->leftJoin('purchase_details', 'purchase_orders.id_purchase', '=', 'purchase_details.purchase_id')
+            ->leftJoin('products', 'purchase_details.product_id', '=', 'products.id_product')
+            ->leftJoin('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id_supplier')
+            ->select(
+                'purchase_orders.purchase_invoice as purchase_invoice',
+                'purchase_orders.date as date',
+                'suppliers.name as supplier_name',
+                'products.name as product_name',
+                'purchase_details.total_quantity_product as total'
+            )
             ->get();
         // dd($hisPurchase);
-
         $paymentMethod = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
             ->where('c.id_configuration', 3)
             ->where('dc.status_active', 1)
             ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
-            
+
+        $pengiriman = DetailConfiguration::where('configuration_id', operator: 8)->where('status_active', 1)->get();
+        // dd($pengiriman);
         return view('purchase.create', [
             'invoiceNumber' => $invoiceNumber,
             'supplier' => $supplier,
@@ -141,7 +149,8 @@ class PurchaseOrderController extends Controller
             'receiveProdMethod' => $receiveProdMethod,
             'payProd' => $payProd,
             'hisPurchase' => $hisPurchase,
-            'paymentMethod' => $paymentMethod
+            'paymentMethod' => $paymentMethod,
+            'pengiriman' => $pengiriman
         ]);
     }
     public function generateInvoiceNumber()
@@ -176,6 +185,8 @@ class PurchaseOrderController extends Controller
         $invoiceNumber = $this->generateInvoiceNumber();
         $purchase->purchase_invoice = $invoiceNumber;
         $purchase->date = $request->get(key: 'date');
+        // dd(request()->all());
+
         $purchase->expected_arrival = $request->get('expected_arrival');
         $purchase->total_purchase = $request->get('total_price');
         // if ($payProd->id_detail_configuration == 22) {
@@ -202,15 +213,82 @@ class PurchaseOrderController extends Controller
                 ]
             );
 
-            $purchase->refreshCost($cogsMethod, $product, $request->get('date'));
+            // $purchase->refreshCost($cogsMethod, $product, $request->get('date'));
+            if ($request->metode_pengiriman == 'diambil') {
+                if ($cogsMethod == 'Average') {
+                    $productData = DB::table('products')->where('id_product', $product['id'])->first();
+                    $profit = $productData->profit / 100;
 
-            DB::table('product_moving')->insert([
-                'move_stock' => $product['quantity'],
-                'date' => $purchase->date,
-                'product_id' => $product['id'],
-                'warehouse_id_in' => $request->get('id_warehouse'),
-                'purchase_id' => $purchase->id_purchase,
-            ]);
+                    $oldStock = $productData->total_stock;
+                    $oldCost = $productData->cost;
+                    $oldPrice = $productData->price;
+                    $totalOldCost = $oldCost * $oldStock;
+
+                    $newStock = $product['quantity'];
+                    $totalNewCost = $product['amount'];
+                    $newCost = $totalNewCost / $newStock;
+
+                    $totalAllCost = $totalOldCost + $totalNewCost;
+                    $totalAllStock = $oldStock + $newStock;
+                    $averageCost = $totalAllCost / $totalAllStock;
+                    // $ratioPrice = $oldPrice / $oldCost;
+
+                    $newPrice = ($averageCost * $profit) + $averageCost;
+
+                    DB::table('products')
+                        ->where('id_product', $product['id'])
+                        ->update([
+                            'price' => $newPrice,
+                            'cost' => $averageCost,
+                            'total_stock' => $totalAllStock,
+                        ]);
+
+                } else if ($cogsMethod == 'FIFO') {
+                    $productData = DB::table('products')->where('id_product', $product['id'])->first();
+                    $profit = $productData->profit / 100;
+                    $cost = $product['amount'] / $product['quantity'];
+                    $price = ($cost * $profit) + $cost;
+                    $totalStock = $productData->total_stock + $product['quantity'];
+
+                    DB::table('product_fifo')->insert([
+                        'product_id' => $product['id'],
+                        'initial_stock' => $product['quantity'],
+                        'purchase_date' => $request->get('date'),
+                        'cost' => $cost,
+                        'price' => $price,
+                        'sold' => 0
+                    ]);
+
+                    DB::table('products')
+                        ->where('id_product', $product['id'])
+                        ->update([
+                            'total_stock' => $totalStock,
+                            'cost' => $cost,
+                            'price' => $price,
+                        ]);
+                }
+            } else if ($request->metode_pengiriman == 'dikirim') {
+                if ($cogsMethod == 'FIFO') {
+                    DB::table('products')
+                        ->where('id_product', $product['id'])
+                        ->increment('on_order', $product['quantity']);
+                    DB::table('product_fifo')
+                        ->where('product_id', $product['id'])
+                        ->increment('on_order', $product['quantity']);
+                } else if ($cogsMethod == 'Average') {
+                    DB::table('products')
+                        ->where('id_product', $product['id'])
+                        ->increment('on_order', $product['quantity']);
+                }
+            }
+
+            // DB::table('product_moving')->insert([
+            //     'move_stock' => $product['quantity'],
+            //     'date' => $purchase->date,
+            //     'product_id' => $product['id'],
+            //     'warehouse_id_in' => $request->get('id_warehouse'),
+            //     'purchase_id' => $purchase->id_purchase,
+            // ]);
 
             DB::table('product_has_warehouses')
                 ->where('product_id', $product['id'])
@@ -280,6 +358,39 @@ class PurchaseOrderController extends Controller
         }
 
         return view('purchase.nota', compact('purchase', 'purchaseDetail', 'dataToko'));
+    }
+
+
+    public function showProd($id)
+    {
+        $purchase = DB::table('purchase_orders')
+            ->leftJoin('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id_supplier')
+            ->join('employees', 'purchase_orders.employee_id', '=', 'employees.id_employee')
+            ->where('purchase_orders.id_purchase', $id)
+            ->select(
+                'purchase_orders.*',
+                'suppliers.name as supplier_name',
+                'employees.name as e_name'
+            )
+            ->first();
+
+        $purchaseDetail = DB::table('purchase_details')
+            ->join('products', 'purchase_details.product_id', '=', 'products.id_product')
+            ->where('purchase_details.purchase_id', $id)
+            ->select('purchase_details.*', 'products.name as product_name')
+            ->get();
+        // dd($purchaseDetail);
+        $gudang = Warehouse::all();
+
+        $terima = DB::table('purchase_details as pd')
+            ->join('delivery_note as dn', 'pd.purchase_id', '=', 'dn.purchase_id')
+            ->join('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
+            ->where('pd.purchase_id', $id)
+            ->select('dnp.quantity as terima', 'pd.total_quantity_product as jumlah', 'dnp.product_id')
+            ->get();
+                // dd($terima);
+
+        return view('purchase.terima', compact('purchase', 'purchaseDetail', 'gudang', 'terima'));
     }
     /**
      * Display the specified resource.

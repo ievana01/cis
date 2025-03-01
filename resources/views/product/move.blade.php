@@ -3,7 +3,7 @@
     @if (@session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
-    <h4 class="font-weight-bold">Lokasi Produk</h4>
+    <h4 class="font-weight-bold">Pindah Produk</h4>
     @if ($multiWh == null)
         <div class="card">
             <div class="card-body text-danger">

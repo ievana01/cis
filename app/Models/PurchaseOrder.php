@@ -34,57 +34,57 @@ class PurchaseOrder extends Model
 
     public function refreshCost($cogsMethod, $product, $date)
     {
-        if ($cogsMethod == 'Average') {
-            $productData = DB::table('products')->where('id_product', $product['id'])->first();
-            $profit = $productData->profit / 100;
+    //     if ($cogsMethod == 'Average') {
+    //         $productData = DB::table('products')->where('id_product', $product['id'])->first();
+    //         $profit = $productData->profit / 100;
 
-            $oldStock = $productData->total_stock;
-            $oldCost = $productData->cost;
-            $oldPrice = $productData->price;
-            $totalOldCost = $oldCost * $oldStock;
+    //         $oldStock = $productData->total_stock;
+    //         $oldCost = $productData->cost;
+    //         $oldPrice = $productData->price;
+    //         $totalOldCost = $oldCost * $oldStock;
 
-            $newStock = $product['quantity'];
-            $totalNewCost = $product['amount'];
-            $newCost = $totalNewCost / $newStock;
+    //         $newStock = $product['quantity'];
+    //         $totalNewCost = $product['amount'];
+    //         $newCost = $totalNewCost / $newStock;
 
-            $totalAllCost = $totalOldCost + $totalNewCost;
-            $totalAllStock = $oldStock + $newStock;
-            $averageCost = $totalAllCost / $totalAllStock;
-            // $ratioPrice = $oldPrice / $oldCost;
+    //         $totalAllCost = $totalOldCost + $totalNewCost;
+    //         $totalAllStock = $oldStock + $newStock;
+    //         $averageCost = $totalAllCost / $totalAllStock;
+    //         // $ratioPrice = $oldPrice / $oldCost;
 
-            $newPrice = ($averageCost * $profit) + $averageCost;
+    //         $newPrice = ($averageCost * $profit) + $averageCost;
 
-            DB::table('products')
-                ->where('id_product', $product['id'])
-                ->update([
-                    'price' => $newPrice,
-                    'cost' => $averageCost,
-                    'total_stock' => $totalAllStock,
-                ]);
+    //         DB::table('products')
+    //             ->where('id_product', $product['id'])
+    //             ->update([
+    //                 'price' => $newPrice,
+    //                 'cost' => $averageCost,
+    //                 'total_stock' => $totalAllStock,
+    //             ]);
 
-        } else if ($cogsMethod == 'FIFO') {
-            $productData = DB::table('products')->where('id_product', $product['id'])->first();
-            $profit = $productData->profit / 100;
-            $cost = $product['amount'] / $product['quantity'];
-            $price = ($cost * $profit) + $cost;
-            $totalStock = $productData->total_stock + $product['quantity'];
+    //     } else if ($cogsMethod == 'FIFO') {
+    //         $productData = DB::table('products')->where('id_product', $product['id'])->first();
+    //         $profit = $productData->profit / 100;
+    //         $cost = $product['amount'] / $product['quantity'];
+    //         $price = ($cost * $profit) + $cost;
+    //         $totalStock = $productData->total_stock + $product['quantity'];
 
-            DB::table('product_fifo')->insert([
-                'product_id' => $product['id'],
-                'initial_stock' => $product['quantity'],
-                'purchase_date' =>$date,
-                'cost' => $cost,
-                'price' => $price,
-                'sold' => 0
-            ]);
+    //         DB::table('product_fifo')->insert([
+    //             'product_id' => $product['id'],
+    //             'initial_stock' => $product['quantity'],
+    //             'purchase_date' =>$date,
+    //             'cost' => $cost,
+    //             'price' => $price,
+    //             'sold' => 0
+    //         ]);
 
-            DB::table('products')
-                ->where('id_product', $product['id'])
-                ->update([
-                    'total_stock' => $totalStock,
-                    'cost' => $cost,
-                    'price' => $price,
-                ]);
-        }
+    //         DB::table('products')
+    //             ->where('id_product', $product['id'])
+    //             ->update([
+    //                 'total_stock' => $totalStock,
+    //                 'cost' => $cost,
+    //                 'price' => $price,
+    //             ]);
+    //     }
     }
 }

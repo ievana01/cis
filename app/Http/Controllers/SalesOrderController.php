@@ -7,10 +7,12 @@ use App\Models\Customer;
 use App\Models\DetailConfiguration;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ProductHasWarehouse;
 use App\Models\ProductMoving;
 use App\Models\SalesDetail;
 use App\Models\SalesOrder;
 use App\Models\StoreData;
+use App\Models\Warehouse;
 use Auth;
 use DB;
 use Illuminate\Http\Request;
@@ -30,6 +32,7 @@ class SalesOrderController extends Controller
                 'sales_orders.id_sales',
                 'sales_orders.sales_invoice',
                 'sales_orders.date',
+                'sales_orders.delivery_date',
                 'sales_orders.total_price',
                 'customers.name as customer_name',  // Menampilkan nama customer dari tabel customers
                 'sales_orders.customer_name as custname',  // Menampilkan nama customer yang diinput manual
@@ -139,7 +142,7 @@ class SalesOrderController extends Controller
             ->select('dc.*')
             ->get();
         // dd($shippingMethod);
-        
+
         $multiDiskon = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
             ->where('c.id_configuration', 5)
@@ -148,7 +151,7 @@ class SalesOrderController extends Controller
             ->get();
         // dd($multiDiskon);
 
-        $pengiriman = DetailConfiguration::where('configuration_id', operator: 4)->get();
+        $pengiriman = DetailConfiguration::where('configuration_id', operator: 4)->where('status_active', 1)->get();
         // dd($pengiriman);
         return view('sales.create', [
             "invoiceNumber" => $invoiceNumber,
@@ -220,10 +223,12 @@ class SalesOrderController extends Controller
         $cogsMethod = $cogsChoose->name;
 
         $customerId = $request->get('id_customer');
+        // dd(request()->all());
         $sales = new SalesOrder();
         $invoiceNumber = $this->generateInvoiceNumber();
         $sales->sales_invoice = $invoiceNumber;
         $sales->date = $request->get(key: 'date');
+        $sales->delivery_date = $request->get(key: 'delivery_date');
         $sales->total_price = $request->get('total_price');
         if ($customerId == 'other') {
             $sales->customer_name = $request->get('customer_name');
@@ -235,10 +240,8 @@ class SalesOrderController extends Controller
         $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
         $sales->discount = $request->get('hDiscount') ?? 0;
         $sales->tax = $request->get('tax');
-        // dd($request->get('tax'));
-        // $sales->employee_id = $request->get('employee_id') ?? 1;
         $sales->employee_id = Auth::user()->employee->id_employee;
-        // dd(Auth::user()->employee->id_employee);        
+
         $sales->save();
 
         $products = json_decode($request->get('products'), true);
@@ -257,7 +260,85 @@ class SalesOrderController extends Controller
                 ->where('product_id', $product['id'])
                 ->first();
 
-            $sales->refreshCostSales($cogsMethod, $product, $warehouse, $sales);
+            if ($request->metode_pengiriman == 'diambil') {
+                if ($cogsMethod == 'FIFO') {
+                    $quantity = $product['quantity'];
+                    $stocks = DB::table('product_fifo')
+                        ->where('product_id', $product['id'])
+                        ->orderBy('purchase_date', 'asc') // Urutkan berdasarkan tanggal pembelian
+                        ->get();
+
+                    foreach ($stocks as $stock) {
+                        if ($quantity <= 0) {
+                            break; // Jika tidak ada stok yang tersisa untuk dikurangi, hentikan loop
+                        }
+
+                        // Tentukan stok yang bisa dikurangi dari stok ini
+                        $toDecrement = min($quantity, $stock->initial_stock - $stock->sold);
+
+                        // Jika stok habis atau ada stok yang cukup untuk dikurangi
+                        if ($toDecrement > 0) {
+                            // Mengurangi stok di product_fifo
+                            DB::table('product_fifo')
+                                ->where('id_product_fifo', $stock->id_product_fifo) // Pastikan hanya mengupdate stok yang sesuai
+                                ->increment('sold', $toDecrement);
+
+                            DB::table('products')
+                                ->where('id_product', $product['id'])
+                                ->decrement('total_stock', $toDecrement);
+
+                            // Simpan pergerakan stok di product_moving
+                            // DB::table('product_moving')->insert([
+                            //     'product_id' => $product['id'],
+                            //     'move_stock' => $toDecrement,
+                            //     'date' => $sales->date,
+                            //     'warehouse_id_in' => $warehouse->warehouse_id,
+                            //     'sales_id' => $sales->id_sales
+                            // ]);
+
+                            // Update stok di product_has_warehouses jika perlu
+                            DB::table('product_has_warehouses')
+                                ->where('product_id', $product['id'])
+                                ->decrement('stock', $toDecrement);
+
+                            // Kurangi jumlah yang akan diproses
+                            $quantity -= $toDecrement;
+                        }
+                    }
+                } else if ($cogsMethod == 'Average') {
+                    DB::table('products')
+                        ->where('id_product', $product['id'])
+                        ->decrement('total_stock', $product['quantity']);
+
+                    // DB::table('product_moving')->insert([
+                    //     'product_id' => $product['id'],
+                    //     'move_stock' => $product['quantity'],
+                    //     'date' => $sales->date,
+                    //     'warehouse_id_in' => $warehouse->warehouse_id,
+                    //     'sales_id' => $sales->id_sales,
+                    // ]);
+
+                    DB::table('product_has_warehouses')
+                        ->where('product_id', $product['id'])
+                        ->decrement('stock', $product['quantity']);
+                }
+            } else if ($request->metode_pengiriman == 'dikirim') {
+                if ($cogsMethod == 'FIFO') {
+                    DB::table('products')
+                        ->where('id_product', $product['id'])
+                        ->increment('in_order', $product['quantity']);
+
+                    DB::table('product_fifo')
+                        ->where('product_id', $product['id'])
+                        ->increment('in_order', $product['quantity']);
+                } else if ($cogsMethod == 'Average') {
+                    DB::table('products')
+                        ->where('id_product', $product['id'])
+                        ->increment('in_order', $product['quantity']);
+                }
+            }
+
+            // $sales->refreshCostSales($cogsMethod, $product, $warehouse, $sales);
 
         }
         // return redirect()->route('sales.index')->with('status', 'Data Berhasil Disimpan');
@@ -283,8 +364,6 @@ class SalesOrderController extends Controller
             'id_sales' => $id_sales,
         ]);
     }
-
-
 
     public function showNota($id)
     {
@@ -317,6 +396,47 @@ class SalesOrderController extends Controller
         }
 
         return view('sales.nota', compact('sales', 'salesDetail', 'dataToko'));
+    }
+
+    public function showProd($id)
+    {
+        $sales = DB::table('sales_orders')
+            ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+            ->join('employees', 'sales_orders.employee_id', '=', 'employees.id_employee')
+            ->where('sales_orders.id_sales', $id)
+            ->select(
+                'sales_orders.*',
+                'customers.name as customer_name_by_id',
+                'employees.name as e_name'
+            )
+            ->first();
+        // dd($sales);
+        $salesDetail = DB::table('sales_details')
+            ->join('products', 'sales_details.product_id', '=', 'products.id_product')
+            ->where('sales_details.sales_id', $id)
+            ->select('sales_details.*', 'products.name as product_name')
+            ->get();
+        // dd($salesDetail);
+        $gudang = Warehouse::all();
+
+        $stokProd = DB::table('product_has_warehouses as phw')
+            ->join('warehouses as w', 'phw.warehouse_id', '=', 'w.id_warehouse')
+            ->join('products as p', 'phw.product_id', '=', 'p.id_product')
+            ->select('phw.*', 'w.name', 'p.name as product_name')
+            ->get();
+        // dd($stokProd);
+        if (!$sales || $salesDetail->isEmpty()) {
+            return redirect()->back()->with('error', 'Sales order not found');
+        }
+
+        $terkirim = DB::table('sales_details as sd')
+            ->join('delivery_note as dn', 'sd.sales_id', '=', 'dn.sales_id')
+            ->join('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
+            ->where('sd.sales_id', $id)
+            ->select('dnp.quantity as terkirim', 'sd.total_quantity as jumlah', 'dnp.product_id')
+            ->get();
+        // dd($terkirim);
+        return view('sales.kirim', compact('sales', 'salesDetail', 'gudang', 'stokProd', 'terkirim'));
     }
 
     /**

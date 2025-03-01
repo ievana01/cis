@@ -35,7 +35,6 @@
                 </tr>
                 <tr>
                     <th><label for="date">Tanggal Order</label></th>
-                    {{-- <th><input type="date" class="form-control" name="date" data-placeholder="Silahkan pilih tanggal"></th> --}}
                     <th>
                         <input type="text" class="form-control" name="date" id="dateInput"
                             placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">
@@ -45,20 +44,18 @@
                 <tr>
                     @foreach ($shippingMethod as $sp)
                         @if ($sp->id_detail_configuration == 10)
-                            <th><label for="date">Tanggal Kirim</label></th>
+                            <th><label for="delivery_date">Tanggal Kirim</label></th>
                             <th>
-                                <input type="text" class="form-control" name="date" id="dateInput"
+                                <input type="text" class="form-control" name="delivery_date" id="dateInput"
                                     placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
                                     onblur="formatDate(this)">
                             </th>
-                            <input type="hidden" name="date" id="dateHidden">
+                            <input type="hidden" name="delivery_date" id="delivery_date">
                         @endif
                     @endforeach
                 </tr>
                 <tr>
                     <th><label for="tax">Tarif Pajak</label></th>
-                    {{-- <th><input type="text" class="form-control" name="tax" id="tax"
-                            value="{{ $taxRate * 100 }}" readonly></th> --}}
                     <th>
                         <div style="display: flex; align-items: center;">
                             <input type="text" class="form-control" name="tax" id="tax"
@@ -70,17 +67,28 @@
                 <tr>
                     <th><label for="">Metode Pengiriman</label></th>
                     <th>
-                        @foreach ($pengiriman as $p)
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="pengiriman"
-                                    id="pengiriman{{ $p->id }}" {{ $p->status_active == 0 ? 'disabled' : '' }}>
-                                <label class="form-check-label" for="pengiriman{{ $p->id }}">
-                                    {{ $p->name }}
-                                </label>
-                            </div>
-                        @endforeach
+                        @php
+                            $dikirim = $pengiriman->firstWhere('name', 'Pesanan dikirim oleh toko');
+                            $diambil = $pengiriman->firstWhere('name', 'Pesanan diambil di toko');
+                        @endphp
 
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metode_pengiriman" id="dikirim"
+                                value="dikirim" {{ $dikirim ? '' : 'disabled' }}>
+                            <label class="form-check-label" for="dikirim">
+                                Pesanan dikirim oleh toko
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metode_pengiriman" id="diambil"
+                                value="diambil" {{ $diambil ? '' : 'disabled' }}>
+                            <label class="form-check-label" for="diambil">
+                                Pesanan diambil di toko
+                            </label>
+                        </div>
                     </th>
+
+
                 </tr>
             </tbody>
         </table>
@@ -142,8 +150,8 @@
         </table>
 
         <div style="text-align: right;" class="mb-4 mt-2">
-            @foreach ($shippingMethod as $shippingMethod)
-                @if ($shippingMethod->id_detail_configuration == 10)
+            @foreach ($shippingMethod as $spm)
+                @if ($spm->id_detail_configuration == 10)
                     <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">+ Biaya Pengiriman</a>
                 @endif
             @endforeach
@@ -332,9 +340,13 @@
 
                 // Simpan ke input hidden dalam format YYYY-MM-DD untuk database
                 document.getElementById('dateHidden').value = `${year}-${month}-${day}`;
+                document.getElementById('delivery_date').value = `${year}-${month}-${day}`;
+
             } else {
                 input.type = 'text';
                 document.getElementById('dateHidden').value = '';
+                document.getElementById('delivery_date').value = '';
+
             }
         }
 
@@ -454,6 +466,9 @@
             const productPrice = parseFloat(document.getElementById("productPrice").value) || 0;
             const productQty = parseInt(document.getElementById("productQty").value) || 1;
             const totalStock = parseInt(document.getElementById("total_stock").value) || 0;
+            const metodePengiriman = document.querySelector('input[name="metode_pengiriman"]:checked')?.value || null;
+            console.log('a' + metodePengiriman);
+
             let productAmount = updateAmount();
             console.log("Debug -> Adding Product:", {
                 productName,
@@ -465,11 +480,13 @@
                 alert("Please select a product and provide valid values!");
                 return;
             }
-            if (productQty > totalStock) {
-                alert(
-                    "Quantity exceeds the total stock, please set the maximum quantity according to the total stock quantity!"
-                );
-                return;
+            if (metodePengiriman == 'diambil') {
+                if (productQty > totalStock) {
+                    alert(
+                        "Kuantitas melebihi total stok, harap atur kuantitas maksimum sesuai dengan total kuantitas stok!"
+                    );
+                    return;
+                }
             }
             // Append to the product list table
             const productsTable = document.getElementById("productsTable");

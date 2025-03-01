@@ -23,9 +23,12 @@
                     <td>{{ $data->customer_name ?? $data->custname }}</td>
                     <td>Rp. {{ number_format($data->total_price, 0, ',', '.') }}</td>
                     <td>{{ $data->payment_method_name }}</td>
-                    <td>
-                        <a href="" class="btn btn-warning">Kirim Produk</a>
-                        <a href="{{ route('sales.showNota', $data->id_sales) }}" class="btn btn-info">Tampilkan Nota</a>
+                    <td class="d-flex justify-content-center">
+                        @if ($data->delivery_date != null)
+                            <a href="{{route('sales.showProd', $data->id_sales)}}" class="btn btn-warning btn-sm mr-2">Kirim Produk</a>
+                        @endif
+                        <a href="{{ route('sales.showNota', $data->id_sales) }}" class="btn btn-info btn-sm">Tampilkan
+                            Nota</a>
                     </td>
                 </tr>
             @empty

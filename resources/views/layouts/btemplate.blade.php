@@ -103,7 +103,7 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Manajemen Produk</h6>
                         <a class="collapse-item" href="{{ route('product.index') }}">Produk</a>
-                        <a class="collapse-item" href="{{ route('productMove.index') }}">Perpindahan Produk</a>
+                        <a class="collapse-item" href="{{ route('pindahProduk.index') }}">Pindah Produk</a>
                         <a class="collapse-item" href="{{ route('category.index') }}">Kategori Produk</a>
                         <a class="collapse-item" href="{{ route('warehouse.index') }}">Gudang</a>
 

@@ -169,15 +169,6 @@ class ProductController extends Controller
             ->first();
 
         $data = new Product();
-        // $data->name = $request->get('name');
-        // $data->description = $request->get('description');
-        // $data->price = $request->get('cost') * ($request->get('profit') / 100) + $request->get('cost');
-        // $data->total_stock = $request->get('total_stock');
-        // $data->cost = $request->get('cost');
-        // $data->profit = $request->get('profit');
-        // $data->unit = $request->get('unit');
-        // $data->min_total_stock = $request->get('min_total_stock');
-        // $data->category_id = $request->get('category_id');
         $data->name = $validated['name'];
         $data->description = $validated['description'];
         $data->price = $validated['cost'] * ($validated['profit'] / 100) + $validated['cost'];
@@ -190,12 +181,9 @@ class ProductController extends Controller
 
         if ($subKat != null) {
             $data->sub_categories_id = $request->get('sub_category');
-            // dd($data->sub_categories_id);
         } else {
             $data->sub_categories_id = null;
-            // dd($data->sub_categories_id);
         }
-        // $data->supplier_id = $request->get('supplier_id');
         $data->save();
 
         if ($cogsMethod == 'FIFO') {
@@ -378,13 +366,15 @@ class ProductController extends Controller
         }
     }
 
-    // public function showMultiGudang()
-    // {
-    //     $multiWh = DB::table('detail_configurations')
-    //         ->where('status_active', 1)
-    //         ->where('configuration_id', 11)
-    //         ->first();
-    //     View::share('multiWh', $multiWh);
-    //     return view('layouts.btemplate');
-    // }
+    public function getProductsByWarehouse($warehouse_id)
+    {
+        $products = DB::table('product_has_warehouses as phw')
+            ->join('products as p', 'p.id_product', '=', 'phw.product_id')
+            ->where('phw.warehouse_id', operator: $warehouse_id)
+            ->select('p.id_product', 'p.name', 'phw.stock')
+            ->get();
+
+        return response()->json($products);
+    }
+
 }
