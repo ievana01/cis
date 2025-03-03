@@ -16,6 +16,11 @@ class DeliveryNoteController extends Controller
      */
     public function index()
     {
+        $multiWh = DB::table('detail_configurations')
+            ->where('status_active', 1)
+            ->where('configuration_id', 11)
+            ->first();
+
         $pindah = DB::table('delivery_note as dn')
             ->leftJoin('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
             ->leftJoin('products as p', 'dnp.product_id', '=', 'p.id_product')
@@ -42,7 +47,7 @@ class DeliveryNoteController extends Controller
         // Cek hasil
         // dd($pindah);
 
-        return view('deliveryNote.index', compact('pindah'));
+        return view('deliveryNote.index', compact('pindah', 'multiWh'));
     }
 
     /**
@@ -59,12 +64,12 @@ class DeliveryNoteController extends Controller
     {
         $lastInvoice = DeliveryNote::orderBy('id', 'desc')->first();
         if ($lastInvoice) {
-            $lastNumber = intval(substr($lastInvoice->invoice_number, 1));
+            $lastNumber = intval(substr($lastInvoice->invoice_number, 3));
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
-        return 'MV-'. str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        return 'MV-' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
     /**
      * Store a newly created resource in storage.

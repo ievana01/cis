@@ -4,6 +4,7 @@
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
     <a class="btn btn-primary mb-2" href="{{ route('purchase.create') }}">+ Order Pembelian</a>
+    <input class="form-control" id="myInput" type="text" placeholder="Cari..">
     <table class="table table-hover text-center">
         <thead>
             <tr>
@@ -15,7 +16,7 @@
                 <th>Aksi</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="myTable">
             @forelse ($purchase as $data)
                 <tr>
                     <td>{{ $data->purchase_invoice }}</td>
@@ -82,5 +83,14 @@
                 }
             });
         }
+
+        $(document).ready(function() {
+            $("#myInput").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#myTable tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
     </script>
 @endsection

@@ -95,19 +95,19 @@ class SalesOrder extends Model
                     ->decrement('stock', $product['quantity']);
             }
         } else if ($metode_pengiriman == 'dikirim') {
-            if ($cogsMethod == 'FIFO') {
+            // if ($cogsMethod == 'FIFO') {
                 DB::table('products')
                     ->where('id_product', $product['id'])
                     ->increment('in_order', $product['quantity']);
 
-                DB::table('product_fifo')
-                    ->where('product_id', $product['id'])
-                    ->increment('in_order', $product['quantity']);
-            } else if ($cogsMethod == 'Average') {
-                DB::table('products')
-                    ->where('id_product', $product['id'])
-                    ->increment('in_order', $product['quantity']);
-            }
+            //     DB::table('product_fifo')
+            //         ->where('product_id', $product['id'])
+            //         ->increment('in_order', $product['quantity']);
+            // } else if ($cogsMethod == 'Average') {
+            //     DB::table('products')
+            //         ->where('id_product', $product['id'])
+            //         ->increment('in_order', $product['quantity']);
+            // }
         }
 
     }

@@ -4,6 +4,7 @@
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
     <a class="btn btn-primary mb-2" href="{{ route('sales.create') }}">+ Order Penjualan</a>
+    <input class="form-control" id="myInput" type="text" placeholder="Cari..">
     <table class="table table-hover text-center">
         <thead>
             <tr>
@@ -15,7 +16,7 @@
                 <th>Aksi</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="myTable">
             @forelse ($sales as $data)
                 <tr>
                     <td>{{ $data->sales_invoice }}</td>
@@ -25,7 +26,8 @@
                     <td>{{ $data->payment_method_name }}</td>
                     <td class="d-flex justify-content-center">
                         @if ($data->delivery_date != null)
-                            <a href="{{ route('sales.showProd', $data->id_sales) }}" class="btn btn-warning btn-sm mr-2">Kirim
+                            <a href="{{ route('sales.showProd', $data->id_sales) }}"
+                                class="btn btn-warning btn-sm mr-2">Kirim
                                 Produk</a>
                         @endif
                         <a href="{{ route('sales.showNota', $data->id_sales) }}" class="btn btn-info btn-sm">Tampilkan
@@ -39,4 +41,17 @@
             @endforelse
         </tbody>
     </table>
+@endsection
+
+@section('javascript')
+    <script>
+        $(document).ready(function() {
+            $("#myInput").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#myTable tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    </script>
 @endsection

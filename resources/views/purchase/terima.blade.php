@@ -39,8 +39,8 @@
                         <th>No</th>
                         <th>Nama Produk</th>
                         <th>Jumlah</th>
-                        <th>Jumlah dikirim</th>
-                        <th>Dari Gudang</th>
+                        <th>Jumlah Diterima</th>
+                        <th>Lokasi Gudang</th>
                     </tr>
                 </thead>
                 <tbody>

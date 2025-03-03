@@ -68,21 +68,29 @@ class PurchaseOrderController extends Controller
             ->get();
 
         foreach ($allConfigurations as $config) {
-            // Pastikan bahwa konfigurasi yang dipilih adalah array
+            // Ambil konfigurasi yang dipilih
             $selectedConfigurations = $configurations[$config->configuration_id] ?? [];
 
-            // Jika hanya satu nilai, ubah ke array
+            // Jika hanya satu nilai (radio button), ubah menjadi array
             if (!is_array($selectedConfigurations)) {
                 $selectedConfigurations = [$selectedConfigurations];
             }
 
-            // Cek apakah konfigurasi ini dipilih
-            $isActive = in_array($config->id_detail_configuration, $selectedConfigurations) ? 1 : 0;
+            // Jika id_configuration == 7, pastikan hanya satu opsi aktif
+            if ($config->configuration_id == 7) {
+                DB::table('detail_configurations')
+                    ->where('configuration_id', $config->configuration_id)
+                    ->update(['status_active' => 0]); // Nonaktifkan semua dulu
 
-            // Update database
-            DB::table('detail_configurations')
-                ->where('id_detail_configuration', $config->id_detail_configuration)
-                ->update(['status_active' => $isActive]);
+                DB::table('detail_configurations')
+                    ->where('id_detail_configuration', reset($selectedConfigurations))
+                    ->update(['status_active' => 1]); // Aktifkan hanya satu yang dipilih
+            } else {
+                // Untuk checkbox (bisa lebih dari satu)
+                DB::table('detail_configurations')
+                    ->where('id_detail_configuration', $config->id_detail_configuration)
+                    ->update(['status_active' => in_array($config->id_detail_configuration, $selectedConfigurations) ? 1 : 0]);
+            }
         }
 
         return redirect()->route('purchase.configuration')->with('status', 'Berhasil mengubah konfigurasi!');

@@ -195,20 +195,6 @@ class SalesOrderController extends Controller
             )
             ->orderBy('sales_orders.sales_invoice', 'asc')
             ->get();
-        // $data = DB::table('sales_orders')
-        //     ->leftJoin('product_moving', 'sales_orders.id_sales', '=', 'product_moving.sales_id')
-        //     ->leftJoin('products', 'product_moving.product_id', '=', 'products.id_product')
-        //     ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
-        //     ->select(
-        //         'sales_orders.sales_invoice as sales_invoice',
-        //         'sales_orders.customer_name as cust_name',
-        //         'customers.name as cust_name_by_id',
-        //         'products.name as product_name',
-        //         'product_moving.*'
-        //     )
-        //     ->orderBy('sales_invoice', 'asc')
-        //     ->get();
-        // dd($data);
         return view('sales.datasales', ['data' => $data]);
     }
     /**

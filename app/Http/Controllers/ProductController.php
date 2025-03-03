@@ -151,7 +151,8 @@ class ProductController extends Controller
             'min_total_stock' => 'required|numeric',
             'category_id' => 'required',
             'warehouse_id' => 'required',
-            'file_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
+            '
+            file_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
         ], $message);
 
         //ambil id detail konfigurasi yg aktif

@@ -87,7 +87,6 @@
         <table class="table table-bordered text-center">
             <thead>
                 <tr>
-                    <th>No.</th>
                     <th>Nama Produk</th>
                     <th>Jumlah</th>
                     <th>Aksi</th>
