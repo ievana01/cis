@@ -1,7 +1,7 @@
 @extends('layouts.blank')
 @section('content')
     <form action="{{ route('delivery-note.storePindah') }}" method="POST">
-        <h4 class="text-center">Pindah Produk</h4>
+        <h4 class="text-center">Pindah Produk Baru</h4>
         @csrf
         <table class="table table-bordered">
             <tbody>

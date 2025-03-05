@@ -9,6 +9,11 @@
         <p><strong>Tanggal Order:</strong> {{ date('d-m-Y', strtotime($sales->date)) }}</p>
         <p><strong>Pelanggan:</strong> {{ $sales->customer_name_by_id ?? $sales->customer_name }}</p>
         <p><strong>Staf:</strong> {{ $sales->e_name }}</p>
+        @if ($sales->customer_name_by_id  == 'Umum')
+            <p><strong>Nama Penerima:</strong> {{ $sales->recipient_name ?? '-' }} </p>
+            <p><strong>Alamat Penerima:</strong> {{ $sales->recipient_address ?? '-' }} </p>
+            <p><strong>Nomor Telepon Penerima:</strong> {{ $sales->recipient_phone_num ?? '-' }} </p>
+        @endif
     </div>
     @php
         $semuaSudahDikirim = true;

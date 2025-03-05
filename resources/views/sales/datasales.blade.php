@@ -1,6 +1,6 @@
 @extends('layouts.btemplate')
 @section('content')
-    <h4 class="font-weight-bold">Laporan Produk Terjual</h4>
+<h4 class="font-weight-bold">Laporan Penjualan Produk</h4>
     <input class="form-control" id="myInput" type="text" placeholder="Cari..">
     <table class="table table-border text-center">
         <thead>

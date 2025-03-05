@@ -142,7 +142,7 @@
                 <div id="collapseReport" class="collapse" aria-labelledby="headingData"
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="sales-data">Laporan Produk Terjual</a>
+                        <a class="collapse-item" href="sales-data">Laporan Penjualan Produk</a>
                         <a class="collapse-item" href="purchase-data">Laporan Pembelian Produk</a>
                         <a class="collapse-item" href="/laporan-laba">Laporan Laba Kotor</a>
                     </div>

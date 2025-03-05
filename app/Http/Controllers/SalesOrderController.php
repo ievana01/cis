@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Configuration;
 use App\Models\Customer;
 use App\Models\DetailConfiguration;
@@ -11,9 +12,11 @@ use App\Models\ProductHasWarehouse;
 use App\Models\ProductMoving;
 use App\Models\SalesDetail;
 use App\Models\SalesOrder;
+use App\Models\SeasonDiscount;
 use App\Models\StoreData;
 use App\Models\Warehouse;
 use Auth;
+use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
 use Log;
@@ -50,21 +53,31 @@ class SalesOrderController extends Controller
         foreach ($configuration as $config) {
             $config->details = DB::select('select * from detail_configurations where configuration_id = ?', [$config->id_configuration]);
         }
-        return view('sales.configuration', ['configuration' => $configuration]);
+        $category = Category::all();
+        // dd($category);
+        return view('sales.configuration', ['configuration' => $configuration, 'category' => $category]);
     }
 
     public function save(Request $request)
     {
+        // dd(request()->all());
         $configurations = $request->input('configurations', []);
         $discountValues = $request->input('discount_values', []);
         $taxValues = $request->input('tax_values', []);
-        // dd($taxValues);
+        $seasonValues = array_filter($request->input('season_value', []), function ($value) {
+            return !is_null($value) && $value !== "";
+        });
         $allConfigurations = DB::table('detail_configurations')
             ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
             ->where('configurations.menu_id', 1)
-            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id', 'detail_configurations.type', 'detail_configurations.value')
+            ->select(
+                'detail_configurations.id_detail_configuration',
+                'detail_configurations.configuration_id',
+                'detail_configurations.type',
+                'detail_configurations.value',
+                'detail_configurations.name'
+            )
             ->get();
-        // dd($allConfigurations);
         foreach ($allConfigurations as $config) {
             $isActive = 0;
             if (isset($configurations[$config->configuration_id]) && is_array($configurations[$config->configuration_id])) {
@@ -96,6 +109,29 @@ class SalesOrderController extends Controller
                     ->update(['value' => $taxValues]);
             }
         }
+
+        // Simpan Diskon Musim
+        // if ($request->hasAny(['name', 'start_date', 'end_date', 'category_id', 'season_value'])) {
+        //     $seasonDiscountId = DB::table('season_discount')->insertGetId([
+        //         'name' => $request->input('name'),
+        //         'start_date' => $request->input('start_date'),
+        //         'end_date' => $request->input('end_date'),
+        //         'detail_configuration_id' => 9
+        //     ]);
+
+        //     // Simpan kategori dan besar diskon
+        //     $categoryIds = $request->input('category_id', []);
+        //     foreach ($categoryIds as $index => $categoryId) {
+        //         $seasonValue = $seasonValues[$index] ?? 0;
+
+        //         DB::table('season_discount_has_categories')->insert([
+        //             'season_discount_id' => $seasonDiscountId,
+        //             'category_id' => $categoryId,
+        //             'season_value' => $seasonValue
+        //         ]);
+        //     }
+        // }
+
         return redirect()->route('sales.configuration')->with('status', 'Sukses mengubah konfigurasi!');
     }
 
@@ -111,7 +147,7 @@ class SalesOrderController extends Controller
         // dd($product);
         $paymentMethod = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
-            ->where('c.id_configuration', 3)
+            ->where('c.id_configuration', 1)
             ->where('dc.status_active', 1)
             ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
@@ -119,7 +155,7 @@ class SalesOrderController extends Controller
         $taxRate = 0;
         $tax = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
-            ->where('c.id_configuration', 2)
+            ->where('c.id_configuration', 6)
             ->where('dc.status_active', 1)
             ->select('dc.value')
             ->first();
@@ -128,16 +164,17 @@ class SalesOrderController extends Controller
             $taxRate = floatval(str_replace('%', '', $tax->value)) / 100; // Menghasilkan 0.11 untuk 11%
         }
 
-        $discount = DB::table('configurations as c')
-            ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
-            ->where('c.id_configuration', 6)
-            ->where('dc.status_active', 1)
-            ->select('dc.*')
-            ->get();
+        // $discount = DB::table('configurations as c')
+        //     ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
+        //     ->where('c.id_configuration', 4)
+        //     ->where('dc.status_active', 1)
+        //     ->select('dc.*')
+        //     ->get();
+        //     // dd($discount);
 
         $shippingMethod = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
-            ->where('c.id_configuration', 4)
+            ->where('c.id_configuration', 2)
             ->where('dc.status_active', 1)
             ->select('dc.*')
             ->get();
@@ -145,14 +182,61 @@ class SalesOrderController extends Controller
 
         $multiDiskon = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
-            ->where('c.id_configuration', 5)
+            ->where('c.id_configuration', 3)
             ->where('dc.status_active', 1)
             ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
         // dd($multiDiskon);
 
-        $pengiriman = DetailConfiguration::where('configuration_id', operator: 4)->where('status_active', 1)->get();
-        // dd($pengiriman);
+        $pengiriman = DetailConfiguration::where('configuration_id', operator: 2)->where('status_active', 1)->get();
+
+        $discountUmum = DB::table('configurations as c')
+            ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
+            ->where('c.id_configuration', 4)
+            ->where('dc.status_active', 1)
+            ->select('dc.*')
+            ->get();
+        // dd($discountUmum);
+        // Ambil Diskon Musim yang aktif
+        $seasonDiscounts = DB::table('season_discount as sd')
+            ->join('season_discount_has_categories as sdc', 'sd.id', '=', 'sdc.season_discount_id')
+            ->join('categories as c', 'sdc.category_id', '=', 'c.id_category')
+            ->join('detail_configurations as dc', 'sd.detail_configuration_id', '=', 'dc.id_detail_configuration')
+            ->select(
+                'sd.id as season_discount_id',
+                'sd.name as season_discount_name',
+                'sd.start_date',
+                'sd.end_date',
+                'sdc.category_id',
+                'sdc.season_value',
+                'c.name as category_name',
+                'dc.name as detail_configuration_name'
+            )
+            ->where('sd.detail_configuration_id', 9)
+            ->whereNull('sdc.deleted_at')
+            ->where('sd.end_date', '>=', now())
+            ->where('sd.start_date', '<=', now())
+            ->get();
+        // dd($seasonDiscounts);
+        // Format hasil query agar memiliki struktur nested array
+        $groupedSeasonDiscounts = $seasonDiscounts->groupBy('season_discount_id')->map(function ($items) {
+            $firstItem = $items->first();
+            return [
+                'jenis' => $firstItem->detail_configuration_name,
+                'id' => $firstItem->season_discount_id,
+                'name' => $firstItem->season_discount_name,
+                'start_date' => $firstItem->start_date,
+                'end_date' => $firstItem->end_date,
+                'categories' => $items->map(function ($item) {
+                    return [
+                        'category_id' => $item->category_id,
+                        'category_name' => $item->category_name,
+                        'season_value' => $item->season_value,
+                    ];
+                })->values(),
+            ];
+        })->values();
+        // dd($groupedSeasonDiscounts);
         return view('sales.create', [
             "invoiceNumber" => $invoiceNumber,
             "sales" => $sales,
@@ -160,10 +244,12 @@ class SalesOrderController extends Controller
             "product" => $product,
             "paymentMethod" => $paymentMethod,
             "taxRate" => $taxRate,
-            "discount" => $discount,
             "shippingMethod" => $shippingMethod,
             "multiDiskon" => $multiDiskon,
-            "pengiriman" => $pengiriman
+            "pengiriman" => $pengiriman,
+            'discountUmum' => $discountUmum,
+            'groupedSeasonDiscounts' => $groupedSeasonDiscounts
+
         ]);
     }
 
@@ -222,6 +308,9 @@ class SalesOrderController extends Controller
         $sales->tax = $request->get('tax');
         $sales->employee_id = Auth::user()->employee->id_employee;
 
+        $sales->recipient_name = $request->get('recipient_name') ?? null;
+        $sales->recipient_address = $request->get('recipient_address') ?? null;
+        $sales->recipient_phone_num = $request->get('recipient_phone_num') ?? null;
         $sales->save();
 
         $products = json_decode($request->get('products'), true);
@@ -334,6 +423,65 @@ class SalesOrderController extends Controller
         // dd($terkirim);
         return view('sales.kirim', compact('sales', 'salesDetail', 'gudang', 'stokProd', 'terkirim'));
     }
+
+    public function getDiskon(Request $request)
+    {
+        $id = $request->id;
+        $diskonMusim = DB::table('season_discount as sd')
+            ->join('season_discount_has_categories as sdc', 'sd.id', '=', 'sdc.season_discount_id')
+            ->join('categories as c', 'sdc.category_id', '=', 'c.id_category')
+            ->select(
+                'sd.id as season_discount_id',
+                'sd.name as season_discount_name',
+                'sd.start_date',
+                'sd.end_date',
+                'sdc.category_id',
+                'sdc.season_value',
+                'c.name as category_name'
+            )
+            ->where('sd.detail_configuration_id', $id)
+            ->where('sd.end_date', '>=', now())
+            ->whereNull('sdc.deleted_at')
+            ->get();
+                // dd($diskonMusim);
+        // Mengelompokkan hasil query agar memiliki format nested array
+        $groupedData = $diskonMusim->groupBy('season_discount_id')->map(function ($items) {
+            $firstItem = $items->first(); // Ambil data utama (season discount)
+            return [
+                'id' => $firstItem->season_discount_id,
+                'name' => $firstItem->season_discount_name,
+                'start_date' => $firstItem->start_date,
+                'end_date' => $firstItem->end_date,
+                'categories' => $items->map(function ($item) {
+                    return [
+                        'category_id' => $item->category_id,
+                        'category_name' => $item->category_name,
+                        'season_value' => $item->season_value,
+                    ];
+                })->values(), // Reset indeks array
+            ];
+        })->values(); // Reset indeks array utama
+
+        // dd($groupedData);
+        $category = Category::all();
+        // dd($category);
+
+        return response()->json(array(
+            'status' => 'oke',
+            'msg' => view('sales.getDiskon', ['diskonMusim' => $groupedData], ['category' => $category])->render()
+        ), 200);
+    }
+
+    public function hapusKategoriDiskon(Request $request)
+    {
+        DB::table('season_discount_has_categories')
+            ->where('category_id', $request->category_id)
+            ->where('season_discount_id', $request->discount_id)
+            ->delete(); 
+
+        return response()->json(['message' => 'Kategori berhasil dihapus!']);
+    }
+
 
     /**
      * Display the specified resource.

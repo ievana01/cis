@@ -2,7 +2,7 @@
 @section('content')
     <form method="POST" action="{{ route('sales.store') }}" enctype="multipart/form-data">
         @csrf
-        <h4 class="text-center">Nota Penjualan Baru</h4>
+        <h4 class="text-center">Order Penjualan Baru</h4>
         <table class="table table-condensed">
             <tbody>
                 <tr>
@@ -41,19 +41,6 @@
                     </th>
                     <input type="hidden" name="date" id="dateHidden">
                 </tr>
-                {{-- <tr>
-                    @foreach ($shippingMethod as $sp)
-                        @if ($sp->id_detail_configuration == 10)
-                            <th><label for="delivery_date">Tanggal Kirim</label></th>
-                            <th>
-                                <input type="text" class="form-control" name="delivery_date" id="dateInput"
-                                    placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
-                                    onblur="formatDate(this)">
-                            </th>
-                            <input type="hidden" name="delivery_date" id="delivery_date">
-                        @endif
-                    @endforeach
-                </tr> --}}
                 <tr>
                     <th><label for="tax">Tarif Pajak</label></th>
                     <th>
@@ -113,7 +100,7 @@
                             <option value="">Pilih produk</option>
                             @foreach ($product as $p)
                                 <option value="{{ $p->id_product }}" data-price="{{ $p->price }}"
-                                    data-stock="{{ $p->total_stock }}">
+                                    data-stock="{{ $p->total_stock }}" data-categoryId ="{{ $p->category_id }}">
                                     {{ $p->name }}
                                 </option>
                             @endforeach
@@ -151,12 +138,12 @@
 
         <div style="text-align: right;" class="mb-4 mt-2">
             @foreach ($shippingMethod as $spm)
-                @if ($spm->id_detail_configuration == 10)
+                @if ($spm->id_detail_configuration == 6)
                     <a href="#modalShipping" class="btn btn-primary" data-toggle="modal">+ Biaya Pengiriman</a>
                 @endif
             @endforeach
-            @if ($discount->isNotEmpty())
-                <a href="#modalDiscount" class="btn btn-success" data-toggle="modal" id="discountButton">+ Diskon</a>
+            @if ($discountUmum->isNotEmpty())
+            <a href="#modalDiscount" class="btn btn-success" data-toggle="modal" id="discountButton">+ Diskon</a>
             @endif
         </div>
 
@@ -171,8 +158,8 @@
         </div>
 
         <div style="text-align: right;">
-            <a href="{{ route('sales.index') }}" type="button" class="btn btn-danger">Batal</a>
             <a href="#modalPayment" class="btn btn-primary" data-toggle="modal">Simpan</a>
+            <a href="{{ route('sales.index') }}" type="button" class="btn btn-danger">Batal</a>
         </div>
 
         {{-- pilih jenis metode pembayaran --}}
@@ -181,11 +168,28 @@
                 <div class="modal-content">
                     <div class="modal-body" id="modalContent">
                         <div id="text-dikirim" style="display: none">
-                            <label for="expected_arrival">Perkiraan tanggal kirim</label>
-                            <input type="text" class="form-control" name="delivery_date" id="dateInput"
-                                placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
-                                onblur="formatDate(this)">
-                            <input type="hidden" name="delivery_date" id="delivery_date">
+                            <div>
+                                <label for="expected_arrival">Perkiraan tanggal kirim</label>
+                                <input type="text" class="form-control" name="delivery_date" id="dateInput"
+                                    placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
+                                    onblur="formatDate(this)">
+                                <input type="hidden" name="delivery_date" id="delivery_date">
+                            </div>
+                            <div>
+                                <label for="recipient_name">Nama Penerima</label>
+                                <input type="text" class="form-control" name="recipient_name" id="recipient_name"
+                                    placeholder="Masukkan nama penerima pesanan">
+                            </div>
+                            <div>
+                                <label for="recipient_address">Alamat Penerima</label>
+                                <input type="text" class="form-control" name="recipient_address"
+                                    id="recipient_address" placeholder="Masukkan alamat penerima pesanan">
+                            </div>
+                            <div>
+                                <label for="recipient_phone_num">Nomor Telepon</label>
+                                <input type="text" class="form-control" name="recipient_phone_num"
+                                    id="recipient_phone_num" placeholder="Masukkan nomor telepon penerima pesanan">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="payment_method">Metode Pembayaran</label>
@@ -220,36 +224,6 @@
             </div>
         </div>
 
-        {{-- cek apakah pembayaran sukses --}}
-        {{-- <div class="modal fade" id="modalKonfirmasiPay" tabindex="-1" role="basic" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <form id="formKonfirmasi">
-                        <div class="modal-body" id="modalContent">
-                            <div class="form-group">
-                                <label for="">Apakah pembayaran sukses?</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="radioPayment" id="radioYes"
-                                        value="ya" required>
-                                    <label class="form-check-label" for="radioYes">Ya</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="radioPayment" id="radioNo"
-                                        value="tidak">
-                                    <label class="form-check-label" for="radioNo">Tidak</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
-                            <button type="submit" class="btn btn-primary" onclick="getNota($sales->id_sales)">Cetak
-                                Nota</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div> --}}
-
         <div class="modal fade" id="modalShipping" tabindex="-1" role="basic" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -279,19 +253,44 @@
                                 <p class="text-danger text-center">Tawarkan jenis diskon yang tersedia! Setiap transaksi
                                     hanya dapat memilih 1 jenis diskon!</p>
                             @endif
-                            <label for="discount">Jenis Diskon:</label>
-                            @foreach ($discount as $dsc)
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input"
-                                        id="radio{{ $dsc->id_detail_configuration }}" name="optradio"
+                            <p>Jenis Diskon:</p>
+                            
+                            @foreach ($discountUmum as $dsc)
+                                @if (!str_contains($dsc->name, 'Diskon Musim'))
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input"
+                                            id="radio{{ $dsc->id_detail_configuration }}" name="optradio"
                                         value="{{ $dsc->id_detail_configuration }}" data-name="{{ $dsc->name }}"
-                                        data-value="{{ $dsc->value }}" onclick="updateDiscountValue(this)">
-                                    <label class="form-check-label"
-                                        for="radio{{ $dsc->id_detail_configuration }}">{{ $dsc->name }}</label>
+                                            data-value="{{ $dsc->value }}" onclick="updateDiscountValue(this)">
+                                        <label class="form-check-label"
+                                            for="radio{{ $dsc->id_detail_configuration }}">{{ $dsc->name }}
+                                            ({{ $dsc->value }}%)
+                                        </label>
+                                    </div>
+                                @endif
+                            @endforeach
+
+                            {{-- Pilihan Diskon Musim --}}
+                            @foreach ($groupedSeasonDiscounts as $dsc)
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radioSeason{{ $dsc['id'] }}"
+                                        name="optradio" value="{{ $dsc['id'] }}" data-name="{{ $dsc['name'] }}"
+                                        data-jenis="{{ $dsc['jenis'] }}" onclick="updateDiscountValue(this)">
+                                    <label class="form-check-label" for="radioSeason{{ $dsc['id'] }}">
+                                        Diskon Musim
+                                    </label>
+                                </div>
+                                {{-- Card untuk Diskon Musim --}}
+                                <div class="p-3 bg-light rounded">
+                                    <strong>{{ $dsc['name'] }}</strong><br>
+                                    {{ date('d-m-Y',strtotime($dsc['start_date'])) }} sampai {{ date('d-m-Y',strtotime($dsc['end_date'])) }}<br>
+
+                                    @foreach ($dsc['categories'] as $category)
+                                        {{ $category['category_name'] }} Diskon {{ $category['season_value'] }}%<br>
+                                    @endforeach
                                 </div>
                             @endforeach
-                            <input type="number" class="form-control" id="discount" name="discount" value=""
-                                disabled style="display: none;">
+
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -467,8 +466,6 @@
             document.getElementById('total_price_input').value = total.toFixed(2);
         }
 
-        const discounts = @json($discount);
-        console.log(discounts);
 
         function addProduct() {
             const productSelect = document.getElementById("productName");
@@ -479,6 +476,9 @@
             const totalStock = parseInt(document.getElementById("total_stock").value) || 0;
             const metodePengiriman = document.querySelector('input[name="metode_pengiriman"]:checked')?.value || null;
             console.log('a' + metodePengiriman);
+            const categoryId = selectedOption.getAttribute("data-categoryId");
+            // console.log("Category ID:", categoryId);
+
 
             let productAmount = updateAmount();
             console.log("Debug -> Adding Product:", {
@@ -486,6 +486,7 @@
                 productPrice,
                 productQty,
                 productAmount,
+                categoryId
             });
             if (!productName || productPrice <= 0 || productQty <= 0) {
                 alert("Please select a product and provide valid values!");
@@ -523,6 +524,7 @@
                 price: productPrice,
                 quantity: productQty,
                 amount: productAmount,
+                categoryId: categoryId
                 // discountMember: discountMember,
             };
             // Add the product to the hidden field
@@ -550,7 +552,7 @@
             const tableBody = document.getElementById('productsTable');
             const row = document.createElement('tr');
             row.innerHTML = `
-            <td>Shipping Cost</td>
+            <td>Biaya Pengiriman</td>
             <td>-</td>
             <td>1</td>
             <td>${shippingCost.toFixed(2)}</td>
@@ -567,17 +569,76 @@
         }
 
         function updateDiscountValue(radio) {
-            const discountValue = radio.getAttribute('data-value');
-            const discountField = document.getElementById('discount');
-            const hiddenDiscountField = document.getElementById('hDiscount');
-            discountField.value = discountValue;
-            discountField.style.display = 'block';
-            hiddenDiscountField.value = discountValue;
-            updateTotals();
+            // Ambil elemen input diskon
+            const discountInput = document.getElementById('discount');
+
+            // Jika tidak ada input diskon, buat input tersembunyi
+            if (!discountInput) {
+                const hiddenDiscountInput = document.createElement('input');
+                hiddenDiscountInput.type = 'hidden';
+                hiddenDiscountInput.id = 'discount';
+                hiddenDiscountInput.name = 'discount';
+                document.querySelector('form').appendChild(hiddenDiscountInput);
+            }
+
+            // Ambil informasi diskon dari radio button
+            const discountName = radio.getAttribute('data-name');
+            const discountId = radio.value;
+
+            // Untuk diskon umum
+            const generalDiscounts = @json($discountUmum);
+            const seasonDiscounts = @json($groupedSeasonDiscounts);
+
+            let discountValue = null;
+
+            // Cari diskon umum
+            const generalDiscount = generalDiscounts.find(
+                dsc => dsc.id_detail_configuration.toString() === discountId
+            );
+
+            if (generalDiscount) {
+                discountValue = parseFloat(generalDiscount.value);
+                document.getElementById('discount').value = discountValue;
+
+                console.log('Diskon Umum Dipilih:', {
+                    nama: discountName,
+                    nilai: discountValue
+                });
+            }
+            // Untuk diskon musim
+            else {
+                const selectedSeasonDiscount = seasonDiscounts.find(
+                    discount => discount.id.toString() === discountId
+                );
+                console.log('select', selectedSeasonDiscount);
+
+                if (selectedSeasonDiscount) {
+                    // Siapkan array untuk menyimpan kategori dan diskon
+                    const categoryDiscounts = selectedSeasonDiscount.categories.map(category => ({
+                        category_id: category.category_id,
+                        category_name: category.category_name,
+                        discount_value: parseFloat(category.season_value)
+                    }));
+
+                    // Simpan data diskon musim ke input
+                    document.getElementById('discount').value = JSON.stringify(categoryDiscounts);
+
+                    console.log('Diskon Musim Dipilih:', {
+                        nama: discountName,
+                        id: discountId,
+                        kategori: categoryDiscounts
+                    });
+                }
+            }
+
+            // Perbarui status tombol diskon
+            toggleDiscountButton();
         }
 
         function getSelectedDiscountName() {
             const radios = document.getElementsByName('optradio');
+            console.log('get select diskon', radios);
+
             for (let radio of radios) {
                 if (radio.checked) {
                     return radio.getAttribute('data-name'); // Get the name from the data-name attribute
@@ -603,63 +664,167 @@
         }
 
         let jumDis = 0;
-
         function submitDiscount() {
-            let disPer = 0;
-            let disMem = 0;
-            let disMusOr = 0;
-            const discount = parseFloat(document.getElementById('discount').value) || 0;
-            console.log('diskon', discount);
-            const discountHidden = document.getElementById('hDiscount'); // Ambil nilai dari hidden field
-            const discountName = getSelectedDiscountName();
-            console.log('diskonname', discountName);
-            if (discountName === '') {
-                alert('Please select a discount type.');
+            // Ambil radio button yang dipilih
+            const selectedDiscountRadio = document.querySelector('input[name="optradio"]:checked');
+
+            if (!selectedDiscountRadio) {
+                alert('Silakan pilih jenis diskon terlebih dahulu.');
                 return;
             }
-            let finalDiscount = discount;
-            console.log('final discount', finalDiscount);
-            console.log('amount', totalAmount);
 
-            if (discountName === 'Diskon Persentase') {
-                finalDiscount = totalAmount * (discount / 100); // Diskon berdasarkan persentase
-                disPer = finalDiscount;
+            const discountName = selectedDiscountRadio.getAttribute('data-name');
+            console.log('name', discountName);
 
-                // discountHidden.value = finalDiscount;
-                console.log('%', disPer);
-            } else if (discountName === 'Diskon Member') {
-                finalDiscount = totalAmount * (discount / 100); // Diskon member
-                disMem = finalDiscount;
-                // discountHidden.value = finalDiscount;
-                console.log('mem', disMem);
+            const jenisDiskon = selectedDiscountRadio.getAttribute('data-jenis') || '';
+            console.log('jenis', jenisDiskon);
+
+            const discountId = selectedDiscountRadio.value;
+            const discountHidden = document.getElementById('hDiscount');
+
+            // Ambil data produk yang sudah ditambahkan
+            const hiddenProductsInput = document.getElementById("hidden_products_input");
+            let currentProducts = JSON.parse(hiddenProductsInput.value || '[]');
+
+            // Variabel untuk tracking diskon
+            let totalDiscount = 0;
+            let discountedProducts = [];
+
+            // Calculate total amount (if not already defined)
+            totalAmount = currentProducts.reduce((sum, product) => sum + product.amount, 0);
+            console.log('tt', totalAmount);
+
+
+            console.log('Current Products:', JSON.stringify(currentProducts));
+
+            // Jika ini diskon musim, cari produk yang sesuai kategori
+            if (jenisDiskon.includes('Diskon Musim')) {
+                // Ambil data diskon musim dari attribute radio button
+                const seasonDiscounts = @json($groupedSeasonDiscounts);
+                const selectedSeasonDiscount = seasonDiscounts.find(discount =>
+                    discount.id.toString() === discountId
+                );
+                console.log('selected season dis', selectedSeasonDiscount);
+
+                if (selectedSeasonDiscount) {
+                    // Loop produk yang sudah ditambahkan
+                    currentProducts = currentProducts.map(product => {
+                        // Debug: Log product category and discount categories
+                        console.log('Full Product Object:', JSON.stringify(product));
+                        console.log('Product Category:', product.categoryId);
+                        console.log('Discount Categories:', selectedSeasonDiscount.categories);
+
+                        // Cari kategori produk di diskon musim
+                        const categoryDiscount = selectedSeasonDiscount.categories.find(
+                            cat => {
+                                console.log('Comparing:',
+                                    cat.category_name,
+                                    'with',
+                                    product.category_name
+                                );
+                                // Try matching by category name if ID is undefined
+                                return (
+                                    (cat.category_id && cat.category_id.toString() === product
+                                        .categoryId) ||
+                                    (cat.category_name && cat.category_name === product.category_name)
+                                );
+                            }
+                        );
+
+                        if (categoryDiscount) {
+                            // Hitung diskon untuk produk ini
+                            const discountPercentage = parseFloat(categoryDiscount.season_value);
+                            const productDiscount = product.amount * (discountPercentage / 100);
+
+                            // Tambahkan info diskon ke produk
+                            product.discount = {
+                                percentage: discountPercentage,
+                                amount: productDiscount
+                            };
+
+                            totalDiscount += productDiscount;
+                            discountedProducts.push({
+                                name: product.name,
+                                originalAmount: product.amount,
+                                discountAmount: productDiscount,
+                                discountPercentage: discountPercentage
+                            });
+
+                            // Debug: Log discount details
+                            console.log('Discount Applied:', {
+                                productName: product.name,
+                                discountPercentage: discountPercentage,
+                                productDiscount: productDiscount
+                            });
+                            product.amount -= productDiscount;
+                        }
+                        return product;
+                    });
+
+                    // Perbarui hidden input dengan produk yang sudah dimodifikasi
+                    hiddenProductsInput.value = JSON.stringify(currentProducts);
+                }
             } else {
-                finalDiscount = discount; // Diskon nominal (Musim atau Order)
-                disMusOr = finalDiscount;
-                // discountHidden.value = finalDiscount;
-                console.log('musim/order', disMusOr);
+                // Untuk diskon non-musim, gunakan logika sebelumnya
+                const discountValue = parseFloat(selectedDiscountRadio.getAttribute('data-value') || 0);
 
+                // Ensure we have a valid discount value
+                if (discountValue > 0) {
+                    totalDiscount = totalAmount * (discountValue / 100);
+                    totalDiscount = Math.min(totalDiscount, totalAmount);
+
+                    // Add the discount to discounted products
+                    discountedProducts.push({
+                        name: discountName,
+                        originalAmount: totalAmount,
+                        discountAmount: totalDiscount,
+                        discountPercentage: discountValue
+                    });
+                }
             }
-            jumDis += disPer + disMem + disMusOr;
-            console.log('jumDis', jumDis);
+            // Update totalAmount setelah diskon diterapkan
+            totalAmount -= totalDiscount;
+            console.log('Total setelah diskon:', totalAmount);
 
-            discountHidden.value = jumDis;
-            console.log('all dis', jumDis);
-
+            // Tambahkan baris diskon ke tabel
             const tableBody = document.getElementById('productsTable');
             const row = document.createElement('tr');
             row.innerHTML = `
         <td>${discountName}</td>
         <td>-</td>
-        <td>1</td>
-        <td>${parseFloat(finalDiscount).toFixed(2)}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
-            <i class="fa-solid fa-trash-can"></i></button></td>
+        <td>-</td>
+        <td>-${totalDiscount.toFixed(2)}</td>
+        <td>
+            <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </td>
     `;
             tableBody.appendChild(row);
+
+            // Debug: Tampilkan produk yang didiskon
+            console.log('Produk yang didiskon:', discountedProducts);
+
+            // // Perbarui total amount dan hidden input
+            // totalAmount -= totalDiscount;
+            // discountHidden.value = (parseFloat(discountHidden.value || 0) + totalDiscount).toFixed(2);
+
+            // // Tutup modal dan update total
+            // $('#modalDiscount').modal('hide');
+            // updateTotals();
+
+            // // Non-aktifkan tombol diskon jika tidak diperbolehkan memilih beberapa diskon
+            // toggleDiscountButton();
+            // / Update totalAmount di tampilan
+            document.getElementById("totalAmount").innerText = totalAmount.toFixed(2);
+
+            // Update hidden input untuk diskon
+            discountHidden.value = (parseFloat(discountHidden.value || 0) + totalDiscount).toFixed(2);
+
+            // Tutup modal dan update total lainnya
             $('#modalDiscount').modal('hide');
-            document.getElementById('discount').value = '';
-            totalAmount -= parseFloat(finalDiscount);
             updateTotals();
+            toggleDiscountButton();
         }
 
         function removeRow(button) {

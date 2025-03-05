@@ -10,6 +10,8 @@
                 <th>Tanggal Order</th>
                 <th>Pemasok</th>
                 <th>Jumlah Pembelian</th>
+                <th>Total</th>
+                <th>Jenis Pembayaran</th>
             </tr>
         </thead>
         <tbody id="myTable">
@@ -19,11 +21,13 @@
                     <td>{{ $dp->product_name }}</td>
                     <td>{{ date('d-m-Y', strtotime($dp->date)) }}</td>
                     <td>{{ $dp->supplier_name }}</td>
-                    <td>{{ $dp->move_stock }}</td>
+                    <td>{{ $dp->total_quantity_product }}</td>
+                    <td>Rp. {{ number_format($dp->total_purchase, 0, ',', '.') }}</td>
+                    <td>{{ $dp->payment_method ?? 'Belum terdaftar' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="text-center">Data tidak tersedia</td>
+                    <td colspan="7" class="text-center">Data tidak tersedia</td>
                 </tr>
             @endforelse
         </tbody>

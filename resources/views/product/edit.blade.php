@@ -33,17 +33,6 @@
             <!-- Preview gambar baru yang dipilih -->
             <div id="previewContainer" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
         </div>
-        {{-- <div class="form-group">
-            <label for="file_image">Foto Produk</label><br>
-            <img src="{{ asset('storage/product_images/' . $images) }}" alt="Foto Produk" width="50"
-                height="50" />
-            <input type="file" class="form-control-file" id="logo" name="logo">
-            <small id="file_image" class="form-text text-muted">Masukkan foto produk</small>
-        </div>
-        <div id="previewContainer" style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <!-- Image previews will appear here -->
-        </div> --}}
-
         <div class="form-group">
             <label for="name">Nama</label>
             <input type="text" class="form-control" id="name" name="name" aria-describedby="name"
@@ -94,8 +83,13 @@
                 <small class="text-danger">{{ $message }}</small>
             @enderror
         </div>
+        <div class="form-group">
+            <label for="cost">Harga Pokok</label>
+            <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
+                value="{{ $product->cost }}" placeholder="Masukkan harga pokok produk" readonly>
+        </div>
 
-        @if ($pemProd->id_detail_configuration == 17)
+        {{-- @if ($pemProd->id_detail_configuration == 17)
             <div class="form-group">
                 <label for="cost">Harga Pokok</label>
                 <input type="text" class="form-control" id="cost" name="cost" aria-describedby="cost"
@@ -110,6 +104,14 @@
             @error('cost')
                 <small class="text-danger">{{ $message }}</small>
             @enderror
+        @endif --}}
+
+        @if ($pemProd->id_detail_configuration == 18)
+            <div class="form-group">
+                <label for="price">Harga Jual</label>
+                <input type="text" class="form-control" id="price" name="price" value="{{ $product->price }}"
+                    placeholder="Masukkan harga jual produk">
+            </div>
         @endif
 
         <div class="form-group">

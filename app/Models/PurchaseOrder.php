@@ -32,11 +32,11 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseDetail::class, 'purchase_id');
     }
 
-    public function refreshCost($product, $date, $metode_pengiriman)
+    public function refreshCost($product, $date, $metode_pengiriman, $warehouse_id)
     {
         $cogsChoose = DB::table('detail_configurations')
             ->where('status_active', 1)
-            ->where('configuration_id', 1)
+            ->where('configuration_id', 5)
             ->first();
         $cogsMethod = $cogsChoose->name;
 
@@ -95,6 +95,7 @@ class PurchaseOrder extends Model
             }
             DB::table('product_has_warehouses')
                 ->where('product_id', $product['id'])
+                ->where('warehouse_id', $warehouse_id)
                 ->increment('stock', $product['quantity']);
 
         } else if ($metode_pengiriman == 'dikirim') {

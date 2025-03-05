@@ -32,28 +32,6 @@ class CategoryController extends Controller
         return view('category.createcategory');
     }
 
-    // public function formSubCategory(Request $request)
-    // {
-    //     $id = $request->id;
-    //     $category = Category::find($id);
-    //     // dd($subCategory);
-    //     return response()->json(array(
-    //         'status' => 'oke',
-    //         'msg' => view('category.formSubCategory', compact('category'))->render()
-    //     ), 200);
-    // }
-
-    // public function addSub(Request $request)
-    // {
-    //     DB::table('sub_categories')->insert([
-    //         'category_id' => $request->get('category_id'),
-    //         'code_sub_category' => $request->get('code_sub_category'),
-    //         'name' => $request->get('name'),
-    //     ]);
-    //     return redirect()->route('category.index')->with('status', 'Sub kategori berhasil ditambahkan!');
-    // }
-
-
     /**
      * Store a newly created resource in storage.
      */

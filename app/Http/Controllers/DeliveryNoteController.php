@@ -79,7 +79,7 @@ class DeliveryNoteController extends Controller
     {
         $cogsChoose = DB::table('detail_configurations')
             ->where('status_active', 1)
-            ->where('configuration_id', 1)
+            ->where('configuration_id', 5)
             ->first();
         $cogsMethod = $cogsChoose->name;
 
@@ -133,11 +133,11 @@ class DeliveryNoteController extends Controller
                         'total_stock' => DB::raw("GREATEST(total_stock - {$product['total_quantity']}, 0)")
                     ]);
 
-                DB::table('product_fifo')
-                    ->where('product_id', $product['id_product'])
-                    ->update([
-                        'in_order' => DB::raw("GREATEST(in_order - {$product['total_quantity']}, 0)"),
-                    ]);
+                // DB::table('product_fifo')
+                //     ->where('product_id', $product['id_product'])
+                //     ->update([
+                //         'in_order' => DB::raw("GREATEST(in_order - {$product['total_quantity']}, 0)"),
+                //     ]);
 
                 DB::table('product_has_warehouses')
                     ->where('product_id', $product['id_product'])
@@ -165,14 +165,14 @@ class DeliveryNoteController extends Controller
     {
         $cogsChoose = DB::table('detail_configurations')
             ->where('status_active', 1)
-            ->where('configuration_id', 1)
+            ->where('configuration_id', 5)
             ->first();
         $cogsMethod = $cogsChoose->name;
         $dn = new DeliveryNote();
         $dn->date = $request->get('date');
         $dn->note = null;
         $dn->type = 'terima';
-        $dn->warehouses_id_in = $request->get('warehouse_id_in');
+        $dn->warehouses_id_in = $request->warehouse_id;
         $dn->purchase_id = $request->purchase_id;
         // dd(request()->all());
         $dn->save();
@@ -212,8 +212,8 @@ class DeliveryNoteController extends Controller
                     'cost' => $cost,
                     'price' => $price,
                     'sold' => 0,
-                    'in_order' => 0,
-                    'on_order' => $onOrder
+                    // 'in_order' => 0,
+                    // 'on_order' => $onOrder
                 ]);
 
                 DB::table('products')
@@ -250,7 +250,7 @@ class DeliveryNoteController extends Controller
             }
             DB::table('product_has_warehouses')
                 ->where('product_id', $product['id_product'])
-                ->where('warehouse_id', $request->get('warehouse_id_in'))
+                ->where('warehouse_id', $request->get('warehouse_id'))
                 ->update([
                     'stock' => DB::raw("stock + {$product['total_quantity']}")
                 ]);
@@ -282,7 +282,6 @@ class DeliveryNoteController extends Controller
                 'delivery_note_id' => $dn->id,
                 'product_id' => $productId,
                 'quantity' => $quantity,
-                'note' => $product['note'] ?? null,
             ]);
 
             // Kurangi stok di gudang asal
@@ -300,7 +299,7 @@ class DeliveryNoteController extends Controller
             if ($existing) {
                 // Jika produk sudah ada di gudang tujuan, tambahkan stoknya
                 DB::table('product_has_warehouses')
-                    ->where('product_id', $productId)
+                ->where('product_id', $productId)
                     ->where('warehouse_id', $dn->warehouses_id_out)
                     ->increment('stock', $quantity);
             } else {

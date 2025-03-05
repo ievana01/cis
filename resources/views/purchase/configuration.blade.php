@@ -26,6 +26,13 @@
                                 </label>
                                 <p>{{ $detail->description }}</p>
                             </div>
+                            @if ($c->id_configuration == 7 && $detail->id_detail_configuration == 17)
+                                <div id="profitForm" style="display: none; ">
+                                    <input type="number" id="profitValue" class="form-control" name="profit_values[5]"
+                                        placeholder="Masukkan besaran nilai keuntungan (%)"
+                                        value="{{ $detail->value ?? '' }}">
+                                </div>
+                            @endif
                         @else
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input"
@@ -39,10 +46,18 @@
                                 <p>{{ $detail->description }}</p>
                             </div>
                         @endif
+                        {{-- @if ($c->id_configuration == 7 && $detail->id_detail_configuration == 17)
+                            <div id="profitForm" style="display: none;">
+                                <input type="number" id="value" class="form-control" name="profit_values[5]"
+                                    placeholder="Masukkan besaran nilai keuntungan (%)" value="{{ $detail->value }}">
+                            </div>
+                        @endif --}}
                     @endforeach
                 </ul>
             </div>
         @endforeach
+
+
 
 
         <div class="modal fade" id="modalVerifikasi" tabindex="-1" role="basic" aria-hidden="true">
@@ -76,6 +91,25 @@
 @section('javascript')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+
+            const profitForm = document.getElementById('profitForm');
+            const profitRadio = document.getElementById(
+            'radio17'); // Sesuaikan ID ini sesuai dengan `id_detail_configuration`
+
+            if (!profitForm || !profitRadio) return;
+
+            // Tampilkan jika radio sudah dicentang saat halaman dimuat
+            if (profitRadio.checked) {
+                profitForm.style.display = 'block';
+                profitForm.style.width = '50%';
+                profitForm.style.marginLeft = '20px';
+            }
+
+            // Event listener untuk menangani perubahan
+            profitRadio.addEventListener('change', function() {
+                profitForm.style.display = this.checked ? 'block' : 'none';
+            });
+
             const btnVerifikasi = document.getElementById('btnVerifikasi');
             const radioYes = document.getElementById('radioYes');
             const radioNo = document.getElementById('radioNo');

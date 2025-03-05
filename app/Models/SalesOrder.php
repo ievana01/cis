@@ -46,7 +46,7 @@ class SalesOrder extends Model
     {
         $cogsChoose = DB::table('detail_configurations')
             ->where('status_active', 1)
-            ->where('configuration_id', 1)
+            ->where('configuration_id', 5)
             ->first();
         $cogsMethod = $cogsChoose->name;
         if ($metode_pengiriman == 'diambil') {

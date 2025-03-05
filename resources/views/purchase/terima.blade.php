@@ -9,6 +9,7 @@
         <p><strong>Tanggal Order:</strong> {{ date('d-m-Y', strtotime($purchase->date)) }}</p>
         <p><strong>Pemasok:</strong> {{ $purchase->supplier_name }}</p>
         <p><strong>Staf:</strong> {{ $purchase->e_name }}</p>
+        <p><strong>Lokasi Terima Produk:</strong> {{$purchase->warehouse_name}}</p>
     </div>
     @php
         $semuaSudahDiterima = true;
@@ -26,6 +27,7 @@
         <form action="{{ route('delivery-note.storeTerima') }}" method="POST">
             @csrf
             <input type="hidden" name="purchase_id" value="{{ $purchase->id_purchase }}">
+            <input type="hidden" name="warehouse_id" value="{{ $purchase->warehouse_id }}">
             <div class="mb-2">
                 <label for="date">Tanggal Terima</label>
                 <input type="text" class="form-control" name="date" id="dateInput" placeholder="Silahkan pilih tanggal"
@@ -40,7 +42,7 @@
                         <th>Nama Produk</th>
                         <th>Jumlah</th>
                         <th>Jumlah Diterima</th>
-                        <th>Lokasi Gudang</th>
+                        {{-- <th>Lokasi Gudang</th> --}}
                     </tr>
                 </thead>
                 <tbody>
@@ -61,14 +63,14 @@
                                 <input type="hidden" name="products[{{ $index }}][id_product]"
                                     value="{{ $pd->product_id }}">
                             </td>
-                            <td>
+                            {{-- <td>
                                 <select class="form-control" id="warehouse_id_in" name="warehouse_id_in">
                                     <option value="">Pilih Gudang</option>
                                     @foreach ($gudang as $g)
                                         <option value="{{ $g->id_warehouse }}">{{ $g->name }}</option>
                                     @endforeach
                                 </select>
-                            </td>
+                            </td> --}}
                         </tr>
                     @endforeach
                 </tbody>

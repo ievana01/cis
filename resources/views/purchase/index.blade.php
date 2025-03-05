@@ -26,7 +26,8 @@
 
                     <td>
                         @if ($data->payment_method != null)
-                            <label>Pembayaran Sukses</label>
+                            <label>Pembayaran Sukses</label><br>
+                            <label>Jenis Pembayaran {{$data->payment_method}} </label>
                         @else
                             <label class="text-danger">Pembayaran blm terdaftar</label>
                             @if ($payProd->id_detail_configuration == 21 && $data->expected_arrival <= now()->toDateString())

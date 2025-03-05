@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductMovingController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\SalesOrderController;
+use App\Http\Controllers\SeasonDisountController;
 use App\Http\Controllers\StoreDataController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\SupplierController;
@@ -74,7 +75,7 @@ Route::middleware(["auth"])->group(function () {
 
     Route::post('/sales/getCreateCust', [SalesOrderController::class, 'getCreateCust'])->name('sales.getCreateCust');
 
-    Route::resource('/dataStore', controller: StoreDataController::class);
+    Route::resource('/dataStore',  StoreDataController::class);
 
     Route::post('sales/getNota', [SalesOrderController::class, 'getNota'])->name("sales.getNota");
     Route::get('sales/nota/{id}', [SalesOrderController::class, 'showNota'])->name('sales.showNota');
@@ -99,6 +100,10 @@ Route::middleware(["auth"])->group(function () {
     Route::get('/get-products/{warehouse_id}', [ProductController::class, 'getProductsByWarehouse']);
     Route::post('/pindah', [DeliveryNoteController::class, 'storePindah'])->name('delivery-note.storePindah');
 
+    Route::post('sales-configuration/getDiskon', [SalesOrderController::class,'getDiskon'])->name("sales.getDiskon");
+    Route::post('/hapus-kategori-diskon', [SalesOrderController::class, 'hapusKategoriDiskon'])->name('hapus.kategori.diskon');
+
+    Route::resource('/seasonDiscount', SeasonDisountController::class);
 });
 
 Auth::routes();

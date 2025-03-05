@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\DetailConfiguration;
 use App\Models\ImageProduct;
 use App\Models\Product;
 use App\Models\ProductHasWarehouse;
@@ -105,7 +106,10 @@ class ProductController extends Controller
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->first();
         $nameSubKat = SubCategory::all();
-        return view('product.createproduct', ["category" => $category, "warehouse" => $warehouse, "unit" => $unitOptions, "subKat" => $subKat, "nameSubKat" => $nameSubKat]);
+
+        $keuntungan = DetailConfiguration::select('value')->where('configuration_id', 7)->where('status_active', 1)->first();
+        // dd($keuntungan);
+        return view('product.createproduct', ["category" => $category, "warehouse" => $warehouse, "unit" => $unitOptions, "subKat" => $subKat, "nameSubKat" => $nameSubKat, 'keuntungan' => $keuntungan]);
     }
 
     //dapetin data sub kategori di create dan edit produk
@@ -121,6 +125,7 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        //    dd($request->all());
         $message = [
             'name.required' => 'Nama wajib diisi.',
             'name.string' => 'Nama harus berupa teks.',
@@ -158,7 +163,7 @@ class ProductController extends Controller
         //ambil id detail konfigurasi yg aktif
         $cogsChoose = DB::table('detail_configurations')
             ->where('status_active', 1)
-            ->where('configuration_id', 1)
+            ->where('configuration_id', 5)
             ->first();
         $cogsMethod = $cogsChoose->name;
 
@@ -258,6 +263,7 @@ class ProductController extends Controller
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->first();
+        // dd($pemProd);
         $categoryId = $product->category_id;
         // dd($categoryId);
         $konfigSubCat = DB::table('configurations')
@@ -281,6 +287,13 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        $pemProd = DB::table('configurations')
+            ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
+            ->where('configurations.id_configuration', 7)
+            ->where('detail_configurations.status_active', 1)
+            ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
+            ->first();
+
         $message = [
             'name.string' => 'Nama harus berupa teks.',
             'name.max' => 'Nama tidak boleh lebih dari 45 karakter.',
@@ -296,6 +309,7 @@ class ProductController extends Controller
             'name' => 'string|max:45',
             'total_stock' => 'numeric',
             'cost' => 'numeric',
+            'price'=>'numeric',
             'profit' => 'numeric',
             'min_total_stock' => 'numeric',
             'file_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
@@ -319,6 +333,9 @@ class ProductController extends Controller
         $product->total_stock = $validated['total_stock'];
         $product->cost = $validated['cost'];
         $product->price = ($validated['cost'] * ($validated['profit'] / 100)) + $validated['cost'];
+        if ($pemProd->id_detail_configuration == 18) {
+            $product->price = $validated['price'];
+        }
         $product->profit = $validated['profit'];
         $product->unit = $request->unit;
         $product->min_total_stock = $validated['min_total_stock'];

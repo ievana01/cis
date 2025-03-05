@@ -68,8 +68,12 @@
         </div>
         <div class="form-group">
             <label for="profit">Keuntungan Produk (%)</label>
+            {{-- <input type="number" class="form-control" id="profit" name="profit" aria-describedby="profit"
+                placeholder="Berapa banyak keuntungan yang anda inginkan untuk produk ini?"> --}}
             <input type="number" class="form-control" id="profit" name="profit" aria-describedby="profit"
-                placeholder="Berapa banyak keuntungan yang anda inginkan untuk produk ini?">
+                placeholder="Berapa banyak keuntungan yang anda inginkan untuk produk ini?"
+                value="{{ optional($keuntungan)->value ?? '' }}">
+
             @error('profit')
                 <small class="text-danger">{{ $message }}</small>
             @enderror

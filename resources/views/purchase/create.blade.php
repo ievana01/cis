@@ -2,7 +2,7 @@
 @section('content')
     <form method="POST" action="{{ route('purchase.store') }}">
         @csrf
-        <h4 class="text-center">Nota Pembelian Baru</h4>
+        <h4 class="text-center">Order Pembelian Baru</h4>
         <table class="table table-condensed">
             <tbody>
                 <tr>
@@ -31,7 +31,7 @@
                     <input type="hidden" name="date" id="dateHidden">
                 </tr>
                 <tr>
-                    <th><label for="warehouse">Dikirim ke</label></th>
+                    <th><label for="warehouse_id">Lokasi Penyimpanan</label></th>
                     <th>
                         <select class="form-control" name="id_warehouse" id="id_warehouse">
                             <option value="">Pilih gudang</option>
@@ -140,14 +140,14 @@
             <tbody id="productsTable"></tbody>
         </table>
         <input type="hidden" name="total_price" id="total_price_input" value="0">
-        <div style="text-align: right;">
-            <p>Jumlah sebelum pajak: <b id="totalAmount">Rp 0.00</b></p>
-            <p>Pajak: <b id="taxes">Rp 0.00</b></p>
-            <p>Total: <b id="total_price">Rp 0.00</b></p>
+        <div style="text-align: right; font-size: 18px;">
+            <p class="font-weight-bold">Total Pembelian: <b id="totalAmount">Rp 0.00</b></>
+            {{-- <p>Pajak: <b id="taxes">Rp 0.00</b></p> --}}
+            {{-- <p>Total: <b id="total_price">Rp 0.00</b></p> --}}
         </div>
         <div style="text-align: right;">
-            <a href="{{ route('purchase.index') }}" type="button" class="btn btn-danger">Batal</a>
             <a href="#modalPayment" class="btn btn-primary" data-toggle="modal">Buat Pesanan</a>
+            <a href="{{ route('purchase.index') }}" type="button" class="btn btn-danger">Batal</a>
 
         </div>
 

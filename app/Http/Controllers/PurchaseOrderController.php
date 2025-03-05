@@ -57,9 +57,58 @@ class PurchaseOrderController extends Controller
         return view('purchase.configuration', ['configuration' => $configuration]);
     }
 
+    // public function save(Request $request)
+    // {
+    //     $configurations = $request->input('configurations', []);
+    //     $profitValues = $request->input('profit_values', []);
+
+    //     $allConfigurations = DB::table('detail_configurations')
+    //         ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
+    //         ->where('configurations.menu_id', 2)
+    //         ->select('detail_configurations.id_detail_configuration', 'detail_configurations.configuration_id')
+    //         ->get();
+
+    //     foreach ($allConfigurations as $config) {
+    //         // Ambil konfigurasi yang dipilih
+    //         $selectedConfigurations = $configurations[$config->configuration_id] ?? [];
+
+    //         // Jika hanya satu nilai (radio button), ubah menjadi array
+    //         if (!is_array($selectedConfigurations)) {
+    //             $selectedConfigurations = [$selectedConfigurations];
+    //         }
+
+    //         // Jika id_configuration == 7, pastikan hanya satu opsi aktif
+    //         if ($config->configuration_id == 7) {
+    //             DB::table('detail_configurations')
+    //                 ->where('configuration_id', $config->configuration_id)
+    //                 ->update(['status_active' => 0]); // Nonaktifkan semua dulu
+
+    //             DB::table('detail_configurations')
+    //                 ->where('id_detail_configuration', reset($selectedConfigurations))
+    //                 ->update(['status_active' => 1]); // Aktifkan hanya satu yang dipilih
+    //             if ($selectedId == 17 && isset($profitValues[5])) {
+    //                 DB::table('detail_configurations')
+    //                     ->where('id_detail_configuration', 17)
+    //                     ->update(['value' => $profitValues[5]]);
+    //             }
+    //         } else {
+    //             // Untuk checkbox (bisa lebih dari satu)
+    //             DB::table('detail_configurations')
+    //                 ->where('id_detail_configuration', $config->id_detail_configuration)
+    //                 ->update(['status_active' => in_array($config->id_detail_configuration, $selectedConfigurations) ? 1 : 0]);
+    //         }
+    //     }
+
+    //     return redirect()->route('purchase.configuration')->with('status', 'Berhasil mengubah konfigurasi!');
+    // }
+
+    /**
+     * Show the form for creating a new resource.
+     */
     public function save(Request $request)
     {
         $configurations = $request->input('configurations', []);
+        $profitValues = $request->input('profit_values', []);
 
         $allConfigurations = DB::table('detail_configurations')
             ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
@@ -76,15 +125,24 @@ class PurchaseOrderController extends Controller
                 $selectedConfigurations = [$selectedConfigurations];
             }
 
-            // Jika id_configuration == 7, pastikan hanya satu opsi aktif
             if ($config->configuration_id == 7) {
+                // Nonaktifkan semua dulu
                 DB::table('detail_configurations')
                     ->where('configuration_id', $config->configuration_id)
-                    ->update(['status_active' => 0]); // Nonaktifkan semua dulu
+                    ->update(['status_active' => 0]);
 
+                // Aktifkan yang dipilih
+                $selectedId = reset($selectedConfigurations);
                 DB::table('detail_configurations')
-                    ->where('id_detail_configuration', reset($selectedConfigurations))
-                    ->update(['status_active' => 1]); // Aktifkan hanya satu yang dipilih
+                    ->where('id_detail_configuration', $selectedId)
+                    ->update(['status_active' => 1]);
+
+                // Cek jika konfigurasi yang dipilih adalah ID 17 (profit) dan simpan nilainya
+                if ($selectedId == 17 && isset($profitValues[5])) {
+                    DB::table('detail_configurations')
+                        ->where('id_detail_configuration', 17)
+                        ->update(['value' => $profitValues[5]]);
+                }
             } else {
                 // Untuk checkbox (bisa lebih dari satu)
                 DB::table('detail_configurations')
@@ -96,9 +154,6 @@ class PurchaseOrderController extends Controller
         return redirect()->route('purchase.configuration')->with('status', 'Berhasil mengubah konfigurasi!');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $invoiceNumber = $this->generateInvoiceNumber();
@@ -142,7 +197,7 @@ class PurchaseOrderController extends Controller
         // dd($hisPurchase);
         $paymentMethod = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
-            ->where('c.id_configuration', 3)
+            ->where('c.id_configuration', 1)
             ->where('dc.status_active', 1)
             ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
@@ -188,6 +243,7 @@ class PurchaseOrderController extends Controller
         $purchase->payment_method = $request->get('payment_method') ?? null;
         $purchase->supplier_id = $request->get('id_supplier');
         $purchase->employee_id = Auth::user()->employee->id_employee;
+        $purchase->warehouse_id = $request->id_warehouse;
         $purchase->save();
 
         $products = json_decode($request->get('products'), true);
@@ -201,7 +257,7 @@ class PurchaseOrderController extends Controller
                 ]
             );
 
-            $purchase->refreshCost($product, $request->get('date'), $request->get('metode_pengiriman'));
+            $purchase->refreshCost($product, $request->get('date'), $request->get('metode_pengiriman'), $request->id_warehouse);
         }
         return redirect()->route('purchase.showNota', $purchase->id_purchase)->with('status', 'Nota berhasil dibuat!');
     }
@@ -209,19 +265,21 @@ class PurchaseOrderController extends Controller
 
     public function showData()
     {
-        $data = DB::table('product_moving')
-            ->join('products', 'product_moving.product_id', '=', 'products.id_product')
-            ->join('purchase_orders', 'product_moving.purchase_id', '=', 'purchase_orders.id_purchase')
+        $data = DB::table('purchase_orders')
+            ->join('purchase_details', 'id_purchase', '=', 'purchase_details.purchase_id')
+            ->join('products', 'purchase_details.product_id', '=', 'products.id_product')
             ->join('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id_supplier')
+            ->leftJoin('detail_configurations', 'purchase_orders.payment_method', '=', 'detail_configurations.id_detail_configuration')
             ->select(
                 'purchase_orders.purchase_invoice as purchase_invoice',
+                'purchase_orders.date as date',
                 'suppliers.name as supplier_name',
                 'products.name as product_name',
-                'product_moving.*'
-            )
-            ->orderBy('purchase_invoice', 'asc')
-            ->get();
-        // dd($data);
+                'purchase_details.total_quantity_product as total_quantity_product',
+                'purchase_orders.total_purchase as total_purchase',
+                'detail_configurations.name as payment_method'
+            )->get();
+
         return view('purchase.datapurchase', ['data' => $data]);
     }
 
@@ -273,14 +331,16 @@ class PurchaseOrderController extends Controller
         $purchase = DB::table('purchase_orders')
             ->leftJoin('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id_supplier')
             ->join('employees', 'purchase_orders.employee_id', '=', 'employees.id_employee')
+            ->join('warehouses', 'purchase_orders.warehouse_id', '=', 'warehouses.id_warehouse')
             ->where('purchase_orders.id_purchase', $id)
             ->select(
                 'purchase_orders.*',
                 'suppliers.name as supplier_name',
-                'employees.name as e_name'
+                'employees.name as e_name',
+                'warehouses.name as warehouse_name'
             )
             ->first();
-
+        // dd($purchase);
         $purchaseDetail = DB::table('purchase_details')
             ->join('products', 'purchase_details.product_id', '=', 'products.id_product')
             ->where('purchase_details.purchase_id', $id)
@@ -363,7 +423,7 @@ class PurchaseOrderController extends Controller
         // Ambil metode perhitungan HPP (FIFO atau Average)
         $cogsChoose = DB::table('detail_configurations')
             ->where('status_active', 1)
-            ->where('configuration_id', 1)
+            ->where('configuration_id', 5)
             ->first();
 
         if (!$cogsChoose) {
@@ -392,8 +452,9 @@ class PurchaseOrderController extends Controller
             } elseif ($cogsMethod == "Average") {
                 // Ambil jumlah terjual dari sales_details
                 $jumlahTerjual = SalesDetail::where('product_id', $product->id_product)->sum('total_quantity');
+                // dd($jumlahTerjual);
                 // Ambil harga pokok rata-rata dari tabel products
-                $cost = $product->cost ?? 0; // Pastikan cost tidak null
+                $cost = $product->cost; // Pastikan cost tidak null
                 $hpp = $cost * $jumlahTerjual;
                 $pendapatan = $product->price * $jumlahTerjual;
                 $labaKotor = $pendapatan - $hpp;
