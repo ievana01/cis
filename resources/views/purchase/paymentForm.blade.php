@@ -7,7 +7,7 @@
     <p>No Ref : {{ $purchase->purchase_invoice }}</p>
     <p>Tanggal Order : {{ date('d-m-Y', strtotime($purchase->date)) }}</p>
 
-    <p>Total Pembayaran : Rp. {{ $purchase->total_purchase }}</p>
+    <p>Total Pembayaran : Rp. {{ number_format($purchase->total_purchase, 0, ',', '.') }}</p>
 
     <label for="payment_method">Metode Pembayaran</label>
     <select class="form-control" name="payment_method" id="payment_method">

@@ -21,8 +21,8 @@
                 <tr>
                     <td>{{ $loop->iteration }}.</td>
                     <td>{{ $data->code_category }} - {{ $data->name }}</td>
+                    @if ($catProd && $catProd->id_detail_configuration == 23)
                     <td >
-                        @if ($catProd && $catProd->id_detail_configuration == 23)
                             <ul class="list-unstyled">
                                 @foreach ($subCategory->where('category_id', $data->id_category) as $sub)
                                     <li class="d-flex justify-content-between align-items-center mt-1">
@@ -45,8 +45,8 @@
                                     </li>
                                 @endforeach
                             </ul>
+                        </td>
                         @endif
-                    </td>
                     <td>
                         @if ($catProd && $catProd->id_detail_configuration != null)
                             {{-- <a href="#modalAddSub" class="btn btn-info btn-sm" data-toggle="modal"

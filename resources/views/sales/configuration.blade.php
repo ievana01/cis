@@ -19,10 +19,11 @@
                         {{-- metode HPP dan pajak --}}
                         @if ($c->id_configuration == 5 || $c->id_configuration == 6)
                             <div class="form-check">
-                                <input type="radio" class="form-check-input"
+                                <input type="radio" class="form-check-input hpp-pajak-config"
                                     id="radio{{ $detail->id_detail_configuration }}"
                                     name="configurations[{{ $c->id_configuration }}]"
                                     value="{{ $detail->id_detail_configuration }}"
+                                    data-config-id="{{ $c->id_configuration }}"
                                     {{ $detail->status_active == 1 ? 'checked' : '' }}>
                                 <label class="form-check-label" for="radio{{ $detail->id_detail_configuration }}">
                                     {{ $detail->name }}
@@ -44,7 +45,8 @@
 
                                 @if (str_contains($detail->name, 'Diskon Musim'))
                                     <a href="#modalSetting" class="btn btn-info" data-toggle="modal"
-                                        onclick="getDiskon({{ $detail->id_detail_configuration }})">Setting Diskon Musim</a>
+                                        onclick="getDiskon({{ $detail->id_detail_configuration }})">Setting Diskon
+                                        Musim</a>
                                 @endif
 
                                 {{-- nampilin input untuk value diskon --}}
@@ -64,7 +66,7 @@
                     @endforeach
                     @if ($c->id_configuration == 6 && $detail->id_detail_configuration == 16)
                         <div id="taxForm" style="display: none;">
-                            <input type="number" id="value" class="form-control" name="tax_values[4]"
+                            <input type="number" id="value" class="form-control" name="tax_values[16]"
                                 placeholder="Masukkan besaran nilai pajak (%)" value="{{ $detail->value }}">
                         </div>
                     @endif
@@ -78,6 +80,7 @@
                     <div class="modal-body" id="modalContent">
                         <div class="form-group">
                             <label for="">Apakah anda yakin menyimpan konfigurasi ini?</label>
+                            <p id="warningMessage" class="text-danger font-weight-bold"></p>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="radioYes" name="verifikasi"
                                     value="ya" required>
@@ -120,6 +123,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const targetRadio = document.getElementById('radio16');
             const additionalForm = document.getElementById('taxForm');
+            const warningMessage = document.getElementById('warningMessage');
 
             // Tampilkan form tambahan jika radio sudah aktif saat halaman dimuat
             if (targetRadio && targetRadio.checked) {
@@ -153,6 +157,20 @@
                 radio.addEventListener('change', updateButtonState);
             });
 
+            document.querySelectorAll('.hpp-pajak-config').forEach(input => {
+                input.addEventListener('change', function() {
+                    if (this.checked) {
+                        if (this.dataset.configId == "5") {
+                            warningMessage.textContent =
+                                "⚠️ Mengubah HPP akan menyebabkan perubahan penyimpanan stok produk dan harga pokok serta harga jual!";
+                        } else if (this.dataset.configId == "6") {
+                            warningMessage.textContent =
+                                "⚠️ Mengubah Pajak akan menyebabkan perubahan PPN semua nota!";
+                        }
+                    }
+                });
+            });
+
         });
 
         function formatDate(input) {
@@ -173,47 +191,6 @@
                 document.getElementById('end_date').value = '';
             }
         }
-
-        //     function addDiscount() {
-        //         let categorySelect = document.querySelector("#category_id");
-        //         let seasonInput = document.querySelector("input[name='season_value[]']");
-
-        //         let categoryValue = categorySelect.value;
-        //         let categoryText = categorySelect.options[categorySelect.selectedIndex].text;
-        //         let seasonValue = seasonInput ? seasonInput.value.trim() : "";
-
-        //         if (!categoryValue || seasonValue === "") {
-        //             alert("Harap pilih kategori dan masukkan besar diskon!");
-        //             return;
-        //         }
-
-        //         let tableBody = document.getElementById("discountTableBody");
-        //         let newRow = tableBody.insertRow();
-
-        //         newRow.innerHTML = `
-    //     <td>
-    //         <input type="hidden" name="category_id[]" value="${categoryValue}">
-    //         ${categoryText}
-    //     </td>
-    //     <td>
-    //         <input type="hidden" name="season_value[]" value="${seasonValue}">
-    //         ${seasonValue}%
-    //     </td>
-    //     <td>
-    //         <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button>
-    //     </td>
-    // `;
-
-        //         // Reset input setelah tambah
-        //         categorySelect.selectedIndex = 0;
-        //         seasonInput.value = "";
-        //     }
-
-
-        //     function removeRow(button) {
-        //         let row = button.parentNode.parentNode;
-        //         row.parentNode.removeChild(row);
-        //     }
 
         function addDiscount() {
             let categorySelect = document.querySelector(".category-select");
@@ -256,7 +233,7 @@
         };
 
         function getDiskon(id_detail_configuration) {
-            console.log("ID yang dikirim:", id_detail_configuration); 
+            console.log("ID yang dikirim:", id_detail_configuration);
             $.ajax({
                 type: "POST",
                 url: "{{ route('sales.getDiskon') }}",

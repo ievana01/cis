@@ -244,6 +244,7 @@ class PurchaseOrderController extends Controller
         $purchase->supplier_id = $request->get('id_supplier');
         $purchase->employee_id = Auth::user()->employee->id_employee;
         $purchase->warehouse_id = $request->id_warehouse;
+        // dd($request->all());
         $purchase->save();
 
         $products = json_decode($request->get('products'), true);
@@ -270,6 +271,7 @@ class PurchaseOrderController extends Controller
             ->join('products', 'purchase_details.product_id', '=', 'products.id_product')
             ->join('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id_supplier')
             ->leftJoin('detail_configurations', 'purchase_orders.payment_method', '=', 'detail_configurations.id_detail_configuration')
+            ->leftJoin('employees', 'purchase_orders.employee_id', '=', 'employees.id_employee')
             ->select(
                 'purchase_orders.purchase_invoice as purchase_invoice',
                 'purchase_orders.date as date',
@@ -277,7 +279,8 @@ class PurchaseOrderController extends Controller
                 'products.name as product_name',
                 'purchase_details.total_quantity_product as total_quantity_product',
                 'purchase_orders.total_purchase as total_purchase',
-                'detail_configurations.name as payment_method'
+                'detail_configurations.name as payment_method',
+                'employees.name as emp_name'
             )->get();
 
         return view('purchase.datapurchase', ['data' => $data]);
@@ -349,15 +352,46 @@ class PurchaseOrderController extends Controller
         // dd($purchaseDetail);
         $gudang = Warehouse::all();
 
-        $terima = DB::table('purchase_details as pd')
-            ->join('delivery_note as dn', 'pd.purchase_id', '=', 'dn.purchase_id')
-            ->join('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
-            ->where('pd.purchase_id', $id)
-            ->select('dnp.quantity as terima', 'pd.total_quantity_product as jumlah', 'dnp.product_id')
+        $terima = DB::table('delivery_note_has_products as dnp')
+            ->join('delivery_note as dn', 'dnp.delivery_note_id', '=', 'dn.id')
+            ->where('dn.purchase_id', $id)
+            ->select(
+                'dn.purchase_id',
+                'dnp.product_id',
+                DB::raw('SUM(dnp.quantity) as total_terima')
+            )
+            ->groupBy('dn.purchase_id', 'dnp.product_id')
             ->get();
         // dd($terima);
 
         return view('purchase.terima', compact('purchase', 'purchaseDetail', 'gudang', 'terima'));
+    }
+
+    public function laporanTerimaProd()
+    {
+        $data = DB::table('delivery_note as dn')
+            ->join('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
+            ->join('purchase_orders as po', 'po.id_purchase', '=', 'dn.purchase_id')
+            ->join('products as p', 'p.id_product', '=', 'dnp.product_id')
+            ->leftJoin('purchase_details as pd', function ($join) {
+                $join->on('pd.purchase_id', '=', 'dn.purchase_id')
+                    ->on('pd.product_id', '=', 'p.id_product'); // Hanya menghubungkan ke produk terkait
+            })
+            ->where('dn.type', 'terima')
+            ->select(
+                'dn.id as delivery_id',
+                'dn.date as tanggal_kirim',
+                'p.name as prod_name',
+                DB::raw('SUM(dnp.quantity) as jumlah_terima'), // Menjumlahkan jumlah pengiriman
+                'po.purchase_invoice as invoice',
+                DB::raw('COALESCE(SUM(pd.total_quantity_product), 0) as jumlah_beli') // Menjumlahkan jumlah beli dengan nilai default 0
+            )
+            ->groupBy('dn.id', 'dn.date', 'p.name', 'po.purchase_invoice') // Kelompokkan untuk mencegah duplikasi
+            ->get()
+            ->groupBy('delivery_id');
+
+        // dd($data);
+        return view('purchase.laporanTerimaProd', compact('data'));
     }
     /**
      * Display the specified resource.
@@ -380,7 +414,7 @@ class PurchaseOrderController extends Controller
         $id = $request->id;
         $paymentMethod = DB::table('configurations')
             ->join('detail_configurations', 'configurations.id_configuration', '=', 'detail_configurations.configuration_id')
-            ->where('configurations.id_configuration', 3)
+            ->where('configurations.id_configuration', 1)
             ->where('detail_configurations.status_active', 1)
             ->select('detail_configurations.id_detail_configuration', 'detail_configurations.name')
             ->get();
@@ -402,8 +436,6 @@ class PurchaseOrderController extends Controller
             ->update(['payment_method' => $request->get('payment_method')]);
 
         // dd($request->get('payment_method'));
-
-
         return redirect()->route('purchase.index')->with('status', 'Sukses melakukan Pembayaran!');
     }
 

@@ -142,8 +142,8 @@
         <input type="hidden" name="total_price" id="total_price_input" value="0">
         <div style="text-align: right; font-size: 18px;">
             <p class="font-weight-bold">Total Pembelian: <b id="totalAmount">Rp 0.00</b></>
-            {{-- <p>Pajak: <b id="taxes">Rp 0.00</b></p> --}}
-            {{-- <p>Total: <b id="total_price">Rp 0.00</b></p> --}}
+            {{-- <p>Pajak: <b id="taxes">Rp 0.00</b></p>
+            <p>Total: <b id="total_price">Rp 0.00</b></p> --}}
         </div>
         <div style="text-align: right;">
             <a href="#modalPayment" class="btn btn-primary" data-toggle="modal">Buat Pesanan</a>
@@ -350,17 +350,17 @@
         }
 
         function updateTotals() {
-            document.getElementById("totalAmount").innerText = `Rp ${totalAmount.toFixed(2)}`;
+            document.getElementById("totalAmount").innerText = `Rp ${totalAmount.toLocaleString("id-ID")}`;
 
             // Hitung pajak (misalnya 10%)
-            const taxRate = 0;
-            const taxes = totalAmount * taxRate;
-            document.getElementById("taxes").innerText = `Rp ${taxes.toFixed(2)}`;
+            // const taxRate = 0;
+            // const taxes = totalAmount * taxRate;
+            // document.getElementById("taxes").innerText = `Rp ${taxes.toLocaleString("id-ID")}`;
 
             // Hitung total keseluruhan (amount + pajak)
-            const totalPrice = totalAmount + taxes;
-            document.getElementById("total_price").innerText = `Rp ${totalPrice.toFixed(2)}`;
-            document.getElementById('total_price_input').value = totalPrice.toFixed(2);
+            // const totalPrice = totalAmount + taxes;
+            // document.getElementById("total_price").innerText = `Rp ${totalPrice.toFixed(2)}`;
+            document.getElementById('total_price_input').value = totalAmount.toFixed(2);
         }
 
         function addProduct() {
@@ -386,9 +386,9 @@
             const newRow = `
                 <tr>
                     <td>${productName}</td>
-                    <td>${productCost.toFixed(2)}</td>
+                    <td>${productCost.toLocaleString("id-ID")}</td>
                     <td>${qty}</td>
-                    <td>${productAmount.toFixed(2)}</td>
+                    <td>${productAmount.toLocaleString("id-ID")}</td>
                     <td>
                         <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)"><i class="fa-solid fa-trash-can"></i></button>
                     </td>

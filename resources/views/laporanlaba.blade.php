@@ -2,7 +2,8 @@
 @section('content')
     <h4 class="font-weight-bold">Laporan Laba Kotor</h4>
     <h5>{{ $dataToko->name }}</h5>
-
+    <input class="form-control mb-3 border border-primary" id="myInput" type="text" placeholder="Cari..."
+        style="max-width: 400px;">
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -13,7 +14,7 @@
                 <th>Laba Kotor</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="myTable">
             @foreach ($laporan as $item)
                 <tr>
                     <td>{{ $item['produk'] }}</td>
@@ -25,4 +26,18 @@
             @endforeach
         </tbody>
     </table>
+@endsection
+@section('javascript')
+    <script>
+        $(document).ready(function() {
+            // Fungsi pencarian teks di dalam tabel
+            $("#myInput").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+
+                $("#myTable tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
 @endsection

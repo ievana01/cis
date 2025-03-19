@@ -96,7 +96,7 @@ class DeliveryNoteController extends Controller
                 'delivery_note_id' => $dn->id,
                 'product_id' => $product['id_product'],
                 'quantity' => $product['total_quantity'],
-                'note' => $product['note'] ?? null,
+                // 'note' => $product['note'] ?? null,
             ]);
 
             if ($cogsMethod == "FIFO") {
@@ -181,7 +181,7 @@ class DeliveryNoteController extends Controller
                 'delivery_note_id' => $dn->id,
                 'product_id' => $product['id_product'],
                 'quantity' => $product['total_quantity'],
-                'note' => $product['note'] ?? null,
+                // 'note' => $product['note'] ?? null,
             ]);
             $productId = $product['id_product'] ?? null;
 

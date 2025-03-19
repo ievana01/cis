@@ -68,8 +68,10 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href={{ route('sales.index') }}>Order Penjualan</a>
                         <div class="collapse-divider"></div>
-                        <h6 class="collapse-header">Konfigurasi</h6>
-                        <a class="collapse-item" href="sales-configuration">Konfigurasi Penjualan</a>
+                        @if (Auth::check() && Auth::user()->role_id == 1)
+                            <h6 class="collapse-header">Konfigurasi</h6>
+                            <a class="collapse-item" href="sales-configuration">Konfigurasi Penjualan</a>
+                        @endif
                     </div>
                 </div>
             </li>
@@ -86,8 +88,10 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('purchase.index') }}">Order Pembelian</a>
                         <div class="collapse-divider"></div>
-                        <h6 class="collapse-header">Konfigurasi</h6>
-                        <a class="collapse-item" href="purchase-configuration">Konfigurasi Pembelian</a>
+                        @if (Auth::check() && Auth::user()->role_id == 1)
+                            <h6 class="collapse-header">Konfigurasi</h6>
+                            <a class="collapse-item" href="purchase-configuration">Konfigurasi Pembelian</a>
+                        @endif
                     </div>
                 </div>
             </li>
@@ -107,13 +111,14 @@
                         <a class="collapse-item" href="{{ route('category.index') }}">Kategori Produk</a>
                         <a class="collapse-item" href="{{ route('warehouse.index') }}">Gudang</a>
 
-                        {{-- <div class="collapse-divider"></div>
-                        <h6 class="collapse-header">Laporan</h6>
-                        <a class="collapse-item" href="report-stock">Lokasi Stok Produk</a> --}}
-
                         <div class="collapse-divider"></div>
-                        <h6 class="collapse-header">Konfigurasi</h6>
-                        <a class="collapse-item" href="inventory-configuration">Konfigurasi Sediaan</a>
+                        <h6 class="collapse-header">Laporan</h6>
+                        <a class="collapse-item" href="report-stock">Lokasi Stok Produk</a>
+                        @if (Auth::check() && Auth::user()->role_id == 1)
+                            <div class="collapse-divider"></div>
+                            <h6 class="collapse-header">Konfigurasi</h6>
+                            <a class="collapse-item" href="inventory-configuration">Konfigurasi Sediaan</a>
+                        @endif
                     </div>
                 </div>
             </li>
@@ -133,21 +138,25 @@
                     </div>
                 </div>
             </li>
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReport"
-                    aria-expanded="true" aria-controls="collapseData">
-                    <i class="fa-solid fa-file-lines"></i>
-                    <span>Laporan</span>
-                </a>
-                <div id="collapseReport" class="collapse" aria-labelledby="headingData"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="sales-data">Laporan Penjualan Produk</a>
-                        <a class="collapse-item" href="purchase-data">Laporan Pembelian Produk</a>
-                        <a class="collapse-item" href="/laporan-laba">Laporan Laba Kotor</a>
+            @if (Auth::check() && Auth::user()->role_id == 1)
+                <li class="nav-item">
+                    <a class="nav-link collapsed" href="#" data-toggle="collapse"
+                        data-target="#collapseReport" aria-expanded="true" aria-controls="collapseData">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span>Laporan</span>
+                    </a>
+                    <div id="collapseReport" class="collapse" aria-labelledby="headingData"
+                        data-parent="#accordionSidebar">
+                        <div class="bg-white py-2 collapse-inner rounded">
+                            <a class="collapse-item" href="sales-data">Penjualan Produk</a>
+                            <a class="collapse-item" href="purchase-data">Pembelian Produk</a>
+                            <a class="collapse-item" href="/laporan-pengiriman-produk">Pengiriman Produk</a>
+                            <a class="collapse-item" href="/laporan-penerimaan-produk">Penerimaan Produk</a>
+                            <a class="collapse-item" href="/laporan-laba">Laba Kotor</a>
+                        </div>
                     </div>
-                </div>
-            </li>
+                </li>
+            @endif
 
 
         </ul>

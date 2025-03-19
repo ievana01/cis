@@ -98,19 +98,10 @@ class PurchaseOrder extends Model
                 ->where('warehouse_id', $warehouse_id)
                 ->increment('stock', $product['quantity']);
 
-        } else if ($metode_pengiriman == 'dikirim') {
-            // if ($cogsMethod == 'FIFO') {
-            DB::table('products')
-                ->where('id_product', $product['id'])
-                ->increment('on_order', $product['quantity']);
-            //     DB::table('product_fifo')
-            //         ->where('product_id', $product['id'])
-            //         ->increment('on_order', $product['quantity']);
-            // } else if ($cogsMethod == 'Average') {
-            //     DB::table('products')
-            //         ->where('id_product', $product['id'])
-            //         ->increment('on_order', $product['quantity']);
-            // }
-        }
+            } else if ($metode_pengiriman == 'dikirim') {
+                DB::table('products')
+                    ->where('id_product', $product['id'])
+                    ->increment('on_order', $product['quantity']);
+            }
     }
 }

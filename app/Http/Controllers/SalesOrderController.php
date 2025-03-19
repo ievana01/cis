@@ -7,6 +7,7 @@ use App\Models\Configuration;
 use App\Models\Customer;
 use App\Models\DetailConfiguration;
 use App\Models\PaymentMethod;
+use App\Models\PayModel;
 use App\Models\Product;
 use App\Models\ProductHasWarehouse;
 use App\Models\ProductMoving;
@@ -37,9 +38,9 @@ class SalesOrderController extends Controller
                 'sales_orders.date',
                 'sales_orders.delivery_date',
                 'sales_orders.total_price',
-                'customers.name as customer_name',  // Menampilkan nama customer dari tabel customers
-                'sales_orders.customer_name as custname',  // Menampilkan nama customer yang diinput manual
-                'detail_configurations.name as payment_method_name'  // Menampilkan metode pembayaran
+                'customers.name as customer_name',
+                'sales_orders.customer_name as custname',
+                'detail_configurations.name as payment_method_name'
             )
             // ->where('employee_id', Auth::user()->employee->id_employee)
             ->orderBy('sales_invoice', 'desc')
@@ -54,7 +55,7 @@ class SalesOrderController extends Controller
             $config->details = DB::select('select * from detail_configurations where configuration_id = ?', [$config->id_configuration]);
         }
         $category = Category::all();
-        // dd($category);
+        // dd($configuration);
         return view('sales.configuration', ['configuration' => $configuration, 'category' => $category]);
     }
 
@@ -64,9 +65,6 @@ class SalesOrderController extends Controller
         $configurations = $request->input('configurations', []);
         $discountValues = $request->input('discount_values', []);
         $taxValues = $request->input('tax_values', []);
-        $seasonValues = array_filter($request->input('season_value', []), function ($value) {
-            return !is_null($value) && $value !== "";
-        });
         $allConfigurations = DB::table('detail_configurations')
             ->join('configurations', 'detail_configurations.configuration_id', '=', 'configurations.id_configuration')
             ->where('configurations.menu_id', 1)
@@ -96,42 +94,18 @@ class SalesOrderController extends Controller
 
             if (isset($discountValues[$config->id_detail_configuration])) {
                 $discountValue = $discountValues[$config->id_detail_configuration];
-                // Update the discount value in the database (if needed)
                 DB::table('detail_configurations')
                     ->where('id_detail_configuration', $config->id_detail_configuration)
                     ->update(['value' => $discountValue]);
             }
 
-            if ($config->id_detail_configuration == 4 && isset($taxValues[4])) {
-                $taxValues = $taxValues[4];
+            if ($config->id_detail_configuration == 16 && isset($taxValues[16])) {
+                $taxValues = $taxValues[16];
                 DB::table('detail_configurations')
-                    ->where('id_detail_configuration', 4)
+                    ->where('id_detail_configuration', 16)
                     ->update(['value' => $taxValues]);
             }
         }
-
-        // Simpan Diskon Musim
-        // if ($request->hasAny(['name', 'start_date', 'end_date', 'category_id', 'season_value'])) {
-        //     $seasonDiscountId = DB::table('season_discount')->insertGetId([
-        //         'name' => $request->input('name'),
-        //         'start_date' => $request->input('start_date'),
-        //         'end_date' => $request->input('end_date'),
-        //         'detail_configuration_id' => 9
-        //     ]);
-
-        //     // Simpan kategori dan besar diskon
-        //     $categoryIds = $request->input('category_id', []);
-        //     foreach ($categoryIds as $index => $categoryId) {
-        //         $seasonValue = $seasonValues[$index] ?? 0;
-
-        //         DB::table('season_discount_has_categories')->insert([
-        //             'season_discount_id' => $seasonDiscountId,
-        //             'category_id' => $categoryId,
-        //             'season_value' => $seasonValue
-        //         ]);
-        //     }
-        // }
-
         return redirect()->route('sales.configuration')->with('status', 'Sukses mengubah konfigurasi!');
     }
 
@@ -144,14 +118,12 @@ class SalesOrderController extends Controller
         $sales = SalesOrder::all();
         $customer = Customer::all();
         $product = Product::all();
-        // dd($product);
         $paymentMethod = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
             ->where('c.id_configuration', 1)
             ->where('dc.status_active', 1)
             ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
-
         $taxRate = 0;
         $tax = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
@@ -159,44 +131,29 @@ class SalesOrderController extends Controller
             ->where('dc.status_active', 1)
             ->select('dc.value')
             ->first();
-        // dd($tax);
         if ($tax) {
             $taxRate = floatval(str_replace('%', '', $tax->value)) / 100; // Menghasilkan 0.11 untuk 11%
         }
-
-        // $discount = DB::table('configurations as c')
-        //     ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
-        //     ->where('c.id_configuration', 4)
-        //     ->where('dc.status_active', 1)
-        //     ->select('dc.*')
-        //     ->get();
-        //     // dd($discount);
-
         $shippingMethod = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
             ->where('c.id_configuration', 2)
             ->where('dc.status_active', 1)
             ->select('dc.*')
             ->get();
-        // dd($shippingMethod);
-
         $multiDiskon = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
             ->where('c.id_configuration', 3)
             ->where('dc.status_active', 1)
             ->select('dc.id_detail_configuration', 'dc.name')
             ->get();
-        // dd($multiDiskon);
-
         $pengiriman = DetailConfiguration::where('configuration_id', operator: 2)->where('status_active', 1)->get();
-
         $discountUmum = DB::table('configurations as c')
             ->join('detail_configurations as dc', 'c.id_configuration', '=', 'dc.configuration_id')
             ->where('c.id_configuration', 4)
             ->where('dc.status_active', 1)
             ->select('dc.*')
             ->get();
-        // dd($discountUmum);
+        $diskonMusim = DetailConfiguration::where('id_detail_configuration', operator: 9)->where('status_active', 1)->first();
         // Ambil Diskon Musim yang aktif
         $seasonDiscounts = DB::table('season_discount as sd')
             ->join('season_discount_has_categories as sdc', 'sd.id', '=', 'sdc.season_discount_id')
@@ -248,8 +205,8 @@ class SalesOrderController extends Controller
             "multiDiskon" => $multiDiskon,
             "pengiriman" => $pengiriman,
             'discountUmum' => $discountUmum,
-            'groupedSeasonDiscounts' => $groupedSeasonDiscounts
-
+            'groupedSeasonDiscounts' => $groupedSeasonDiscounts,
+            'diskonMusim' => $diskonMusim,
         ]);
     }
 
@@ -271,13 +228,15 @@ class SalesOrderController extends Controller
             ->leftJoin('sales_details', 'sales_orders.id_sales', '=', 'sales_details.sales_id')
             ->leftJoin('products', 'sales_details.product_id', '=', 'products.id_product')
             ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
+            ->leftJoin('employees', 'sales_orders.employee_id', '=', 'employees.id_employee')
             ->select(
                 'sales_orders.sales_invoice as sales_invoice',
                 'sales_orders.date as date',
                 'sales_orders.customer_name as cust_name',
                 'customers.name as cust_name_by_id',
                 'products.name as product_name',
-                'sales_details.total_quantity as total_quantity'
+                'sales_details.total_quantity as total_quantity',
+                'employees.name as emp_name'
             )
             ->orderBy('sales_orders.sales_invoice', 'asc')
             ->get();
@@ -288,8 +247,15 @@ class SalesOrderController extends Controller
      */
     public function store(Request $request)
     {
-
         $customerId = $request->get('id_customer');
+        $paymentMethod = $request->get('payment_method');
+        $payAktif = (new PayModel())->cekPay($paymentMethod);
+        if (!$payAktif) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Metode pembayaran yang dipilih tidak aktif.'
+            ], 400);
+        }
         $sales = new SalesOrder();
         $invoiceNumber = $this->generateInvoiceNumber();
         $sales->sales_invoice = $invoiceNumber;
@@ -302,7 +268,7 @@ class SalesOrderController extends Controller
             $sales->customer_id = $request->get('id_customer');
         }
         $sales->customer_name = $request->get('customer_name');
-        $sales->payment_method = $request->get('payment_method');
+        $sales->payment_method = $paymentMethod;
         $sales->shipping_cost = $request->get(key: 'hShippingCost') ?? 0;
         $sales->discount = $request->get('hDiscount') ?? 0;
         $sales->tax = $request->get('tax');
@@ -311,6 +277,7 @@ class SalesOrderController extends Controller
         $sales->recipient_name = $request->get('recipient_name') ?? null;
         $sales->recipient_address = $request->get('recipient_address') ?? null;
         $sales->recipient_phone_num = $request->get('recipient_phone_num') ?? null;
+        $sales->card_number = $request->get('card_number') ?? null;
         $sales->save();
 
         $products = json_decode($request->get('products'), true);
@@ -323,7 +290,7 @@ class SalesOrderController extends Controller
                     'total_price' => $product['amount'],
                 ]
             );
-            $sales->refreshCostSales($product, $sales, $request->metode_pengiriman);
+            $sales->refreshCostSales($product, $request->metode_pengiriman);
 
         }
         // return redirect()->route('sales.index')->with('status', 'Data Berhasil Disimpan');
@@ -353,12 +320,6 @@ class SalesOrderController extends Controller
     public function showNota($id)
     {
         $dataToko = StoreData::first();
-        // $sales = DB::table('sales_orders')->where('id_sales', $id)->first();
-        // $sales = DB::table('sales_orders')
-        //     ->join('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
-        //     ->where('sales_orders.id_sales', $id)
-        //     ->select('sales_orders.*', 'customers.name as customer_name')
-        //     ->first();
         $sales = DB::table('sales_orders')
             ->leftJoin('customers', 'sales_orders.customer_id', '=', 'customers.id_customer')
             ->join('employees', 'sales_orders.employee_id', '=', 'employees.id_employee')
@@ -369,17 +330,14 @@ class SalesOrderController extends Controller
                 'employees.name as e_name'
             )
             ->first();
-        // dd($sales);
         $salesDetail = DB::table('sales_details')
             ->join('products', 'sales_details.product_id', '=', 'products.id_product')
             ->where('sales_details.sales_id', $id)
             ->select('sales_details.*', 'products.name as product_name')
             ->get();
-        // dd($salesDetail);
         if (!$sales || $salesDetail->isEmpty()) {
             return redirect()->back()->with('error', 'Sales order not found');
         }
-
         return view('sales.nota', compact('sales', 'salesDetail', 'dataToko'));
     }
 
@@ -395,32 +353,33 @@ class SalesOrderController extends Controller
                 'employees.name as e_name'
             )
             ->first();
-        // dd($sales);
         $salesDetail = DB::table('sales_details')
             ->join('products', 'sales_details.product_id', '=', 'products.id_product')
             ->where('sales_details.sales_id', $id)
             ->select('sales_details.*', 'products.name as product_name')
             ->get();
-        // dd($salesDetail);
         $gudang = Warehouse::all();
-
         $stokProd = DB::table('product_has_warehouses as phw')
             ->join('warehouses as w', 'phw.warehouse_id', '=', 'w.id_warehouse')
             ->join('products as p', 'phw.product_id', '=', 'p.id_product')
             ->select('phw.*', 'w.name', 'p.name as product_name')
             ->get();
-        // dd($stokProd);
         if (!$sales || $salesDetail->isEmpty()) {
             return redirect()->back()->with('error', 'Sales order not found');
         }
 
-        $terkirim = DB::table('sales_details as sd')
-            ->join('delivery_note as dn', 'sd.sales_id', '=', 'dn.sales_id')
-            ->join('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
-            ->where('sd.sales_id', $id)
-            ->select('dnp.quantity as terkirim', 'sd.total_quantity as jumlah', 'dnp.product_id')
+        $terkirim = DB::table('delivery_note_has_products as dnp')
+            ->join('delivery_note as dn', 'dnp.delivery_note_id', '=', 'dn.id')
+            ->where('dn.sales_id', $id)
+            ->select(
+                'dn.sales_id',
+                'dnp.product_id',
+                DB::raw('SUM(dnp.quantity) as total_terkirim')
+            )
+            ->groupBy('dn.sales_id', 'dnp.product_id')
             ->get();
         // dd($terkirim);
+
         return view('sales.kirim', compact('sales', 'salesDetail', 'gudang', 'stokProd', 'terkirim'));
     }
 
@@ -443,7 +402,6 @@ class SalesOrderController extends Controller
             ->where('sd.end_date', '>=', now())
             ->whereNull('sdc.deleted_at')
             ->get();
-                // dd($diskonMusim);
         // Mengelompokkan hasil query agar memiliki format nested array
         $groupedData = $diskonMusim->groupBy('season_discount_id')->map(function ($items) {
             $firstItem = $items->first(); // Ambil data utama (season discount)
@@ -461,11 +419,7 @@ class SalesOrderController extends Controller
                 })->values(), // Reset indeks array
             ];
         })->values(); // Reset indeks array utama
-
-        // dd($groupedData);
         $category = Category::all();
-        // dd($category);
-
         return response()->json(array(
             'status' => 'oke',
             'msg' => view('sales.getDiskon', ['diskonMusim' => $groupedData], ['category' => $category])->render()
@@ -477,11 +431,37 @@ class SalesOrderController extends Controller
         DB::table('season_discount_has_categories')
             ->where('category_id', $request->category_id)
             ->where('season_discount_id', $request->discount_id)
-            ->delete(); 
+            ->delete();
 
         return response()->json(['message' => 'Kategori berhasil dihapus!']);
     }
 
+    public function laporanKirimProd()
+    {
+        $data = DB::table('delivery_note as dn')
+            ->join('delivery_note_has_products as dnp', 'dn.id', '=', 'dnp.delivery_note_id')
+            ->join('sales_orders as so', 'so.id_sales', '=', 'dn.sales_id')
+            ->join('products as p', 'p.id_product', '=', 'dnp.product_id')
+            ->leftJoin('sales_details as sd', function ($join) {
+                $join->on('sd.sales_id', '=', 'dn.sales_id')
+                    ->on('sd.product_id', '=', 'p.id_product'); // Hanya menghubungkan ke produk terkait
+            })
+            ->where('dn.type', 'pengiriman')
+            ->select(
+                'dn.id as delivery_id',
+                'dn.date as tanggal_kirim',
+                'p.name as prod_name',
+                DB::raw('SUM(dnp.quantity) as jumlah_kirim'), // Menjumlahkan jumlah pengiriman
+                'so.sales_invoice as invoice',
+                DB::raw('COALESCE(SUM(sd.total_quantity), 0) as jumlah_beli') // Menjumlahkan jumlah beli dengan nilai default 0
+            )
+            ->groupBy('dn.id', 'dn.date', 'p.name', 'so.sales_invoice') // Kelompokkan untuk mencegah duplikasi
+            ->get()
+            ->groupBy('delivery_id');
+
+        // dd($data);
+        return view('sales.laporanKirimProd', compact('data'));
+    }
 
     /**
      * Display the specified resource.

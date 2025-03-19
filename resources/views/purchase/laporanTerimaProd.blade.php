@@ -1,6 +1,6 @@
 @extends('layouts.btemplate')
 @section('content')
-    <h4 class="font-weight-bold">Laporan Penjualan Produk</h4>
+    <h4 class="font-weight-bold">Laporan Pengiriman Produk</h4>
     <div class="row mb-3">
         <div class="col-md-4">
             <label for="startDate" class="font-weight-bold">Tanggal Awal:</label>
@@ -23,33 +23,39 @@
             <thead class="thead-dark">
                 <tr>
                     <th>No Ref</th>
-                    <th>Staf</th>
+                    <th>Tanggal Kirim</th>
                     <th>Nama Produk</th>
-                    <th>Tanggal Order</th>
-                    <th>Pelanggan</th>
-                    <th>Jumlah Terjual</th>
+                    <th>Pembelian</th>
+                    <th>Diterima</th>
+                    <th>Belum Diterima</th>
                 </tr>
             </thead>
             <tbody id="myTable">
-                @forelse ($data as $ds)
-                    <tr>
-                        <td>{{ $ds->sales_invoice }}</td>
-                        <td>{{ $ds->emp_name }}</td>
-                        <td>{{ $ds->product_name }}</td>
-                        <td class="order-date">{{ date('d-m-Y', strtotime($ds->date)) }}</td>
-                        <td>{{ $ds->cust_name ?? $ds->cust_name_by_id }}</td>
-                        <td>{{ $ds->total_quantity }}</td>
-                    </tr>
+                @forelse ($data as $deliveryId => $items)
+                    {{-- Iterasi pertama (group by delivery_id) --}}
+                    @foreach ($items as $index => $dt)
+                        {{-- Iterasi kedua untuk detail produk --}}
+                        <tr>
+                            @if ($index === 0)
+                                <td rowspan="{{ count($items) }}">{{ $dt->invoice }}</td> {{-- Menampilkan Invoice sekali untuk setiap pengiriman --}}
+                                <td class="order-date" rowspan="{{ count($items) }}">
+                                    {{ date('d-m-Y', strtotime($dt->tanggal_kirim)) }}</td>
+                            @endif
+                            <td>{{ $dt->prod_name }}</td>
+                            <td>{{ $dt->jumlah_beli }}</td>
+                            <td>{{ $dt->jumlah_terima }}</td>
+                            <td>{{ $dt->jumlah_beli - $dt->jumlah_terima }}</td>
+                        </tr>
+                    @endforeach
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center">Data tidak tersedia</td>
+                        <td colspan="5" class="text-center">Data tidak tersedia</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 @endsection
-
 @section('javascript')
     <script>
         $(document).ready(function() {
@@ -70,7 +76,7 @@
                 $("#myTable tr").each(function() {
                     var orderDateText = $(this).find(".order-date").text().trim();
                     var orderDate = new Date(orderDateText.split("-").reverse().join(
-                    "-")); // Convert ke format YYYY-MM-DD
+                        "-")); // Convert ke format YYYY-MM-DD
 
                     if (orderDate >= startDate && orderDate <= endDate) {
                         $(this).show();

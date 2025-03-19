@@ -7,6 +7,10 @@
                 <a class="btn btn-primary" href="{{ route('sales.create') }}">+ Order Penjualan</a>
                 <a class="btn btn-success" href="{{ route('purchase.create') }}">+ Order Pembelian</a>
                 <a class="btn btn-info" href="{{ route('product.index') }}">Daftar Produk</a>
+                @if (Auth::check() && Auth::user()->role_id == 1)
+                    <a class="btn btn-warning" href="{{ route('register') }}">+ Akun Staf</a>
+                @endif
+
             </div>
         </div>
     </div>

@@ -42,7 +42,7 @@ class SalesOrder extends Model
         return $this->hasMany(ProductHasWarehouse::class, 'product_id');
     }
 
-    public function refreshCostSales($product, $sales, $metode_pengiriman)
+    public function refreshCostSales($product, $metode_pengiriman)
     {
         $cogsChoose = DB::table('detail_configurations')
             ->where('status_active', 1)
@@ -76,11 +76,6 @@ class SalesOrder extends Model
                             ->where('id_product', $product['id'])
                             ->decrement('total_stock', $toDecrement);
 
-                        // Update stok di product_has_warehouses jika perlu
-                        DB::table('product_has_warehouses')
-                            ->where('product_id', $product['id'])
-                            ->decrement('stock', $toDecrement);
-
                         // Kurangi jumlah yang akan diproses
                         $quantity -= $toDecrement;
                     }
@@ -89,26 +84,35 @@ class SalesOrder extends Model
                 DB::table('products')
                     ->where('id_product', $product['id'])
                     ->decrement('total_stock', $product['quantity']);
+            }
+            // kurangi stok di gudang --- jika produk disimpan lebih dari 1 gudang maka gudang yg memiliki stok terkecil akan berkurang
+            $quantity = $product['quantity'];
+            $warehouses = DB::table('product_has_warehouses')
+                ->where('product_id', $product['id'])
+                ->where('stock', '>', 0)
+                ->orderBy('stock', 'asc') // Urutkan berdasarkan stok terkecil dulu
+                ->get();
+
+            foreach ($warehouses as $warehouse) {
+                if ($quantity <= 0) {
+                    break;
+                }
+
+                $reduceStock = min($quantity, $warehouse->stock);
 
                 DB::table('product_has_warehouses')
                     ->where('product_id', $product['id'])
-                    ->decrement('stock', $product['quantity']);
+                    ->where('warehouse_id', $warehouse->warehouse_id)
+                    ->decrement('stock', $reduceStock);
+
+                $quantity -= $reduceStock;
             }
         } else if ($metode_pengiriman == 'dikirim') {
-            // if ($cogsMethod == 'FIFO') {
-                DB::table('products')
-                    ->where('id_product', $product['id'])
-                    ->increment('in_order', $product['quantity']);
-
-            //     DB::table('product_fifo')
-            //         ->where('product_id', $product['id'])
-            //         ->increment('in_order', $product['quantity']);
-            // } else if ($cogsMethod == 'Average') {
-            //     DB::table('products')
-            //         ->where('id_product', $product['id'])
-            //         ->increment('in_order', $product['quantity']);
-            // }
+            DB::table('products')
+                ->where('id_product', $product['id'])
+                ->increment('in_order', $product['quantity']);
         }
 
     }
+
 }

@@ -39,10 +39,20 @@ class RegisterController extends Controller
      *
      * @return void
      */
+    // public function __construct()
+    // {
+    //     $this->middleware('guest');
+    // }
     public function __construct()
     {
-        $this->middleware('guest');
+        $this->middleware(function ($request, $next) {
+            if (!Auth::check() || Auth::user()->role_id != 1) {
+                abort(403, 'Unauthorized action.');
+            }
+            return $next($request);
+        });
     }
+
 
     /**
      * Get a validator for an incoming registration request.

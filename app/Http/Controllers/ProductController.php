@@ -35,12 +35,13 @@ class ProductController extends Controller
 
     public function showReportStock()
     {
-        $product = DB::table('products')
-            ->join('product_has_warehouses', 'products.id_product', '=', 'product_has_warehouses.product_id')
-            ->join('warehouses', 'product_has_warehouses.warehouse_id', '=', 'warehouses.id_warehouse')
-            ->select('products.*', 'warehouses.name as warehouse_name')
-            ->get();
-
+        $product = DB::table('product_has_warehouses as pw')
+        ->join('products as p', 'pw.product_id', '=', 'p.id_product')
+        ->join('warehouses as w', 'pw.warehouse_id', '=', 'w.id_warehouse')
+        ->select('p.name as product_name', 'w.name as warehouse_name', 'pw.stock as stok')
+        ->orderBy('p.name', 'asc')
+        ->get();
+        // dd($product);
         return view('product.reportstock', ['product' => $product]);
     }
     public function showConfiguration()
@@ -202,8 +203,6 @@ class ProductController extends Controller
                 'cost' => $data->cost,
                 'initial_stock' => $data->total_stock,
                 'sold' => 0,
-                'in_order' => 0,
-                'on_order' => 0
             ]);
         }
 

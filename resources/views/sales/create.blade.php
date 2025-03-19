@@ -15,7 +15,7 @@
                     <th>
                         <div class="input-group">
                             <select class="form-control" id="id_customer" name="id_customer"
-                                onchange="toggleOtherCustomerInput()">
+                                onchange="toggleOtherCustomerInput()" required>
                                 <option value="">Pilih Pelanggan</option>
                                 @foreach ($customer as $c)
                                     <option value="{{ $c->id_customer }}">{{ $c->name }}</option>
@@ -37,7 +37,7 @@
                     <th><label for="date">Tanggal Order</label></th>
                     <th>
                         <input type="text" class="form-control" name="date" id="dateInput"
-                            placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)">
+                            placeholder="Silahkan pilih tanggal" onfocus="this.type='date'" onblur="formatDate(this)" required>
                     </th>
                     <input type="hidden" name="date" id="dateHidden">
                 </tr>
@@ -143,7 +143,7 @@
                 @endif
             @endforeach
             @if ($discountUmum->isNotEmpty())
-            <a href="#modalDiscount" class="btn btn-success" data-toggle="modal" id="discountButton">+ Diskon</a>
+                <a href="#modalDiscount" class="btn btn-success" data-toggle="modal" id="discountButton">+ Diskon</a>
             @endif
         </div>
 
@@ -168,37 +168,70 @@
                 <div class="modal-content">
                     <div class="modal-body" id="modalContent">
                         <div id="text-dikirim" style="display: none">
-                            <div>
-                                <label for="expected_arrival">Perkiraan tanggal kirim</label>
-                                <input type="text" class="form-control" name="delivery_date" id="dateInput"
-                                    placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
-                                    onblur="formatDate(this)">
-                                <input type="hidden" name="delivery_date" id="delivery_date">
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <div>
+                                        <label for="expected_arrival">Perkiraan tanggal kirim</label>
+                                        <input type="text" class="form-control" name="delivery_date" id="dateInput"
+                                            placeholder="Silahkan pilih tanggal" onfocus="this.type='date'"
+                                            onblur="formatDate(this)">
+                                        <input type="hidden" name="delivery_date" id="delivery_date">
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label for="recipient_name">Nama Penerima</label>
-                                <input type="text" class="form-control" name="recipient_name" id="recipient_name"
-                                    placeholder="Masukkan nama penerima pesanan">
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <div>
+                                        <label for="">Apakah alamat penerima sama dengan alamat pelanggan?</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="flexRadioDefault"
+                                                id="yesOption" value="yes" onchange="toggleRecipientFields()">
+                                            <label class="form-check-label" for="yesOption">Ya</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="flexRadioDefault"
+                                                id="noOption" value="no" onchange="toggleRecipientFields()">
+                                            <label class="form-check-label" for="noOption">Tidak</label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label for="recipient_address">Alamat Penerima</label>
-                                <input type="text" class="form-control" name="recipient_address"
-                                    id="recipient_address" placeholder="Masukkan alamat penerima pesanan">
-                            </div>
-                            <div>
-                                <label for="recipient_phone_num">Nomor Telepon</label>
-                                <input type="text" class="form-control" name="recipient_phone_num"
-                                    id="recipient_phone_num" placeholder="Masukkan nomor telepon penerima pesanan">
+                            <div id="recipientFields" style="display: none;" class="mb-2">
+                                <div>
+                                    <label for="recipient_name">Nama Penerima</label>
+                                    <input type="text" class="form-control" name="recipient_name" id="recipient_name"
+                                        placeholder="Masukkan nama penerima pesanan">
+                                </div>
+                                <div>
+                                    <label for="recipient_address">Alamat Penerima</label>
+                                    <input type="text" class="form-control" name="recipient_address"
+                                        id="recipient_address" placeholder="Masukkan alamat penerima pesanan">
+                                </div>
+                                <div>
+                                    <label for="recipient_phone_num">Nomor Telepon</label>
+                                    <input type="text" class="form-control" name="recipient_phone_num"
+                                        id="recipient_phone_num" placeholder="Masukkan nomor telepon penerima pesanan">
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="payment_method">Metode Pembayaran</label>
-                            <select class="form-control" id="payment_method" name="payment_method">
-                                <option value="">Pilih metode pembayaran</option>
-                                @foreach ($paymentMethod as $pay)
-                                    <option value="{{ $pay->id_detail_configuration }}">{{ $pay->name }}</option>
-                                @endforeach
-                            </select>
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="payment_method">Metode Pembayaran</label>
+                                    <select class="form-control" id="payment_method" name="payment_method">
+                                        <option value="">Pilih metode pembayaran</option>
+                                        @foreach ($paymentMethod as $pay)
+                                            <option value="{{ $pay->id_detail_configuration }}">{{ $pay->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group mb-2" id="cardNumberContainer" style="display: none;">
+                            <label for="card_number">Nomor Kartu Debit</label>
+                            <input type="text" class="form-control" name="card_number" id="card_number"
+                                placeholder="Masukkan nomor kartu">
                         </div>
                         <div class="form-group">
                             <label for="">Apakah pembayaran sukses?</label>
@@ -213,12 +246,75 @@
                                 <label class="form-check-label" for="radioNo">Tidak</label>
                             </div>
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
+                            <button type="submit" class="btn btn-primary" onclick="getNota($sales->id_sales)"
+                                id="btnCetakNota" disabled>Cetak Nota</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="modalDiscount" tabindex="-1" role="basic" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body" id="modalContent">
+                        <div class="form-group">
+                            @if ($multiDiskon->isNotEmpty())
+                                <p class="text-danger text-center">Jenis diskon dapat dipilih lebih dari 1x</p>
+                            @else
+                                <p class="text-danger text-center">Tawarkan jenis diskon yang tersedia! Setiap
+                                    transaksi
+                                    hanya dapat memilih 1 jenis diskon!</p>
+                            @endif
+                            <p>Jenis Diskon:</p>
+
+                            @foreach ($discountUmum as $dsc)
+                                @if (!str_contains($dsc->name, 'Diskon Musim'))
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input"
+                                            id="radio{{ $dsc->id_detail_configuration }}" name="optradio"
+                                            value="{{ $dsc->id_detail_configuration }}" data-name="{{ $dsc->name }}"
+                                            data-value="{{ $dsc->value }}" onclick="updateDiscountValue(this)">
+                                        <label class="form-check-label"
+                                            for="radio{{ $dsc->id_detail_configuration }}">{{ $dsc->name }}
+                                            ({{ $dsc->value }})
+                                        </label>
+                                    </div>
+                                @endif
+                            @endforeach
+
+                            @if ($diskonMusim != null)
+                                {{-- Pilihan Diskon Musim --}}
+                                @foreach ($groupedSeasonDiscounts as $dsc)
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input"
+                                            id="radioSeason{{ $dsc['id'] }}" name="optradio"
+                                            value="{{ $dsc['id'] }}" data-name="{{ $dsc['name'] }}"
+                                            data-jenis="{{ $dsc['jenis'] }}" onclick="updateDiscountValue(this)">
+                                        <label class="form-check-label" for="radioSeason{{ $dsc['id'] }}">
+                                            Diskon Musim
+                                        </label>
+                                    </div>
+                                    {{-- Card untuk Diskon Musim --}}
+                                    <div class="p-3 bg-light rounded">
+                                        <strong>{{ $dsc['name'] }}</strong><br>
+                                        {{ date('d-m-Y', strtotime($dsc['start_date'])) }} sampai
+                                        {{ date('d-m-Y', strtotime($dsc['end_date'])) }}<br>
+
+                                        @foreach ($dsc['categories'] as $category)
+                                            {{ $category['category_name'] }} Diskon {{ $category['season_value'] }}%<br>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            @endif
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
-                        <button type="submit" class="btn btn-primary" onclick="getNota($sales->id_sales)"
-                            id="btnCetakNota" disabled>Cetak
-                            Nota</button>
+                        <button type="button" class="btn btn-primary" onclick="submitDiscount()">Simpan</button>
                     </div>
                 </div>
             </div>
@@ -241,71 +337,39 @@
                 </div>
             </div>
         </div>
-
-        <div class="modal fade" id="modalDiscount" tabindex="-1" role="basic" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body" id="modalContent">
-                        <div class="form-group">
-                            @if ($multiDiskon->isNotEmpty())
-                                <p class="text-danger text-center">Jenis diskon dapat dipilih lebih dari 1x</p>
-                            @else
-                                <p class="text-danger text-center">Tawarkan jenis diskon yang tersedia! Setiap transaksi
-                                    hanya dapat memilih 1 jenis diskon!</p>
-                            @endif
-                            <p>Jenis Diskon:</p>
-                            
-                            @foreach ($discountUmum as $dsc)
-                                @if (!str_contains($dsc->name, 'Diskon Musim'))
-                                    <div class="form-check">
-                                        <input type="radio" class="form-check-input"
-                                            id="radio{{ $dsc->id_detail_configuration }}" name="optradio"
-                                        value="{{ $dsc->id_detail_configuration }}" data-name="{{ $dsc->name }}"
-                                            data-value="{{ $dsc->value }}" onclick="updateDiscountValue(this)">
-                                        <label class="form-check-label"
-                                            for="radio{{ $dsc->id_detail_configuration }}">{{ $dsc->name }}
-                                            ({{ $dsc->value }}%)
-                                        </label>
-                                    </div>
-                                @endif
-                            @endforeach
-
-                            {{-- Pilihan Diskon Musim --}}
-                            @foreach ($groupedSeasonDiscounts as $dsc)
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="radioSeason{{ $dsc['id'] }}"
-                                        name="optradio" value="{{ $dsc['id'] }}" data-name="{{ $dsc['name'] }}"
-                                        data-jenis="{{ $dsc['jenis'] }}" onclick="updateDiscountValue(this)">
-                                    <label class="form-check-label" for="radioSeason{{ $dsc['id'] }}">
-                                        Diskon Musim
-                                    </label>
-                                </div>
-                                {{-- Card untuk Diskon Musim --}}
-                                <div class="p-3 bg-light rounded">
-                                    <strong>{{ $dsc['name'] }}</strong><br>
-                                    {{ date('d-m-Y',strtotime($dsc['start_date'])) }} sampai {{ date('d-m-Y',strtotime($dsc['end_date'])) }}<br>
-
-                                    @foreach ($dsc['categories'] as $category)
-                                        {{ $category['category_name'] }} Diskon {{ $category['season_value'] }}%<br>
-                                    @endforeach
-                                </div>
-                            @endforeach
-
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Tutup</button>
-                        <button type="button" class="btn btn-primary" onclick="submitDiscount()">Simpan</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </form>
 @endsection
 
 @section('javascript')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        $(document).ready(function() {
+            $('#payment_method').change(function() {
+                var selectedPayment = $("#payment_method option:selected").text().trim();
+                console.log("Metode pembayaran dipilih:", selectedPayment); // Debugging
+
+                if (selectedPayment.toLowerCase().includes("kartu debit")) {
+                    console.log("Menampilkan input nomor kartu");
+                    $('#cardNumberContainer').css("display", "block"); // Gunakan css() daripada show()
+                } else {
+                    console.log("Menyembunyikan input nomor kartu");
+                    $('#cardNumberContainer').css("display", "none");
+                    $('#card_number').val(''); // Kosongkan input saat disembunyikan
+                }
+            });
+        });
+
+        function toggleRecipientFields() {
+            const recipientFields = document.getElementById("recipientFields");
+            const yesOption = document.getElementById("yesOption");
+
+            if (yesOption.checked) {
+                recipientFields.style.display = "none";
+            } else {
+                recipientFields.style.display = "block";
+            }
+        }
+
         function getNota(id_sales) {
             console.log('ID Sales yang dikirim:', id_sales); // Debug ID
             $.ajax({
@@ -349,7 +413,6 @@
             }
         }
 
-
         document.addEventListener('DOMContentLoaded', () => {
             const btnCetakNota = document.getElementById('btnCetakNota');
             const radioYes = document.getElementById('radioYes');
@@ -384,9 +447,12 @@
 
             const radioDikirim = document.getElementById('dikirim');
             const textDikirim = document.getElementById('text-dikirim');
+            const radioDiambil = document.getElementById('diambil');
 
             function updateModalContent() {
                 if (radioDikirim.checked) {
+                    textDikirim.style.display = "block";
+                } else if (radioDiambil.checked) {
                     textDikirim.style.display = "block";
                 }
             }
@@ -417,10 +483,10 @@
             const rows = table.querySelectorAll("tr");
             for (let row of rows) {
                 const productName = row.cells[0]?.textContent.trim();
-                if (productName === "Shipping Cost") {
-                    const shippingCost = parseFloat(row.cells[3]?.textContent.trim()) || 0;
-                    console.log("Shipping Cost Found:", shippingCost); // Debugging
-                    return shippingCost; // Kembalikan nilai Shipping Cost
+                if (productName === "Biaya Pengiriman") {
+                    const shippingCost = parseFloat(row.cells[3]?.textContent.replace(/\./g, '').replace(',', '.')) || 0;
+                    console.log("Shipping Cost Found:", shippingCost);
+                    return shippingCost;
                 }
             }
             // Jika tidak ditemukan Shipping Cost
@@ -450,20 +516,17 @@
 
         function updateTotals() {
             const taxInput = document.getElementById('tax');
-            // Ambil value dan hilangkan simbol '%', kemudian konversikan ke desimal
             const taxRate = parseFloat(taxInput.value.replace('%', '')) / 100;
-            // Sekarang taxRate akan bernilai 0.11 (untuk 11%)
             console.log('tax', taxRate); // Output: 0.11
-            // const shipcost = parseFloat(document.getElementById('shipping_cost').value) || 0;
             const shipcost = getShippingCostFromTable();
             console.log('shipcost', shipcost);
             const totalWithShip = totalAmount + shipcost;
-            document.getElementById('totalAmount').textContent = `Rp ${totalWithShip.toFixed(2)}`;
+            document.getElementById('totalAmount').textContent = `Rp ${totalWithShip.toLocaleString("id-ID")}`;
             const taxes = totalWithShip * taxRate;
-            document.getElementById('taxes').textContent = `Rp ${taxes.toFixed(2)}`;
+            document.getElementById('taxes').textContent = `Rp ${taxes.toLocaleString("id-ID")}`;
             const total = totalWithShip + taxes;
-            document.getElementById('total_price').textContent = `Rp ${total.toFixed(2)}`;
-            document.getElementById('total_price_input').value = total.toFixed(2);
+            document.getElementById('total_price').textContent = `Rp ${total.toLocaleString("id-ID")}`;
+            document.getElementById('total_price_input').value = total;
         }
 
 
@@ -505,9 +568,9 @@
             const newRow = `
                 <tr>
                     <td>${productName}</td>
-                    <td>${productPrice.toFixed(2)}</td>
+                    <td>${productPrice.toLocaleString("id-ID")}</td>
                     <td>${productQty}</td>
-                    <td>${productAmount.toFixed(2)}</td>
+                    <td>${productAmount.toLocaleString("id-ID")}</td>
                     <td>
                         <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)"><i class="fa-solid fa-trash-can"></i></button>
                     </td>
@@ -555,7 +618,7 @@
             <td>Biaya Pengiriman</td>
             <td>-</td>
             <td>1</td>
-            <td>${shippingCost.toFixed(2)}</td>
+            <td>${shippingCost.toLocaleString("id-ID")}</td>
             <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">
                 <i class="fa-solid fa-trash-can"></i></button></td>
             `;
@@ -664,6 +727,7 @@
         }
 
         let jumDis = 0;
+
         function submitDiscount() {
             // Ambil radio button yang dipilih
             const selectedDiscountRadio = document.querySelector('input[name="optradio"]:checked');
@@ -767,12 +831,18 @@
             } else {
                 // Untuk diskon non-musim, gunakan logika sebelumnya
                 const discountValue = parseFloat(selectedDiscountRadio.getAttribute('data-value') || 0);
-
+                console.log('or', discountValue);
+                console.log('or', totalAmount);
+                console.log(discountName);
+                
                 // Ensure we have a valid discount value
                 if (discountValue > 0) {
-                    totalDiscount = totalAmount * (discountValue / 100);
-                    totalDiscount = Math.min(totalDiscount, totalAmount);
-
+                    if (discountName.includes('Diskon Order (nominal)')) {
+                        totalDiscount = discountValue;
+                    } else {
+                        totalDiscount = totalAmount * (discountValue / 100);
+                        totalDiscount = Math.min(totalDiscount, totalAmount);
+                    }
                     // Add the discount to discounted products
                     discountedProducts.push({
                         name: discountName,
@@ -793,7 +863,7 @@
         <td>${discountName}</td>
         <td>-</td>
         <td>-</td>
-        <td>-${totalDiscount.toFixed(2)}</td>
+        <td>-${totalDiscount.toLocaleString("id-ID")}</td>
         <td>
             <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
                 <i class="fa-solid fa-trash-can"></i>
@@ -801,21 +871,7 @@
         </td>
     `;
             tableBody.appendChild(row);
-
-            // Debug: Tampilkan produk yang didiskon
             console.log('Produk yang didiskon:', discountedProducts);
-
-            // // Perbarui total amount dan hidden input
-            // totalAmount -= totalDiscount;
-            // discountHidden.value = (parseFloat(discountHidden.value || 0) + totalDiscount).toFixed(2);
-
-            // // Tutup modal dan update total
-            // $('#modalDiscount').modal('hide');
-            // updateTotals();
-
-            // // Non-aktifkan tombol diskon jika tidak diperbolehkan memilih beberapa diskon
-            // toggleDiscountButton();
-            // / Update totalAmount di tampilan
             document.getElementById("totalAmount").innerText = totalAmount.toFixed(2);
 
             // Update hidden input untuk diskon
